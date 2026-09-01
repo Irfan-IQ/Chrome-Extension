@@ -1,0 +1,13 @@
+# Nothing to build — this loads directly as an unpacked extension.
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Never commit a real API key. The key is stored at runtime in
+# chrome.storage.local, not in any file in this repo — keep it that way.
+*.key
+secrets.*

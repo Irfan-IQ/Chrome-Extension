@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Assistant</title>
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header id="header">
+        <div class="header-title">
+          <span class="app-name">AI Assistant</span>
+          <span class="app-badge">Gemini</span>
+        </div>
+        <div class="header-right">
+          <span id="status-dot" class="status-dot" title="Ready"></span>
+          <button id="clear-btn" class="icon-btn" title="Clear chat">Clear</button>
+          <button id="settings-btn" class="icon-btn" title="Settings">⚙</button>
+        </div>
+      </header>
+
+      <!-- Settings panel (hidden by default) -->
+      <section id="settings-panel" class="settings-panel hidden">
+        <h2>Settings</h2>
+        <label for="api-key-input">Gemini API Key</label>
+        <input
+          id="api-key-input"
+          type="password"
+          placeholder="Paste your API key"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <div class="settings-actions">
+          <button id="save-key-btn" class="primary-btn">Save</button>
+          <button id="close-settings-btn" class="secondary-btn">Close</button>
+        </div>
+        <p id="settings-status" class="settings-status"></p>
+        <p class="settings-hint">
+          Get a key from Google AI Studio. It is stored only in this browser via
+          <code>chrome.storage.local</code>.
+        </p>
+      </section>
+
+      <!-- V2 privacy status strip -->
+      <section id="privacy-strip" class="privacy-strip">
+        <div class="privacy-row">
+          <label class="privacy-toggle">
+            <input type="checkbox" id="privacy-enabled" checked />
+            <span>Privacy Protection: <strong id="privacy-state">ON</strong></span>
+          </label>
+          <button id="privacy-info-btn" class="icon-btn" title="About V2 privacy">?</button>
+        </div>
+        <div id="privacy-detail" class="privacy-detail">
+          Attaches a locally-sanitized snapshot of the current page to your
+          message. DOM fields only — <em>does not detect sensitive content
+          inside images</em>.
+        </div>
+        <div id="privacy-status" class="privacy-status"></div>
+      </section>
+
+      <main id="chat" class="chat" aria-live="polite"></main>
+
+      <footer id="composer">
+        <textarea
+          id="input"
+          rows="1"
+          placeholder="Ask something..."
+          aria-label="Message"
+        ></textarea>
+        <button id="send-btn" class="primary-btn">Send</button>
+      </footer>
+    </div>
+
+    <!-- V1 -->
+    <script src="gemini.js"></script>
+    <!-- V2 privacy layer (side-panel context). Order matters:
+         coordinateUtils -> screenshotRedactor -> privacyEngine -->
+    <script src="privacy/coordinateUtils.js"></script>
+    <script src="privacy/screenshotRedactor.js"></script>
+    <script src="privacy/privacyEngine.js"></script>
+    <!-- app -->
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

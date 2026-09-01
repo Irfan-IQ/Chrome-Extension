@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>V2 Privacy Engine — Test Page</title>
+    <style>
+      body {
+        font-family: -apple-system, Arial, sans-serif;
+        max-width: 640px;
+        margin: 24px auto;
+        padding: 0 16px;
+        color: #1f2023;
+      }
+      h1 { font-size: 20px; }
+      p.note { color: #6b6f76; font-size: 13px; }
+      .field { margin: 12px 0; }
+      label { display: block; font-size: 13px; margin-bottom: 4px; }
+      input, textarea, select {
+        width: 100%;
+        padding: 8px 10px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        box-sizing: border-box;
+      }
+      .expect { color: #16a34a; font-size: 12px; }
+      .expect.no { color: #c0362c; }
+    </style>
+  </head>
+  <body>
+    <h1>V2 Privacy Engine — Test Page</h1>
+    <p class="note">
+      Open the AI Assistant side panel (Privacy Protection ON) and send any
+      prompt while this tab is active. Watch the privacy status strip and the
+      service-worker / page console. Values below are dummy data.
+    </p>
+
+    <form autocomplete="on" onsubmit="return false">
+      <div class="field">
+        <label for="f-name">Full name</label>
+        <input type="text" id="f-name" name="name" value="Test User" />
+        <span class="expect">expect: name</span>
+      </div>
+
+      <div class="field">
+        <label for="f-email">Contact</label>
+        <input type="email" id="f-email" name="email" value="test@example.com" />
+        <span class="expect">expect: email</span>
+      </div>
+
+      <div class="field">
+        <label for="f-pass">Secret</label>
+        <input type="password" id="f-pass" name="password" value="secret123" />
+        <span class="expect">expect: password</span>
+      </div>
+
+      <div class="field">
+        <label for="f-mobile">Reach me on</label>
+        <input type="tel" id="f-mobile" name="mobile" value="9876543210" />
+        <span class="expect">expect: phone</span>
+      </div>
+
+      <div class="field">
+        <label for="f-addr">Where</label>
+        <input type="text" id="f-addr" name="address" value="123 Test Street" />
+        <span class="expect">expect: address</span>
+      </div>
+
+      <div class="field">
+        <label for="f-age">How old</label>
+        <input type="number" id="f-age" name="age" value="25" />
+        <span class="expect">expect: age</span>
+      </div>
+
+      <div class="field">
+        <label for="f-user">Handle</label>
+        <input type="text" id="f-user" name="username" value="testuser" />
+        <span class="expect">expect: username</span>
+      </div>
+
+      <div class="field">
+        <label for="f-dob">Born on</label>
+        <input type="date" id="f-dob" name="date_of_birth" />
+        <span class="expect">expect: date_of_birth</span>
+      </div>
+
+      <div class="field">
+        <label for="f-cc">Payment</label>
+        <input
+          type="text"
+          id="f-cc"
+          autocomplete="cc-number"
+          value="4111111111111111"
+        />
+        <span class="expect">expect: credit_card</span>
+      </div>
+
+      <!-- aria-label only, no name/id keyword -->
+      <div class="field">
+        <label>&nbsp;</label>
+        <input type="text" aria-label="Email address" value="aria@example.com" />
+        <span class="expect">expect: email (via aria-label)</span>
+      </div>
+
+      <!-- MUST NOT be flagged -->
+      <div class="field">
+        <label for="f-search">Search the site</label>
+        <input
+          type="text"
+          id="f-search"
+          name="ordinary_search"
+          placeholder="Search"
+        />
+        <span class="expect no">expect: NOT sensitive</span>
+      </div>
+
+      <div class="field">
+        <label for="f-msg">Message</label>
+        <textarea id="f-msg" name="comments" rows="3">Just a normal comment.</textarea>
+        <span class="expect no">expect: NOT sensitive</span>
+      </div>
+
+      <div class="field">
+        <label for="f-country">Country</label>
+        <select id="f-country" name="country">
+          <option>India</option>
+          <option>United States</option>
+        </select>
+        <span class="expect no">expect: NOT sensitive</span>
+      </div>
+    </form>
+
+    <h2 style="font-size: 15px">Cross-origin iframe (should be "uninspectable")</h2>
+    <iframe
+      src="https://example.com/"
+      title="cross origin"
+      style="width: 100%; height: 120px; border: 1px solid #ccc"
+    ></iframe>
+  </body>
+</html>
