@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+
+    <title>Browser Vision PII MVP</title>
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          Arial,
+          Helvetica,
+          sans-serif;
+
+        margin: 0;
+        padding: 32px;
+
+        background: #f3f4f6;
+        color: #111827;
+      }
+
+      main {
+        max-width: 1100px;
+        margin: 0 auto;
+
+        background: #ffffff;
+
+        padding: 28px;
+
+        border-radius: 14px;
+
+        box-shadow:
+          0 8px 30px
+          rgba(0, 0, 0, 0.08);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 28px;
+      }
+
+      .subtitle {
+        color: #6b7280;
+        margin-top: 8px;
+      }
+
+      .controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 24px;
+        flex-wrap: wrap;
+      }
+
+      input[type="file"] {
+        max-width: 100%;
+      }
+
+      button {
+        border: 0;
+        border-radius: 8px;
+
+        padding: 10px 16px;
+
+        background: #111827;
+        color: white;
+
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: #1f2937;
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      #status {
+        margin-top: 18px;
+        font-weight: 600;
+      }
+
+      .viewer {
+        margin-top: 24px;
+
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+
+        padding: 16px;
+
+        background: #fafafa;
+
+        overflow: auto;
+      }
+
+      #canvas {
+        display: block;
+
+        max-width: 100%;
+        height: auto;
+
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+      }
+
+      .results-section {
+        margin-top: 28px;
+      }
+
+      .results-section h2 {
+        margin-bottom: 12px;
+      }
+
+      .detection {
+        padding: 12px;
+
+        margin-bottom: 10px;
+
+        background: white;
+
+        border: 1px solid #e5e7eb;
+
+        border-radius: 8px;
+      }
+
+      .detection p {
+        margin: 4px 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <main>
+      <h1>Browser Vision PII MVP</h1>
+
+      <p class="subtitle">
+        YOLOS-Tiny visual detection and
+        sensitive-object redaction
+      </p>
+
+      <div class="controls">
+        <input
+          type="file"
+          id="imageInput"
+          accept="image/*"
+        />
+
+        <button id="runDetection">
+          Run Detection
+        </button>
+      </div>
+
+      <p id="status">
+        Select an image to begin.
+      </p>
+
+      <div class="viewer">
+        <canvas id="canvas"></canvas>
+      </div>
+
+      <section class="results-section">
+        <h2>Detections</h2>
+
+        <div id="results"></div>
+      </section>
+    </main>
+
+    <script
+      type="module"
+      src="/src/main.ts"
+    ></script>
+  </body>
+</html>
