@@ -57,22 +57,17 @@ export async function detectObjects(
 
   const rawImage = RawImage.fromCanvas(tempCanvas);
 
-  const results = await detectorInstance(rawImage, {
-    threshold: 0.5,
-  });
+ const results = await detector(rawImage, {
+  threshold: 0.3,
+});
 
-  return results
-    .map((result: any) => ({
-      label: result.label,
-      confidence: result.score,
-      bbox: {
-        xmin: result.box.xmin,
-        ymin: result.box.ymin,
-        xmax: result.box.xmax,
-        ymax: result.box.ymax,
-      },
-    }))
-    .filter((detection: Detection) => {
-      return detection.confidence >= 0.90;
-    });
-}
+return results.map((result: any) => ({
+  label: result.label,
+  confidence: result.score,
+  bbox: {
+    xmin: result.box.xmin,
+    ymin: result.box.ymin,
+    xmax: result.box.xmax,
+    ymax: result.box.ymax,
+  },
+}));

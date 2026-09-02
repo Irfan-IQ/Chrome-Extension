@@ -31,12 +31,20 @@ if (!ctx) {
 
 let image: HTMLImageElement | null = null;
 
+// Current sensitive category.
+// Only persons are subject to redaction/warning.
 const SENSITIVE_LABELS = new Set([
   "person",
 ]);
 
+// Extra padding around person detections so the
+// full face/head is less likely to escape the box.
 const PERSON_PADDING_X = 15;
 const PERSON_PADDING_Y = 30;
+
+// ----------------------------------------
+// Image selection
+// ----------------------------------------
 
 fileInput.addEventListener("change", () => {
   const file = fileInput.files?.[0];
@@ -86,6 +94,10 @@ fileInput.addEventListener("change", () => {
   image.src = url;
 });
 
+// ----------------------------------------
+// Detection + redaction
+// ----------------------------------------
+
 runButton.addEventListener("click", async () => {
   if (!image) {
     status.textContent =
@@ -103,7 +115,8 @@ runButton.addEventListener("click", async () => {
     const detections: Detection[] =
       await detectObjects(image);
 
-    // Redraw original image.
+    // Restore the original image before applying
+    // the current detection results.
     ctx.clearRect(
       0,
       0,
@@ -120,6 +133,7 @@ runButton.addEventListener("click", async () => {
     resultsContainer.innerHTML = "";
 
     let redactedCount = 0;
+    let warningCount = 0;
 
     for (const detection of detections) {
       let {
@@ -129,47 +143,115 @@ runButton.addEventListener("click", async () => {
         ymax,
       } = detection.bbox;
 
+      const confidence =
+        detection.confidence;
+
       const isSensitive =
         SENSITIVE_LABELS.has(
           detection.label
         );
 
-      // Only expand person detections.
-      if (detection.label === "person") {
-        xmin -= PERSON_PADDING_X;
-        ymin -= PERSON_PADDING_Y;
-        xmax += PERSON_PADDING_X;
-        ymax += PERSON_PADDING_Y;
+      // ------------------------------------
+      // Only sensitive labels get privacy UI
+      // ------------------------------------
 
-        xmin = Math.max(0, xmin);
-        ymin = Math.max(0, ymin);
-        xmax = Math.min(canvas.width, xmax);
-        ymax = Math.min(canvas.height, ymax);
-      }
-
-      const width = xmax - xmin;
-      const height = ymax - ymin;
-
-      // Redact sensitive detections.
       if (isSensitive) {
-        ctx.fillStyle = "black";
+        // Expand person bounding box.
+        if (
+          detection.label === "person"
+        ) {
+          xmin -= PERSON_PADDING_X;
+          ymin -= PERSON_PADDING_Y;
+          xmax += PERSON_PADDING_X;
+          ymax += PERSON_PADDING_Y;
+        }
 
-        ctx.fillRect(
-          xmin,
-          ymin,
-          width,
-          height
+        // Keep coordinates inside canvas.
+        xmin = Math.max(
+          0,
+          xmin
         );
 
-        redactedCount++;
+        ymin = Math.max(
+          0,
+          ymin
+        );
+
+        xmax = Math.min(
+          canvas.width,
+          xmax
+        );
+
+        ymax = Math.min(
+          canvas.height,
+          ymax
+        );
+
+        const width =
+          xmax - xmin;
+
+        const height =
+          ymax - ymin;
+
+        // --------------------------------
+        // >= 90% = full black redaction
+        // --------------------------------
+
+        if (confidence >= 0.90) {
+          ctx.fillStyle = "black";
+
+          ctx.fillRect(
+            xmin,
+            ymin,
+            width,
+            height
+          );
+
+          redactedCount++;
+        }
+
+        // --------------------------------
+        // 70% - 89.99% = warning outline
+        // --------------------------------
+
+        else if (confidence >= 0.70) {
+          ctx.strokeStyle = "red";
+          ctx.lineWidth = 4;
+
+          ctx.strokeRect(
+            xmin,
+            ymin,
+            width,
+            height
+          );
+
+          warningCount++;
+        }
+
+        // < 70% = nothing drawn
       }
 
-      // Show detection information.
+      // ------------------------------------
+      // Detection result panel
+      // ------------------------------------
+
       const detectionElement =
         document.createElement("div");
 
       detectionElement.className =
         "detection";
+
+      let action = "KEPT";
+
+      if (isSensitive) {
+        if (confidence >= 0.90) {
+          action = "REDACTED";
+        } else if (confidence >= 0.70) {
+          action = "WARNING";
+        } else {
+          action = "IGNORED";
+        }
+      }
 
       detectionElement.innerHTML = `
         <p>
@@ -179,7 +261,7 @@ runButton.addEventListener("click", async () => {
 
         <p>
           <strong>Confidence:</strong>
-          ${(detection.confidence * 100).toFixed(2)}%
+          ${(confidence * 100).toFixed(2)}%
         </p>
 
         <p>
@@ -194,7 +276,7 @@ runButton.addEventListener("click", async () => {
 
         <p>
           <strong>Action:</strong>
-          ${isSensitive ? "REDACTED" : "KEPT"}
+          ${action}
         </p>
       `;
 
@@ -206,7 +288,8 @@ runButton.addEventListener("click", async () => {
     status.textContent =
       `Detection complete. ` +
       `Found ${detections.length} object(s). ` +
-      `${redactedCount} sensitive object(s) redacted.`;
+      `${redactedCount} redacted. ` +
+      `${warningCount} warning(s).`;
 
   } catch (error) {
     console.error(error);
