@@ -11,7 +11,7 @@
       <header id="header">
         <div class="header-title">
           <span class="app-name">AI Assistant</span>
-          <span class="app-badge">Gemini</span>
+          <span class="app-badge">Gemini · V3</span>
         </div>
         <div class="header-right">
           <span id="status-dot" class="status-dot" title="Ready"></span>
@@ -42,21 +42,98 @@
         </p>
       </section>
 
-      <!-- V2 privacy status strip -->
+      <!-- V3 privacy status strip -->
       <section id="privacy-strip" class="privacy-strip">
         <div class="privacy-row">
           <label class="privacy-toggle">
             <input type="checkbox" id="privacy-enabled" checked />
             <span>Privacy Protection: <strong id="privacy-state">ON</strong></span>
           </label>
-          <button id="privacy-info-btn" class="icon-btn" title="About V2 privacy">?</button>
+          <div class="privacy-actions">
+            <button id="scan-btn" class="scan-btn" title="Scan page and generate sanitized screenshot">🛡 Scan Page</button>
+            <button id="debug-btn" class="icon-btn v3-badge" title="Show detection debug info">Debug</button>
+            <button id="privacy-info-btn" class="icon-btn" title="About V3 privacy">?</button>
+          </div>
         </div>
-        <div id="privacy-detail" class="privacy-detail">
-          Attaches a locally-sanitized snapshot of the current page to your
-          message. DOM fields only — <em>does not detect sensitive content
-          inside images</em>.
+
+        <!-- Info panel (toggled by ?) -->
+        <div id="privacy-detail" class="privacy-detail hidden">
+          <strong>V3 Hybrid Privacy Engine</strong><br>
+          Attaches a locally-sanitised snapshot to every message when ON.<br>
+          <em>DOM scan</em> — detects form fields by attribute analysis.<br>
+          <em>OCR</em> — reads visible text in images &amp; canvas (Tesseract.js, fully local).<br>
+          <em>Pattern</em> — regex classifies email, phone, card numbers, etc.<br>
+          <em>Context / NER</em> — label-value pairs and person-name heuristics.<br>
+          <em>Fusion</em> — multiple signals for the same region → higher confidence.<br>
+          All processing is <strong>local to your browser</strong>.
+          No raw screenshot or sensitive text ever leaves your device.
         </div>
+
+        <!-- Live status (progress / summary) -->
         <div id="privacy-status" class="privacy-status"></div>
+
+        <!-- V3 Debug panel (toggled by Debug button) -->
+        <div id="debug-panel" class="debug-panel hidden">
+          <div class="debug-header">
+            <span>Detection Log</span>
+            <button id="debug-close-btn" class="icon-btn">✕</button>
+          </div>
+          <div id="debug-list" class="debug-list">
+            <span class="debug-empty">No detections yet.</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================== -->
+      <!-- V3 SCAN RESULT PANEL — hidden until scan runs                  -->
+      <!-- ============================================================== -->
+      <section id="scan-result-panel" class="scan-result-panel hidden">
+        <!-- Detection summary cards -->
+        <div class="scan-summary-row">
+          <div class="scan-card">
+            <div class="scan-card-value" id="card-dom">—</div>
+            <div class="scan-card-label">DOM regions</div>
+          </div>
+          <div class="scan-card">
+            <div class="scan-card-value" id="card-ocr">—</div>
+            <div class="scan-card-label">OCR regions</div>
+          </div>
+          <div class="scan-card scan-card-accent">
+            <div class="scan-card-value" id="card-fused">—</div>
+            <div class="scan-card-label">Protected</div>
+          </div>
+        </div>
+
+        <!-- Privacy guarantees -->
+        <div class="scan-guarantees">
+          <span class="guarantee-item">✓ Processed locally</span>
+          <span class="guarantee-item">✓ Sensitive data redacted</span>
+          <span class="guarantee-item" id="guarantee-ocr">✓ OCR active</span>
+        </div>
+
+        <!-- Category chips row -->
+        <div id="scan-categories" class="scan-categories"></div>
+
+        <!-- Before / After tabs -->
+        <div class="shot-tabs">
+          <button class="shot-tab" id="tab-original" data-tab="original">Original</button>
+          <button class="shot-tab shot-tab-active" id="tab-sanitized" data-tab="sanitized">Sanitized ✓</button>
+        </div>
+        <div class="shot-viewer">
+          <!-- Original (local only, never sent to AI) -->
+          <div id="shot-original" class="shot-pane hidden">
+            <div class="shot-warning">⚠ For local comparison only. Never sent to AI.</div>
+            <img id="img-original" class="shot-img" alt="Original page screenshot" />
+          </div>
+          <!-- Sanitized (sent to AI) -->
+          <div id="shot-sanitized" class="shot-pane">
+            <div class="shot-ok">✓ This version is sent to AI — sensitive regions redacted</div>
+            <img id="img-sanitized" class="shot-img" alt="Sanitized screenshot" />
+          </div>
+        </div>
+
+        <!-- Close scan result -->
+        <button id="scan-result-close-btn" class="scan-result-close">✕ Close</button>
       </section>
 
       <main id="chat" class="chat" aria-live="polite"></main>
@@ -65,21 +142,40 @@
         <textarea
           id="input"
           rows="1"
-          placeholder="Ask something..."
+          placeholder="Ask something…"
           aria-label="Message"
         ></textarea>
         <button id="send-btn" class="primary-btn">Send</button>
       </footer>
     </div>
 
-    <!-- V1 -->
+    <!-- Zoom lightbox (shared between Original and Sanitized images) -->
+    <div id="zoom-overlay">
+      <button id="zoom-close" title="Close (Esc)">✕</button>
+      <img id="zoom-img" alt="Zoomed screenshot" />
+    </div>
+
+    <!-- V1: Gemini API client -->
     <script src="gemini.js"></script>
-    <!-- V2 privacy layer (side-panel context). Order matters:
-         coordinateUtils -> screenshotRedactor -> privacyEngine -->
+
+    <!-- V3 OCR library (Tesseract.js v4, UMD build — local, no CDN scripts) -->
+    <script src="lib/tesseract.min.js"></script>
+
+    <!-- V2 / V3 privacy modules — side-panel context.
+         Load order: coordinateUtils → screenshotRedactor → V3 analyzers → fusion → engine -->
     <script src="privacy/coordinateUtils.js"></script>
     <script src="privacy/screenshotRedactor.js"></script>
+
+    <!-- V3 new modules -->
+    <script src="privacy/patternAnalyzer.js"></script>
+    <script src="privacy/contextAnalyzer.js"></script>
+    <script src="privacy/ocrAnalyzer.js"></script>
+    <script src="privacy/detectionFusion.js"></script>
+
+    <!-- V3 orchestrator (replaces V2 privacyEngine.js in place) -->
     <script src="privacy/privacyEngine.js"></script>
-    <!-- app -->
+
+    <!-- App UI -->
     <script src="sidepanel.js"></script>
   </body>
 </html>

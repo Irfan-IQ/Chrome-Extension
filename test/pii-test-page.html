@@ -3,139 +3,409 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>V2 Privacy Engine — Test Page</title>
+    <title>Privacy Guard — Demo Page</title>
     <style>
-      body {
-        font-family: -apple-system, Arial, sans-serif;
-        max-width: 640px;
-        margin: 24px auto;
-        padding: 0 16px;
-        color: #1f2023;
+      :root {
+        --bg: #f7f8fa;
+        --card: #ffffff;
+        --border: #e2e5ea;
+        --text: #1a1d23;
+        --muted: #6b7280;
+        --accent: #1d4ed8;
+        --danger: #dc2626;
+        --green: #16a34a;
       }
-      h1 { font-size: 20px; }
-      p.note { color: #6b6f76; font-size: 13px; }
-      .field { margin: 12px 0; }
-      label { display: block; font-size: 13px; margin-bottom: 4px; }
-      input, textarea, select {
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        font-size: 14px;
+        line-height: 1.6;
+        padding: 24px 16px 48px;
+      }
+
+      /* ---------- Page header ---------- */
+      .page-header {
+        max-width: 760px;
+        margin: 0 auto 28px;
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+      }
+      .page-header-icon {
+        font-size: 36px;
+        line-height: 1;
+        flex-shrink: 0;
+      }
+      .page-header h1 { font-size: 22px; font-weight: 700; }
+      .page-header p  { color: var(--muted); font-size: 13px; margin-top: 4px; }
+      .badge {
+        display: inline-block;
+        font-size: 10px;
+        font-weight: 600;
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fcd34d;
+        border-radius: 999px;
+        padding: 2px 8px;
+        letter-spacing: 0.05em;
+      }
+
+      /* ---------- Layout ---------- */
+      .page-body {
+        max-width: 760px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      @media (max-width: 600px) {
+        .page-body { grid-template-columns: 1fr; }
+      }
+
+      /* ---------- Card ---------- */
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .card-header {
+        padding: 10px 16px;
+        background: #f0f6ff;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .card-header h2 { font-size: 13px; font-weight: 600; }
+      .card-body { padding: 16px; }
+
+      /* ---------- Profile card ---------- */
+      .profile-field {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        margin-bottom: 12px;
+      }
+      .profile-label {
+        font-size: 11px;
+        color: var(--muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .profile-value {
+        font-size: 14px;
+        color: var(--text);
+        font-weight: 500;
+        padding: 6px 10px;
+        background: #f9fafb;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+      }
+
+      /* ---------- Form section ---------- */
+      .form-field { margin-bottom: 12px; }
+      .form-field label {
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 4px;
+      }
+      .form-field input, .form-field select {
         width: 100%;
         padding: 8px 10px;
+        border: 1px solid var(--border);
+        border-radius: 7px;
         font-size: 14px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        box-sizing: border-box;
+        font-family: inherit;
+        background: #fff;
       }
-      .expect { color: #16a34a; font-size: 12px; }
-      .expect.no { color: #c0362c; }
+
+      /* ---------- ID Card (canvas) ---------- */
+      .id-card-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+      .id-card-hint {
+        font-size: 11px;
+        color: var(--muted);
+        font-style: italic;
+      }
+      canvas#id-card {
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        display: block;
+        max-width: 100%;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      }
+
+      /* ---------- Alert strip ---------- */
+      .alert-demo {
+        grid-column: 1 / -1;
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        border-radius: 10px;
+        padding: 12px 16px;
+        font-size: 13px;
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+      }
+      .alert-demo .alert-icon { font-size: 20px; flex-shrink: 0; }
+      .alert-demo strong { display: block; margin-bottom: 3px; }
+
+      /* ---------- Full-width section ---------- */
+      .full-col { grid-column: 1 / -1; }
+      .pii-text-block {
+        background: #f9fafb;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px 16px;
+        font-size: 14px;
+        line-height: 1.9;
+      }
+      .pii-lv { display: grid; grid-template-columns: 150px 1fr; gap: 4px 8px; }
+      .pii-lv .k { color: var(--muted); font-size: 13px; }
+      .pii-lv .v { font-weight: 500; }
+
+      /* ---------- Footer note ---------- */
+      .demo-footer {
+        max-width: 760px;
+        margin: 28px auto 0;
+        font-size: 11px;
+        color: var(--muted);
+        text-align: center;
+      }
     </style>
   </head>
   <body>
-    <h1>V2 Privacy Engine — Test Page</h1>
-    <p class="note">
-      Open the AI Assistant side panel (Privacy Protection ON) and send any
-      prompt while this tab is active. Watch the privacy status strip and the
-      service-worker / page console. Values below are dummy data.
+
+    <!-- ===================== Page header ===================== -->
+    <div class="page-header">
+      <div class="page-header-icon">🛡</div>
+      <div>
+        <h1>Privacy Guard — SIH Demo Page <span class="badge">DEMO DATA</span></h1>
+        <p>
+          Open the AI Assistant side panel and click <strong>🛡 Scan Page</strong>.<br>
+          The extension will detect PII from the DOM, forms, plain text, canvas,
+          and images — then show you a sanitised screenshot before any AI request.
+        </p>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- ===================== Alert strip ===================== -->
+      <div class="alert-demo">
+        <div class="alert-icon">⚠️</div>
+        <div>
+          <strong>Fictitious demo data only</strong>
+          All names, IDs, email addresses, phone numbers, and financial details
+          on this page are entirely made up and used solely to demonstrate the
+          V3 DOM + OCR privacy detection pipeline.
+        </div>
+      </div>
+
+      <!-- ===================== Customer Profile (plain text) ===================== -->
+      <div class="card">
+        <div class="card-header">
+          <span>👤</span>
+          <h2>Customer Profile <span class="badge">OCR + DOM</span></h2>
+        </div>
+        <div class="card-body">
+          <!-- Label-value pairs in plain text: OCR + context detector should catch these -->
+          <div class="pii-text-block">
+            <div class="pii-lv">
+              <span class="k">Name:</span>      <span class="v">Rahul Kumar</span>
+              <span class="k">Email:</span>     <span class="v">rahul.kumar@gmail.com</span>
+              <span class="k">Phone:</span>     <span class="v">+91 98765 43210</span>
+              <span class="k">Address:</span>   <span class="v">42 Anna Nagar, Chennai 600040</span>
+              <span class="k">Aadhaar:</span>   <span class="v">1234 5678 9012</span>
+              <span class="k">PAN:</span>       <span class="v">ABCDE1234F</span>
+              <span class="k">DOB:</span>       <span class="v">12 / 04 / 2001</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== ID Card (Canvas — OCR only) ===================== -->
+      <div class="card">
+        <div class="card-header">
+          <span>🪪</span>
+          <h2>Identity Card <span class="badge">OCR only</span></h2>
+        </div>
+        <div class="card-body">
+          <div class="id-card-wrap">
+            <p class="id-card-hint">
+              Rendered on &lt;canvas&gt; — DOM is blind to this.
+              Only OCR can detect the PII inside.
+            </p>
+            <canvas id="id-card" width="340" height="160"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== Account Form (DOM + OCR) ===================== -->
+      <div class="card">
+        <div class="card-header">
+          <span>📝</span>
+          <h2>Account Registration <span class="badge">DOM + OCR</span></h2>
+        </div>
+        <div class="card-body">
+          <form autocomplete="on" onsubmit="return false">
+            <div class="form-field">
+              <label for="f-name">Full Name</label>
+              <input type="text" id="f-name" name="name" value="Priya Sharma" />
+            </div>
+            <div class="form-field">
+              <label for="f-email">Email</label>
+              <input type="email" id="f-email" name="email" value="priya.sharma@example.com" />
+            </div>
+            <div class="form-field">
+              <label for="f-pass">Password</label>
+              <input type="password" id="f-pass" name="password" value="SecretPass@99" />
+            </div>
+            <div class="form-field">
+              <label for="f-phone">Mobile</label>
+              <input type="tel" id="f-phone" name="mobile" value="+91 87654 32109" />
+            </div>
+            <div class="form-field">
+              <label for="f-cc">Card Number</label>
+              <input type="text" id="f-cc" autocomplete="cc-number" value="4111 1111 1111 1111" />
+            </div>
+            <div class="form-field">
+              <label for="f-dob">Date of Birth</label>
+              <input type="date" id="f-dob" name="date_of_birth" value="1998-08-15" />
+            </div>
+            <div class="form-field">
+              <label for="f-addr">Address</label>
+              <input type="text" id="f-addr" name="address" value="45 MG Road, Bengaluru 560001" />
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ===================== Financial Details (DOM + Pattern) ===================== -->
+      <div class="card">
+        <div class="card-header">
+          <span>🏦</span>
+          <h2>Financial Details <span class="badge">DOM + Pattern</span></h2>
+        </div>
+        <div class="card-body">
+          <div class="profile-field">
+            <div class="profile-label">Bank Account</div>
+            <div class="profile-value">9876543210123456</div>
+          </div>
+          <div class="profile-field">
+            <div class="profile-label">IFSC Code</div>
+            <div class="profile-value">SBIN0001234</div>
+          </div>
+          <div class="profile-field">
+            <div class="profile-label">Credit Card</div>
+            <div class="profile-value">5500 0000 0000 0004</div>
+          </div>
+          <div class="profile-field">
+            <div class="profile-label">CVV</div>
+            <div class="profile-value">357</div>
+          </div>
+          <div class="profile-field">
+            <div class="profile-label">Statement Email</div>
+            <div class="profile-value">stmt.alert@rahul-bank.in</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== Not-sensitive (false positive guard) ===================== -->
+      <div class="card full-col">
+        <div class="card-header">
+          <span>✅</span>
+          <h2>Non-sensitive Content — should NOT be redacted</h2>
+        </div>
+        <div class="card-body">
+          <div class="pii-text-block">
+            Version: 3.14.159 &nbsp;·&nbsp;
+            Page ID: 00042 &nbsp;·&nbsp;
+            Price: ₹1,299 &nbsp;·&nbsp;
+            SKU: AB-12345-XY &nbsp;·&nbsp;
+            Discount: 15% &nbsp;·&nbsp;
+            The quick brown fox jumps over the lazy dog. &nbsp;·&nbsp;
+            Copyright © 2026 Example Corp. All rights reserved.
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-body -->
+
+    <p class="demo-footer">
+      All data on this page is fictitious and used solely for the SIH Privacy Guard demonstration.
     </p>
 
-    <form autocomplete="on" onsubmit="return false">
-      <div class="field">
-        <label for="f-name">Full name</label>
-        <input type="text" id="f-name" name="name" value="Test User" />
-        <span class="expect">expect: name</span>
-      </div>
+    <script>
+      // Draw the ID card on canvas (OCR-only detection target)
+      (function () {
+        var c = document.getElementById("id-card");
+        if (!c) return;
+        var ctx = c.getContext("2d");
+        var w = c.width, h = c.height;
 
-      <div class="field">
-        <label for="f-email">Contact</label>
-        <input type="email" id="f-email" name="email" value="test@example.com" />
-        <span class="expect">expect: email</span>
-      </div>
+        // Background gradient
+        var grad = ctx.createLinearGradient(0, 0, w, h);
+        grad.addColorStop(0, "#1e3a8a");
+        grad.addColorStop(1, "#1d4ed8");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.roundRect ? ctx.roundRect(0, 0, w, h, 10) : ctx.rect(0, 0, w, h);
+        ctx.fill();
 
-      <div class="field">
-        <label for="f-pass">Secret</label>
-        <input type="password" id="f-pass" name="password" value="secret123" />
-        <span class="expect">expect: password</span>
-      </div>
+        // Subtle stripe
+        ctx.fillStyle = "rgba(255,255,255,0.06)";
+        for (var i = 0; i < w; i += 20) {
+          ctx.fillRect(i, 0, 10, h);
+        }
 
-      <div class="field">
-        <label for="f-mobile">Reach me on</label>
-        <input type="tel" id="f-mobile" name="mobile" value="9876543210" />
-        <span class="expect">expect: phone</span>
-      </div>
+        // Header
+        ctx.fillStyle = "rgba(255,255,255,0.15)";
+        ctx.fillRect(0, 0, w, 32);
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 13px Arial";
+        ctx.fillText("🪪  NATIONAL ID CARD", 12, 21);
 
-      <div class="field">
-        <label for="f-addr">Where</label>
-        <input type="text" id="f-addr" name="address" value="123 Test Street" />
-        <span class="expect">expect: address</span>
-      </div>
+        // Photo placeholder
+        ctx.fillStyle = "rgba(255,255,255,0.1)";
+        ctx.fillRect(12, 44, 60, 70);
+        ctx.fillStyle = "rgba(255,255,255,0.35)";
+        ctx.font = "28px Arial";
+        ctx.fillText("👤", 18, 94);
 
-      <div class="field">
-        <label for="f-age">How old</label>
-        <input type="number" id="f-age" name="age" value="25" />
-        <span class="expect">expect: age</span>
-      </div>
+        // Fields
+        ctx.textBaseline = "top";
+        ctx.font = "10px Arial";
+        ctx.fillStyle = "rgba(255,255,255,0.55)";
+        ctx.fillText("NAME",     84, 44);
+        ctx.fillText("ID NUMBER",84, 76);
+        ctx.fillText("DOB",      84, 108);
 
-      <div class="field">
-        <label for="f-user">Handle</label>
-        <input type="text" id="f-user" name="username" value="testuser" />
-        <span class="expect">expect: username</span>
-      </div>
+        ctx.font = "bold 13px Arial";
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText("Rahul Kumar",         84, 56);
+        ctx.fillText("4587 2938 1023 9876", 84, 88);
+        ctx.fillText("12 / 04 / 2001",      84, 120);
 
-      <div class="field">
-        <label for="f-dob">Born on</label>
-        <input type="date" id="f-dob" name="date_of_birth" />
-        <span class="expect">expect: date_of_birth</span>
-      </div>
-
-      <div class="field">
-        <label for="f-cc">Payment</label>
-        <input
-          type="text"
-          id="f-cc"
-          autocomplete="cc-number"
-          value="4111111111111111"
-        />
-        <span class="expect">expect: credit_card</span>
-      </div>
-
-      <!-- aria-label only, no name/id keyword -->
-      <div class="field">
-        <label>&nbsp;</label>
-        <input type="text" aria-label="Email address" value="aria@example.com" />
-        <span class="expect">expect: email (via aria-label)</span>
-      </div>
-
-      <!-- MUST NOT be flagged -->
-      <div class="field">
-        <label for="f-search">Search the site</label>
-        <input
-          type="text"
-          id="f-search"
-          name="ordinary_search"
-          placeholder="Search"
-        />
-        <span class="expect no">expect: NOT sensitive</span>
-      </div>
-
-      <div class="field">
-        <label for="f-msg">Message</label>
-        <textarea id="f-msg" name="comments" rows="3">Just a normal comment.</textarea>
-        <span class="expect no">expect: NOT sensitive</span>
-      </div>
-
-      <div class="field">
-        <label for="f-country">Country</label>
-        <select id="f-country" name="country">
-          <option>India</option>
-          <option>United States</option>
-        </select>
-        <span class="expect no">expect: NOT sensitive</span>
-      </div>
-    </form>
-
-    <h2 style="font-size: 15px">Cross-origin iframe (should be "uninspectable")</h2>
-    <iframe
-      src="https://example.com/"
-      title="cross origin"
-      style="width: 100%; height: 120px; border: 1px solid #ccc"
-    ></iframe>
+        // Bottom strip
+        ctx.fillStyle = "rgba(0,0,0,0.2)";
+        ctx.fillRect(0, h - 24, w, 24);
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.font = "9px Arial";
+        ctx.fillText("Valid till: 2030-04-12   |   Issued by: Demo Authority India", 10, h - 13);
+      })();
+    </script>
   </body>
 </html>

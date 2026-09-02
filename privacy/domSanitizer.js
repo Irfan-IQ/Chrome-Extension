@@ -46,8 +46,17 @@
     if (saved.length) restore();
 
     for (var i = 0; i < detections.length; i++) {
-      var el = detections[i] && detections[i]._el;
+      var det = detections[i];
+      var el  = det && det._el;
       if (!el || !el.isConnected) continue;
+
+      // Text-node detections (emails in labels etc.) must NOT be DOM-mutated —
+      // changing their text would break page layout. They are screenshot-only
+      // masks. Record them as a noop so restore() ignores them.
+      if (det._isTextNode) {
+        saved.push({ el: el, kind: "text-node-noop" });
+        continue;
+      }
 
       try {
         if (isFormFieldWithValue(el)) {

@@ -118,6 +118,33 @@
       if (t && t.length <= 40) parts.push(t);
     }
 
+    // 6. Walk UP ancestor chain looking for a container that has a short
+    //    text-only sibling or heading — handles Google Forms, Material-UI,
+    //    Ant Design, etc. where labels are divs above inputs (up to 5 levels).
+    if (parts.length === 0 && el.closest) {
+      var node = el.parentElement;
+      for (var lvl = 0; lvl < 5 && node; lvl++) {
+        // Try: previous sibling of this ancestor
+        var ps = node.previousElementSibling;
+        if (ps) {
+          var psText = (ps.textContent || "").trim();
+          if (psText && psText.length <= 80) { parts.push(psText); break; }
+        }
+        // Try: first child text of parent that is clearly a heading / label role
+        var fc = node.firstElementChild;
+        if (fc && fc !== el) {
+          var fcText = (fc.textContent || "").trim();
+          // Only grab it if it's short and looks like a label (not the input itself)
+          if (fcText && fcText.length <= 60 &&
+              !/^\s*(password|email)\s*$/i.test(fcText) === false ||
+              fcText.length <= 60) {
+            parts.push(fcText); break;
+          }
+        }
+        node = node.parentElement;
+      }
+    }
+
     return lc(parts.join(" ").replace(/\s+/g, " ")).slice(0, 200);
   }
 
@@ -237,6 +264,14 @@
         (hasToken(tk, "name") && hasAnyToken(tk, ["full", "first", "last", "given", "middle", "your", "legal", "real"]))
       )
         return { category: CATEGORY.NAME, confidence: "medium" };
+
+      // Plain "Name" label alone (common in simple forms / Google Forms):
+      // accept medium confidence when the *only* meaningful token is "name" and
+      // the element is a plain text input (not search, number, etc.)
+      if (hasToken(tk, "name") && s.type !== "search" && s.type !== "number" &&
+          s.type !== "email" && s.type !== "tel" && s.tag !== "select") {
+        return { category: CATEGORY.NAME, confidence: "medium" };
+      }
     }
 
     return null;
@@ -307,6 +342,80 @@
 
   var SCAN_SELECTOR =
     'input, textarea, select, [contenteditable=""], [contenteditable="true"]';
+
+  // Regex for structural PII visible in static DOM text (not form fields).
+  // These patterns are distinctive enough to flag without needing label context.
+  var TEXT_NODE_PATTERNS = [
+    { re: /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/, category: CATEGORY.EMAIL },
+    { re: /\b\d{3}[-\s]\d{2}[-\s]\d{4}\b/, category: "ssn" },
+  ];
+
+  // Scan visible TEXT nodes in an element's subtree for structural PII patterns.
+  // Returns detections (with _el = the element whose rect we use for masking).
+  function scanTextNodes(doc, viewport, frameOffset) {
+    var out = [];
+    // Walk label, span, div, p, td elements that may contain PII as plain text.
+    var candidates;
+    try {
+      candidates = doc.querySelectorAll("label, span, p, div, td, li");
+    } catch (e) { return out; }
+
+    var seen = new Set ? new Set() : { _s: [], has: function(v){ return this._s.indexOf(v) !== -1; }, add: function(v){ this._s.push(v); } };
+
+    for (var i = 0; i < candidates.length; i++) {
+      var el = candidates[i];
+      // Skip elements that contain child elements (to avoid double-counting).
+      // We only want leaf-ish nodes.
+      if (el.children && el.children.length > 3) continue;
+      var text = (el.textContent || "").trim();
+      if (!text || text.length > 300) continue;
+
+      for (var pi = 0; pi < TEXT_NODE_PATTERNS.length; pi++) {
+        var pat = TEXT_NODE_PATTERNS[pi];
+        var m = text.match(pat.re);
+        if (!m) continue;
+        var matched = m[0];
+        // Deduplicate by matched text to avoid flagging the same email 10 times
+        if (seen.has(matched)) continue;
+        seen.add(matched);
+
+        var rect;
+        try { rect = el.getBoundingClientRect(); } catch (e) { continue; }
+        var vRect = {
+          left: rect.left + frameOffset.x,
+          top:  rect.top  + frameOffset.y,
+          width: rect.width,
+          height: rect.height,
+        };
+        if (!CU.intersectsViewport(
+              { x: vRect.left, y: vRect.top, width: vRect.width, height: vRect.height },
+              viewport.width, viewport.height)) continue;
+        if (vRect.width < 4 || vRect.height < 4) continue;
+
+        try {
+          console.debug("[V3 dom] Detected " + pat.category + " in text node");
+        } catch (e) {}
+
+        out.push({
+          category: pat.category,
+          elementType: el.tagName,
+          type: null,
+          selector: buildSelector(el),
+          rect: {
+            x: Math.round(vRect.left),
+            y: Math.round(vRect.top),
+            width: Math.round(vRect.width),
+            height: Math.round(vRect.height),
+          },
+          confidence: "high",
+          _el: el,
+          _isTextNode: true,   // tells domSanitizer to mask in screenshot only
+        });
+        break; // one pattern match per element is enough
+      }
+    }
+    return out;
+  }
 
   function scanDocument(doc, viewport, frameOffset) {
     var out = [];
@@ -412,6 +521,10 @@
         });
       }
     }
+
+    // Also scan visible text nodes for structural PII (emails in labels, etc.)
+    var textNodeDets = scanTextNodes(doc, viewport, frameOffset);
+    out = out.concat(textNodeDets);
 
     return { detections: out, uninspectable: uninspectable };
   }
