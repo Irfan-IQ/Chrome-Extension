@@ -49,10 +49,11 @@
   // ---------------------------------------------------------------------------
   // Modules injected into the PAGE (same as V2 — unchanged)
   // ---------------------------------------------------------------------------
+  // V4: domSanitizer.js removed — page is never mutated.
+  // OffscreenCanvas handles all redaction in the side-panel process.
   var PAGE_MODULES = [
     "privacy/coordinateUtils.js",
     "privacy/detector.js",
-    "privacy/domSanitizer.js",
     "privacy/contentScript.js",
   ];
 
@@ -227,23 +228,21 @@
     progress("Injecting privacy engine…");
     await injectModules(tab.id);
 
-    // ---- Step 2b: Capture "before" screenshot (BEFORE DOM redact) ----------
-    // This is shown only in the local UI for before/after comparison.
-    // It is NEVER sent to any external service.
+    // ---- Step 2b: Capture "before" screenshot for local UI comparison -------
+    // Never sent to any external service.
     var beforeScreenshot = null;
     try {
       beforeScreenshot = await chrome.tabs.captureVisibleTab(tab.windowId, { format: "png" });
     } catch (e) {
-      // Non-fatal — we just won't show the before screenshot
-      console.warn("[V3] Before-screenshot capture failed:", e && e.message);
+      console.warn("[V4] Before-screenshot capture failed:", e && e.message);
     }
 
-    // ---- Step 3: DOM scan + redact -----------------------------------------
-    progress("Scanning DOM & temporarily redacting sensitive fields…");
-    var redactRes = await sendToPage(tab.id, { type: "PRIVACY_REDACT" });
+    // ---- Step 3: DOM scan (read-only — no page mutation) -------------------
+    progress("Scanning DOM for sensitive fields…");
+    var redactRes = await sendToPage(tab.id, { type: "PRIVACY_SCAN" });
     if (!redactRes || !redactRes.ok) {
       throw new PrivacyError(
-        "DOM scan/redaction failed (" +
+        "DOM scan failed (" +
           ((redactRes && redactRes.error) || "no response") + ")."
       );
     }
@@ -258,7 +257,8 @@
 
     try {
       // ---- Step 4: Capture visible tab -------------------------------------
-      // At this point DOM fields show "[REDACTED]" — OCR will NOT see real values.
+      // Page is unmodified. Raw screenshot stays local; OffscreenCanvas redraws
+      // opaque blocks over it before anything is sent to Gemini.
       progress("Capturing visible tab…");
       var rawShot;
       try {
@@ -359,11 +359,12 @@
       // ---- Step 10: Build sanitized DOM for Gemini -------------------------
       sanitizedDOM = buildSanitizedDOM(fusedDetections, uninspectable, viewport, ocrEnabled);
 
-    } finally {
-      // ALWAYS restore, even on error. Watchdog in the page is the backup.
-      progress("Restoring original page…");
-      await sendToPage(tab.id, { type: "PRIVACY_RESTORE" });
+    } catch (e) {
+      // Re-throw PrivacyErrors as-is; wrap unexpected errors.
+      if (e && e.name === "PrivacyError") throw e;
+      throw new PrivacyError("Unexpected error during privacy scan: " + ((e && e.message) || String(e)));
     }
+    // V4: no DOM restore — page was never mutated.
 
     progress("Ready.");
     return {

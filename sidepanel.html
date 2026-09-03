@@ -161,8 +161,9 @@
     <!-- V3 OCR library (Tesseract.js v4, UMD build — local, no CDN scripts) -->
     <script src="lib/tesseract.min.js"></script>
 
-    <!-- V2 / V3 privacy modules — side-panel context.
-         Load order: coordinateUtils → screenshotRedactor → V3 analyzers → fusion → engine -->
+    <!-- Privacy modules — side-panel context.
+         Load order: coordinateUtils → screenshotRedactor → analyzers → fusion → engine
+         Note: domSanitizer.js is removed in V4 — page mutation is no longer needed. -->
     <script src="privacy/coordinateUtils.js"></script>
     <script src="privacy/screenshotRedactor.js"></script>
 

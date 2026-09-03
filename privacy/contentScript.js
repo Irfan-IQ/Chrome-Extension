@@ -1,101 +1,60 @@
 // privacy/contentScript.js  —  runs in the PAGE (content-script isolated world)
 //
 // Thin message bridge between the side panel and the page-context privacy
-// modules (detector.js + domSanitizer.js). Injected on demand via
-// chrome.scripting.executeScript.
+// modules (detector.js). Injected on demand via chrome.scripting.executeScript.
 //
-// Two messages:
-//   { type: "PRIVACY_REDACT" }  -> scan live DOM, save originals, redact,
-//                                  arm a watchdog, return detections+viewport.
-//   { type: "PRIVACY_RESTORE" } -> cancel watchdog, restore DOM.
+// Message handled:
+//   { type: "PRIVACY_SCAN" }  -> scan live DOM, return detections + viewport.
+//                                Does NOT mutate the page.
+//   { type: "PRIVACY_PING" }  -> health-check, returns ready flag.
 //
-// WATCHDOG: after redacting we start an 8s timer that auto-restores the page.
-// This is the safety net for "the side panel crashed / was closed before it
-// could send PRIVACY_RESTORE" — the user's page must never stay redacted.
+// V4 design note: DOM mutation (the old "PRIVACY_REDACT / PRIVACY_RESTORE"
+// pattern) has been removed. Redaction is done entirely in the side panel using
+// OffscreenCanvas — opaque blocks are painted over the raw screenshot before it
+// is sent anywhere. The raw screenshot never leaves the local pipeline, so there
+// is no reason to mutate the page:
+//   1. OffscreenCanvas is what actually sanitises the screenshot sent to Gemini.
+//   2. OCR (Tesseract.js) runs entirely locally; it never forwards text values.
+//   3. DOM mutation risked breaking React/Vue/Angular controlled-input state.
+//   4. The 8-second watchdog timer + restore logic is no longer needed.
 
 (function () {
   "use strict";
 
-  // Guard against re-injection: keep exactly one listener + one state object.
-  if (window.__V2_PRIVACY_BRIDGE__) {
+  // Guard against re-injection: keep exactly one listener.
+  if (window.__PRIVACY_BRIDGE__) {
     return;
   }
-  window.__V2_PRIVACY_BRIDGE__ = { installed: true };
+  window.__PRIVACY_BRIDGE__ = { installed: true };
 
-  var WATCHDOG_MS = 8000;
-  var watchdog = null;
-
-  function armWatchdog() {
-    clearWatchdog();
-    watchdog = setTimeout(function () {
-      try {
-        if (window.PrivacyDomSanitizer && window.PrivacyDomSanitizer.isDirty()) {
-          window.PrivacyDomSanitizer.restore();
-          console.debug("[V2 privacy] watchdog restored the page");
-        }
-      } catch (e) {}
-      watchdog = null;
-    }, WATCHDOG_MS);
-  }
-
-  function clearWatchdog() {
-    if (watchdog) {
-      clearTimeout(watchdog);
-      watchdog = null;
-    }
-  }
-
-  function handleRedact() {
+  function handleScan() {
     try {
-      if (!window.PrivacyDetector || !window.PrivacyDomSanitizer) {
-        return { ok: false, error: "privacy modules not loaded" };
+      if (!window.PrivacyDetector) {
+        return { ok: false, error: "PrivacyDetector not loaded" };
       }
 
-      // Scan RIGHT NOW — never a stale snapshot (dynamic pages).
+      // Scan the live DOM right now — never use a stale snapshot.
       var scan = window.PrivacyDetector.scan();
 
-      // Save originals + redact. domSanitizer stores state internally.
-      window.PrivacyDomSanitizer.redact(scan.detections);
-
-      // Arm the auto-restore safety net.
-      armWatchdog();
-
-      // Strip the live element handle (_el) before it leaves the page.
+      // Strip the live element handle (_el) before the result leaves the page;
+      // it is a direct DOM reference that cannot be serialised via postMessage.
       var detections = scan.detections.map(function (d) {
         return {
-          category: d.category,
+          category:    d.category,
           elementType: d.elementType,
-          type: d.type,
-          selector: d.selector,
-          rect: d.rect,
-          confidence: d.confidence,
+          type:        d.type,
+          selector:    d.selector,
+          rect:        d.rect,
+          confidence:  d.confidence,
         };
       });
 
       return {
-        ok: true,
-        detections: detections,
+        ok:            true,
+        detections:    detections,
         uninspectable: scan.uninspectable,
-        viewport: scan.viewport,
+        viewport:      scan.viewport,
       };
-    } catch (e) {
-      // Best-effort restore if we half-redacted, then report failure so the
-      // side panel FAILS CLOSED (does not send anything to Gemini).
-      try {
-        if (window.PrivacyDomSanitizer) window.PrivacyDomSanitizer.restore();
-      } catch (_) {}
-      clearWatchdog();
-      return { ok: false, error: (e && e.message) || String(e) };
-    }
-  }
-
-  function handleRestore() {
-    clearWatchdog();
-    try {
-      var n = window.PrivacyDomSanitizer
-        ? window.PrivacyDomSanitizer.restore()
-        : 0;
-      return { ok: true, restored: n };
     } catch (e) {
       return { ok: false, error: (e && e.message) || String(e) };
     }
@@ -103,19 +62,31 @@
 
   chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
     if (!msg || typeof msg.type !== "string") return;
-    if (msg.type === "PRIVACY_REDACT") {
-      sendResponse(handleRedact());
-      return; // synchronous response
-    }
-    if (msg.type === "PRIVACY_RESTORE") {
-      sendResponse(handleRestore());
+
+    // New canonical message name.
+    if (msg.type === "PRIVACY_SCAN") {
+      sendResponse(handleScan());
       return;
     }
+
+    // Back-compat: old side-panel code may still send PRIVACY_REDACT.
+    // Treat it as a plain scan — no DOM mutation.
+    if (msg.type === "PRIVACY_REDACT") {
+      sendResponse(handleScan());
+      return;
+    }
+
+    // PRIVACY_RESTORE is now a no-op (nothing to undo).
+    if (msg.type === "PRIVACY_RESTORE") {
+      sendResponse({ ok: true, restored: 0 });
+      return;
+    }
+
     if (msg.type === "PRIVACY_PING") {
-      sendResponse({ ok: true, ready: !!(window.PrivacyDetector && window.PrivacyDomSanitizer) });
+      sendResponse({ ok: true, ready: !!window.PrivacyDetector });
       return;
     }
   });
 
-  console.debug("[V2 privacy] content bridge installed");
+  console.debug("[V4 privacy] content bridge installed (scan-only, no DOM mutation)");
 })();
