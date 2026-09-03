@@ -15,10 +15,9 @@ let detector: any = null;
 let detectorBackend: "webgpu" | "wasm" | null = null;
 
 async function createDetector() {
-  // Try WebGPU first.
   if ("gpu" in navigator) {
     try {
-      console.log("Trying YOLOS-Tiny with WebGPU...");
+      console.log("Trying WebGPU...");
 
       const webgpuDetector = await pipeline(
         "object-detection",
@@ -31,19 +30,18 @@ async function createDetector() {
 
       detectorBackend = "webgpu";
 
-      console.log("YOLOS-Tiny running with WebGPU.");
+      console.log("Using WebGPU.");
 
       return webgpuDetector;
     } catch (error) {
       console.warn(
-        "WebGPU initialization failed. Falling back to WASM.",
+        "WebGPU failed. Falling back to WASM.",
         error
       );
     }
   }
 
-  // WASM fallback.
-  console.log("Loading YOLOS-Tiny with WASM...");
+  console.log("Using WASM...");
 
   const wasmDetector = await pipeline(
     "object-detection",
@@ -56,7 +54,7 @@ async function createDetector() {
 
   detectorBackend = "wasm";
 
-  console.log("YOLOS-Tiny running with WASM.");
+  console.log("Using WASM.");
 
   return wasmDetector;
 }
@@ -93,9 +91,6 @@ export async function detectObjects(
 
   const rawImage = RawImage.fromCanvas(tempCanvas);
 
-  // Keep this low so that we don't lose
-  // 70–90% confidence detections before
-  // the red-outline logic sees them.
   const results = await detectorInstance(
     rawImage,
     {

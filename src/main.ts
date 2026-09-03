@@ -20,9 +20,20 @@ const status = document.getElementById(
   "status"
 ) as HTMLParagraphElement;
 
-const resultsContainer = document.getElementById(
-  "results"
-) as HTMLDivElement;
+const detectedCountElement =
+  document.getElementById(
+    "detectedCount"
+  ) as HTMLSpanElement;
+
+const redactedCountElement =
+  document.getElementById(
+    "redactedCount"
+  ) as HTMLSpanElement;
+
+const warningCountElement =
+  document.getElementById(
+    "warningCount"
+  ) as HTMLSpanElement;
 
 const ctx = canvas.getContext("2d");
 
@@ -36,12 +47,11 @@ const SENSITIVE_LABELS = new Set([
   "person",
 ]);
 
-// Slightly smaller than the previous 15x30 padding.
 const PERSON_PADDING_X = 10;
 const PERSON_PADDING_Y = 20;
 
 // ----------------------------------------
-// Image selection
+// Load image
 // ----------------------------------------
 
 fileInput.addEventListener("change", () => {
@@ -58,8 +68,11 @@ fileInput.addEventListener("change", () => {
   selectedImage.onload = () => {
     image = selectedImage;
 
-    canvas.width = selectedImage.naturalWidth;
-    canvas.height = selectedImage.naturalHeight;
+    canvas.width =
+      selectedImage.naturalWidth;
+
+    canvas.height =
+      selectedImage.naturalHeight;
 
     ctx.clearRect(
       0,
@@ -74,7 +87,9 @@ fileInput.addEventListener("change", () => {
       0
     );
 
-    resultsContainer.innerHTML = "";
+    detectedCountElement.textContent = "0";
+    redactedCountElement.textContent = "0";
+    warningCountElement.textContent = "0";
 
     status.textContent =
       "Image loaded. Ready for detection.";
@@ -95,7 +110,7 @@ fileInput.addEventListener("change", () => {
 });
 
 // ----------------------------------------
-// Detection + privacy visualization
+// Run detection
 // ----------------------------------------
 
 runButton.addEventListener("click", async () => {
@@ -110,12 +125,10 @@ runButton.addEventListener("click", async () => {
     runButton.disabled = true;
 
     status.textContent =
-      "Loading YOLOS-Tiny...";
+      "Running detection...";
 
     const detections: Detection[] =
       await detectObjects(image);
-
-    const backend = getDetectorBackend();
 
     // Restore original image.
     ctx.clearRect(
@@ -131,29 +144,13 @@ runButton.addEventListener("click", async () => {
       0
     );
 
-    resultsContainer.innerHTML = "";
-
     let redactedCount = 0;
     let warningCount = 0;
 
-    // Detection list only shows:
-    // person >= 75%
-    // everything else >= 80%
-    const displayedDetections =
-      detections.filter((detection) => {
-        if (
-          detection.label === "person"
-        ) {
-          return detection.confidence >= 0.75;
-        }
-
-        return detection.confidence >= 0.80;
-      });
-
-    // ----------------------------------------
-    // Process every model detection for the
-    // privacy visualization.
-    // ----------------------------------------
+    // Every model detection returned after the
+    // model's threshold counts as a detection.
+    detectedCountElement.textContent =
+      String(detections.length);
 
     for (const detection of detections) {
       let {
@@ -171,169 +168,100 @@ runButton.addEventListener("click", async () => {
           detection.label
         );
 
-      // Only sensitive objects receive
-      // privacy visualization.
-      if (isSensitive) {
-        // Slightly reduced padding around person.
-        if (
-          detection.label === "person"
-        ) {
-          xmin -= PERSON_PADDING_X;
-          ymin -= PERSON_PADDING_Y;
-          xmax += PERSON_PADDING_X;
-          ymax += PERSON_PADDING_Y;
-        }
-
-        // Clamp coordinates.
-        xmin = Math.max(
-          0,
-          xmin
-        );
-
-        ymin = Math.max(
-          0,
-          ymin
-        );
-
-        xmax = Math.min(
-          canvas.width,
-          xmax
-        );
-
-        ymax = Math.min(
-          canvas.height,
-          ymax
-        );
-
-        const width =
-          xmax - xmin;
-
-        const height =
-          ymax - ymin;
-
-        // ----------------------------------
-        // 90%+ = full redaction
-        // ----------------------------------
-
-        if (confidence >= 0.90) {
-          ctx.fillStyle = "black";
-
-          ctx.fillRect(
-            xmin,
-            ymin,
-            width,
-            height
-          );
-
-          redactedCount++;
-        }
-
-        // ----------------------------------
-        // 70%–89.99% = red warning outline
-        // ----------------------------------
-
-        else if (confidence >= 0.70) {
-          ctx.strokeStyle = "red";
-          ctx.lineWidth = 4;
-
-          ctx.strokeRect(
-            xmin,
-            ymin,
-            width,
-            height
-          );
-
-          warningCount++;
-        }
-
-        // Below 70% = no privacy visualization.
-      }
-    }
-
-    // ----------------------------------------
-    // Display only qualifying detections.
-    // ----------------------------------------
-
-    for (const detection of displayedDetections) {
-      const {
-        xmin,
-        ymin,
-        xmax,
-        ymax,
-      } = detection.bbox;
-
-      const isSensitive =
-        SENSITIVE_LABELS.has(
-          detection.label
-        );
-
-      let action = "KEPT";
-
-      if (isSensitive) {
-        if (detection.confidence >= 0.90) {
-          action = "REDACTED";
-        } else if (
-          detection.confidence >= 0.70
-        ) {
-          action = "WARNING";
-        }
+      // Only sensitive objects get
+      // redaction/warning treatment.
+      if (!isSensitive) {
+        continue;
       }
 
-      const detectionElement =
-        document.createElement("div");
+      // Slight padding around people.
+      if (detection.label === "person") {
+        xmin -= PERSON_PADDING_X;
+        ymin -= PERSON_PADDING_Y;
+        xmax += PERSON_PADDING_X;
+        ymax += PERSON_PADDING_Y;
+      }
 
-      detectionElement.className =
-        "detection";
-
-      detectionElement.innerHTML = `
-        <p>
-          <strong>Label:</strong>
-          ${detection.label}
-        </p>
-
-        <p>
-          <strong>Confidence:</strong>
-          ${(detection.confidence * 100).toFixed(2)}%
-        </p>
-
-        <p>
-          <strong>Bounding Box:</strong>
-          [
-            ${Math.round(xmin)},
-            ${Math.round(ymin)},
-            ${Math.round(xmax)},
-            ${Math.round(ymax)}
-          ]
-        </p>
-
-        <p>
-          <strong>Action:</strong>
-          ${action}
-        </p>
-      `;
-
-      resultsContainer.appendChild(
-        detectionElement
+      // Keep the box inside the image.
+      xmin = Math.max(
+        0,
+        xmin
       );
+
+      ymin = Math.max(
+        0,
+        ymin
+      );
+
+      xmax = Math.min(
+        canvas.width,
+        xmax
+      );
+
+      ymax = Math.min(
+        canvas.height,
+        ymax
+      );
+
+      const width =
+        xmax - xmin;
+
+      const height =
+        ymax - ymin;
+
+      // ----------------------------------
+      // 90%+ = black redaction
+      // ----------------------------------
+
+      if (confidence >= 0.90) {
+        ctx.fillStyle = "black";
+
+        ctx.fillRect(
+          xmin,
+          ymin,
+          width,
+          height
+        );
+
+        redactedCount++;
+      }
+
+      // ----------------------------------
+      // 70%–89.99% = red outline
+      // ----------------------------------
+
+      else if (confidence >= 0.70) {
+        ctx.strokeStyle = "red";
+        ctx.lineWidth = 4;
+
+        ctx.strokeRect(
+          xmin,
+          ymin,
+          width,
+          height
+        );
+
+        warningCount++;
+      }
     }
 
-    // ----------------------------------------
-    // Status
-    // ----------------------------------------
+    redactedCountElement.textContent =
+      String(redactedCount);
+
+    warningCountElement.textContent =
+      String(warningCount);
+
+    const backend =
+      getDetectorBackend();
 
     status.textContent =
-      `Detection complete. ` +
-      `Found ${detections.length} object(s). ` +
-      `Showing ${displayedDetections.length}. ` +
-      `${redactedCount} redacted. ` +
-      `${warningCount} warning(s). ` +
-      `Backend: ${backend ?? "unknown"}.`;
+      `Detection complete · ${backend ?? "unknown"}`;
 
   } catch (error) {
     console.error(error);
 
     status.textContent =
-      "Detection failed. Check the browser console.";
+      "Detection failed. Check the console.";
   } finally {
     runButton.disabled = false;
   }
