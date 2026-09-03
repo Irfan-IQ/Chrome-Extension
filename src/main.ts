@@ -1,5 +1,6 @@
 import {
   detectObjects,
+  getDetectorBackend,
   type Detection,
 } from "./detector";
 
@@ -31,16 +32,13 @@ if (!ctx) {
 
 let image: HTMLImageElement | null = null;
 
-// Current sensitive category.
-// Only persons are subject to redaction/warning.
 const SENSITIVE_LABELS = new Set([
   "person",
 ]);
 
-// Extra padding around person detections so the
-// full face/head is less likely to escape the box.
-const PERSON_PADDING_X = 15;
-const PERSON_PADDING_Y = 30;
+// Slightly smaller than the previous 15x30 padding.
+const PERSON_PADDING_X = 10;
+const PERSON_PADDING_Y = 20;
 
 // ----------------------------------------
 // Image selection
@@ -55,11 +53,13 @@ fileInput.addEventListener("change", () => {
 
   const url = URL.createObjectURL(file);
 
-  image = new Image();
+  const selectedImage = new Image();
 
-  image.onload = () => {
-    canvas.width = image!.naturalWidth;
-    canvas.height = image!.naturalHeight;
+  selectedImage.onload = () => {
+    image = selectedImage;
+
+    canvas.width = selectedImage.naturalWidth;
+    canvas.height = selectedImage.naturalHeight;
 
     ctx.clearRect(
       0,
@@ -69,7 +69,7 @@ fileInput.addEventListener("change", () => {
     );
 
     ctx.drawImage(
-      image!,
+      selectedImage,
       0,
       0
     );
@@ -82,7 +82,7 @@ fileInput.addEventListener("change", () => {
     URL.revokeObjectURL(url);
   };
 
-  image.onerror = () => {
+  selectedImage.onerror = () => {
     image = null;
 
     status.textContent =
@@ -91,11 +91,11 @@ fileInput.addEventListener("change", () => {
     URL.revokeObjectURL(url);
   };
 
-  image.src = url;
+  selectedImage.src = url;
 });
 
 // ----------------------------------------
-// Detection + redaction
+// Detection + privacy visualization
 // ----------------------------------------
 
 runButton.addEventListener("click", async () => {
@@ -110,13 +110,14 @@ runButton.addEventListener("click", async () => {
     runButton.disabled = true;
 
     status.textContent =
-      "Running YOLOS-Tiny...";
+      "Loading YOLOS-Tiny...";
 
     const detections: Detection[] =
       await detectObjects(image);
 
-    // Restore the original image before applying
-    // the current detection results.
+    const backend = getDetectorBackend();
+
+    // Restore original image.
     ctx.clearRect(
       0,
       0,
@@ -135,6 +136,25 @@ runButton.addEventListener("click", async () => {
     let redactedCount = 0;
     let warningCount = 0;
 
+    // Detection list only shows:
+    // person >= 75%
+    // everything else >= 80%
+    const displayedDetections =
+      detections.filter((detection) => {
+        if (
+          detection.label === "person"
+        ) {
+          return detection.confidence >= 0.75;
+        }
+
+        return detection.confidence >= 0.80;
+      });
+
+    // ----------------------------------------
+    // Process every model detection for the
+    // privacy visualization.
+    // ----------------------------------------
+
     for (const detection of detections) {
       let {
         xmin,
@@ -151,12 +171,10 @@ runButton.addEventListener("click", async () => {
           detection.label
         );
 
-      // ------------------------------------
-      // Only sensitive labels get privacy UI
-      // ------------------------------------
-
+      // Only sensitive objects receive
+      // privacy visualization.
       if (isSensitive) {
-        // Expand person bounding box.
+        // Slightly reduced padding around person.
         if (
           detection.label === "person"
         ) {
@@ -166,7 +184,7 @@ runButton.addEventListener("click", async () => {
           ymax += PERSON_PADDING_Y;
         }
 
-        // Keep coordinates inside canvas.
+        // Clamp coordinates.
         xmin = Math.max(
           0,
           xmin
@@ -193,9 +211,9 @@ runButton.addEventListener("click", async () => {
         const height =
           ymax - ymin;
 
-        // --------------------------------
-        // >= 90% = full black redaction
-        // --------------------------------
+        // ----------------------------------
+        // 90%+ = full redaction
+        // ----------------------------------
 
         if (confidence >= 0.90) {
           ctx.fillStyle = "black";
@@ -210,9 +228,9 @@ runButton.addEventListener("click", async () => {
           redactedCount++;
         }
 
-        // --------------------------------
-        // 70% - 89.99% = warning outline
-        // --------------------------------
+        // ----------------------------------
+        // 70%–89.99% = red warning outline
+        // ----------------------------------
 
         else if (confidence >= 0.70) {
           ctx.strokeStyle = "red";
@@ -228,30 +246,44 @@ runButton.addEventListener("click", async () => {
           warningCount++;
         }
 
-        // < 70% = nothing drawn
+        // Below 70% = no privacy visualization.
       }
+    }
 
-      // ------------------------------------
-      // Detection result panel
-      // ------------------------------------
+    // ----------------------------------------
+    // Display only qualifying detections.
+    // ----------------------------------------
+
+    for (const detection of displayedDetections) {
+      const {
+        xmin,
+        ymin,
+        xmax,
+        ymax,
+      } = detection.bbox;
+
+      const isSensitive =
+        SENSITIVE_LABELS.has(
+          detection.label
+        );
+
+      let action = "KEPT";
+
+      if (isSensitive) {
+        if (detection.confidence >= 0.90) {
+          action = "REDACTED";
+        } else if (
+          detection.confidence >= 0.70
+        ) {
+          action = "WARNING";
+        }
+      }
 
       const detectionElement =
         document.createElement("div");
 
       detectionElement.className =
         "detection";
-
-      let action = "KEPT";
-
-      if (isSensitive) {
-        if (confidence >= 0.90) {
-          action = "REDACTED";
-        } else if (confidence >= 0.70) {
-          action = "WARNING";
-        } else {
-          action = "IGNORED";
-        }
-      }
 
       detectionElement.innerHTML = `
         <p>
@@ -261,7 +293,7 @@ runButton.addEventListener("click", async () => {
 
         <p>
           <strong>Confidence:</strong>
-          ${(confidence * 100).toFixed(2)}%
+          ${(detection.confidence * 100).toFixed(2)}%
         </p>
 
         <p>
@@ -285,11 +317,17 @@ runButton.addEventListener("click", async () => {
       );
     }
 
+    // ----------------------------------------
+    // Status
+    // ----------------------------------------
+
     status.textContent =
       `Detection complete. ` +
       `Found ${detections.length} object(s). ` +
+      `Showing ${displayedDetections.length}. ` +
       `${redactedCount} redacted. ` +
-      `${warningCount} warning(s).`;
+      `${warningCount} warning(s). ` +
+      `Backend: ${backend ?? "unknown"}.`;
 
   } catch (error) {
     console.error(error);
