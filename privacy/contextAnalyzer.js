@@ -24,7 +24,9 @@
   // ---------------------------------------------------------------------------
   var LABEL_RULES = [
     // Each entry: { pattern: RegExp (matches the label text), category: string, bonus: number }
-    { pattern: /\b(full\s*name|your\s*name|customer\s*name|name)\s*:?\s*$/i,       category: "name",          bonus: 0.30 },
+    // Pattern uses :? so it matches both "Name:" and "Name" (label-only lines like
+    // "APPLICANT NAME" from admissions portals don't have a trailing colon).
+    { pattern: /\b(full\s*name|your\s*name|customer\s*name|applicant\s*name|student\s*name|candidate\s*name|member\s*name|account\s*name|name)\s*:?\s*$/i, category: "name", bonus: 0.30 },
     { pattern: /\b(first\s*name|given\s*name|forename)\s*:?\s*$/i,                 category: "name",          bonus: 0.28 },
     { pattern: /\b(last\s*name|surname|family\s*name)\s*:?\s*$/i,                  category: "name",          bonus: 0.28 },
     { pattern: /\b(e-?mail|email\s*address|contact\s*email)\s*:?\s*$/i,            category: "email",         bonus: 0.25 },
@@ -100,6 +102,33 @@
   }
 
   // ---------------------------------------------------------------------------
+  // Find the spatially closest word to the RIGHT of words[wi] on the same line.
+  // Uses bounding-box positions rather than array index so multi-column layouts
+  // don't cause words from other columns to be treated as neighbors.
+  // ---------------------------------------------------------------------------
+  function findRightNeighbor(words, wi, maxHorizGap, maxVertGap) {
+    var mhg = maxHorizGap || 60;
+    var mvg = maxVertGap || 10;
+    var word = words[wi];
+    var wordRight = word.boundingBox.x + word.boundingBox.width;
+    var bestWord = null;
+    var bestGap = Infinity;
+    for (var j = 0; j < words.length; j++) {
+      if (j === wi) continue;
+      var w2 = words[j];
+      // Must be on approximately the same line
+      if (Math.abs(w2.boundingBox.y - word.boundingBox.y) > mvg) continue;
+      // Must be to the right
+      var gap = w2.boundingBox.x - wordRight;
+      if (gap >= 0 && gap <= mhg && gap < bestGap) {
+        bestGap = gap;
+        bestWord = w2;
+      }
+    }
+    return bestWord;
+  }
+
+  // ---------------------------------------------------------------------------
   // Main analysis function
   //
   //  words:   [{ text, confidence, boundingBox:{x,y,width,height}, source }]
@@ -138,6 +167,23 @@
         // a real value (not another label).
         var seemsLikeLabel = /:\s*$/.test(valueText) && valueText.length < 40;
         if (seemsLikeLabel) continue;
+
+        // In multi-column layouts OCR may merge values from multiple columns
+        // into one line. Narrow the value to words whose X position overlaps
+        // with the label's column (±150 px tolerance).
+        var labelBox = line.boundingBox;
+        if (labelBox && nextLine.boundingBox) {
+          // Find words in the next line that are within the label's X column
+          var narrowed = (allLines[li + 1]._words || []).filter(function (w) {
+            return w.boundingBox &&
+                   w.boundingBox.x >= labelBox.x - 150 &&
+                   w.boundingBox.x <= labelBox.x + labelBox.width + 150;
+          });
+          if (narrowed.length > 0) {
+            valueText = narrowed.map(function (w) { return w.text; }).join(" ").trim();
+          }
+        }
+        if (!valueText) continue;
 
         // For name category: allow single capitalised words (e.g. "Irfan")
         if (rule.category === "name" && valueText.length > 0) {
@@ -211,12 +257,13 @@
         }
       }
 
-      // Two-word names: check wi + wi+1 on same line
-      if (wi + 1 < words.length) {
-        var w2 = words[wi + 1];
+      // Two-word names: find the spatially nearest word to the RIGHT on the same
+      // line rather than relying on array order (which breaks in multi-column
+      // layouts where words from other columns interleave in the array).
+      var w2 = findRightNeighbor(words, wi, 60, 10);
+      if (w2) {
         var twoWordText = word.text + " " + w2.text;
-        if (isNearby(word.boundingBox, w2.boundingBox, 30) &&
-            looksLikePersonName(twoWordText)) {
+        if (looksLikePersonName(twoWordText)) {
           var mergedBox = {
             x: Math.min(word.boundingBox.x, w2.boundingBox.x),
             y: Math.min(word.boundingBox.y, w2.boundingBox.y),
@@ -228,36 +275,37 @@
           safeLog("NER-name", twoWordText);
           results.push({
             category: "name",
-            confidence: 0.55,  // medium — NER alone, no label context
+            confidence: 0.60,  // bumped from 0.55 — spatial match is more reliable
             boundingBox: mergedBox,
             sources: ["ocr", "ner"],
             evidence: "person-name-pattern",
           });
-        }
-      }
-
-      // Three-word names
-      if (wi + 2 < words.length) {
-        var w3 = words[wi + 2];
-        var threeWordText = word.text + " " + words[wi + 1].text + " " + w3.text;
-        if (isNearby(word.boundingBox, w3.boundingBox, 80) &&
-            looksLikePersonName(threeWordText)) {
-          var mergedBox3 = {
-            x: Math.min(word.boundingBox.x, w3.boundingBox.x),
-            y: Math.min(word.boundingBox.y, w3.boundingBox.y),
-            width: (Math.max(word.boundingBox.x + word.boundingBox.width,
-                             w3.boundingBox.x + w3.boundingBox.width)) -
-                   Math.min(word.boundingBox.x, w3.boundingBox.x),
-            height: Math.max(word.boundingBox.height, w3.boundingBox.height),
-          };
-          safeLog("NER-name-3", threeWordText);
-          results.push({
-            category: "name",
-            confidence: 0.50,
-            boundingBox: mergedBox3,
-            sources: ["ocr", "ner"],
-            evidence: "person-name-3-word",
-          });
+          // Also look for a three-word name (wi → w2 → w3)
+          var w2idx = words.indexOf(w2);
+          if (w2idx !== -1) {
+            var w3 = findRightNeighbor(words, w2idx, 60, 10);
+            if (w3) {
+              var threeWordText = word.text + " " + w2.text + " " + w3.text;
+              if (looksLikePersonName(threeWordText)) {
+                var mergedBox3 = {
+                  x: Math.min(word.boundingBox.x, w3.boundingBox.x),
+                  y: Math.min(word.boundingBox.y, w3.boundingBox.y),
+                  width: (Math.max(word.boundingBox.x + word.boundingBox.width,
+                                   w3.boundingBox.x + w3.boundingBox.width)) -
+                         Math.min(word.boundingBox.x, w3.boundingBox.x),
+                  height: Math.max(word.boundingBox.height, w3.boundingBox.height),
+                };
+                safeLog("NER-name-3", threeWordText);
+                results.push({
+                  category: "name",
+                  confidence: 0.58,
+                  boundingBox: mergedBox3,
+                  sources: ["ocr", "ner"],
+                  evidence: "person-name-3-word",
+                });
+              }
+            }
+          }
         }
       }
     }

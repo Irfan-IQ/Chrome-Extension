@@ -244,12 +244,21 @@
     if (hasToken(tk, "age") || (s.type === "number" && hasToken(tokens(s.name + " " + s.id), "age")))
       return { category: CATEGORY.AGE, confidence: "medium" };
 
-    // --- USERNAME ---------------------------------------------
+    // --- USERNAME / STUDENT / REGISTRATION ID --------------------
     if (ac === "username") return { category: CATEGORY.USERNAME, confidence: "high" };
     if (
       containsAny(soft, ["username", "user_name", "user-name", "userid", "user_id", "user-id", "screenname", "screen_name", "login_id", "loginname"]) ||
       hasAnyToken(tk, ["username", "userid", "login", "handle", "nickname", "nick"])
     )
+      return { category: CATEGORY.USERNAME, confidence: "medium" };
+    // Student / institutional identifiers (register number, roll number, etc.)
+    if (containsAny(soft, [
+      "register number", "register no", "reg number", "reg no",
+      "roll number", "roll no", "rollno",
+      "student id", "student number", "student no",
+      "enrolment", "enrollment", "admission number", "admission no",
+      "application id", "application no", "applicant id",
+    ]))
       return { category: CATEGORY.USERNAME, confidence: "medium" };
 
     // --- NAME (person's name) -------------------------------
@@ -417,6 +426,170 @@
     return out;
   }
 
+  // ---------------------------------------------------------------------------
+  // Label-keyword → PII category mapping for static display elements.
+  // Applied to the TEXT of a label/header element to infer what the adjacent
+  // value element contains.
+  // ---------------------------------------------------------------------------
+  var LABEL_PII_RULES = [
+    // Name variations (must not match "username", "filename", "company", etc.)
+    { re: /\b(applicant|student|candidate|full|first|last|given|family|middle|your|member|customer|account)\s*name\b/i, category: CATEGORY.NAME },
+    { re: /\bname\b(?!.*\b(user|file|company|domain|host|product|brand|nick)\b)/i,                                     category: CATEGORY.NAME },
+    // Email
+    { re: /\be-?mail\b/i,                                                                                               category: CATEGORY.EMAIL },
+    // Phone / mobile
+    { re: /\b(phone|mobile|telephone|contact\s*number|cell)\b/i,                                                       category: CATEGORY.PHONE },
+    // Address
+    { re: /\b(address|street|city|zip|postal|pincode|postcode)\b/i,                                                     category: CATEGORY.ADDRESS },
+    // Date of birth
+    { re: /\b(date\s*of\s*birth|d\.?o\.?b|birth\s*date|birthday)\b/i,                                                  category: CATEGORY.DOB },
+    // Age
+    { re: /^\s*age\s*:?\s*$/i,                                                                                          category: CATEGORY.AGE },
+    // Username / login
+    { re: /\b(username|user\s*id|login|handle|screen\s*name)\b/i,                                                      category: CATEGORY.USERNAME },
+    // Student / institutional identifiers
+    { re: /\b(register\s*(no|num|number)|reg\s*(no|num|number)|roll\s*(no|num|number)|rollno|student\s*(id|no|num|number)|enrolment|enrollment|admission\s*(no|num|number)|application\s*(id|no))\b/i, category: CATEGORY.USERNAME },
+    // Credit / debit card
+    { re: /\b(credit\s*card|debit\s*card|card\s*number|cc\s*no)\b/i,                                                   category: CATEGORY.CREDIT_CARD },
+    // National / government IDs
+    { re: /\b(ssn|social\s*security|national\s*id|aadhaar|aadhar|pan\s*(card|no)?|passport\s*no|id\s*number)\b/i,      category: "ssn" },
+  ];
+
+  function classifyLabelText(labelText) {
+    for (var i = 0; i < LABEL_PII_RULES.length; i++) {
+      if (LABEL_PII_RULES[i].re.test(labelText)) {
+        return LABEL_PII_RULES[i].category;
+      }
+    }
+    return null;
+  }
+
+  // Find the value element paired with a label element.
+  // Tries: nextElementSibling of the label, then nextElementSibling of the
+  // label's parent container (handles patterns where label + value share a
+  // wrapper div and the value is the sibling of the wrapper).
+  function findValueElement(labelEl) {
+    // Most common: immediate next sibling
+    var sib = labelEl.nextElementSibling;
+    if (sib) {
+      var t = (sib.textContent || "").trim();
+      if (t && t.length > 0 && t.length < 300) return sib;
+    }
+    // Also try: the label's parent container's next sibling
+    var parent = labelEl.parentElement;
+    if (parent) {
+      var psib = parent.nextElementSibling;
+      if (psib) {
+        var pt = (psib.textContent || "").trim();
+        if (pt && pt.length > 0 && pt.length < 300) return psib;
+      }
+    }
+    return null;
+  }
+
+  // Scan for label→value pairs in static (non-form) display content.
+  // Works without OCR — reads the DOM directly.
+  function scanLabeledStaticValues(doc, viewport, frameOffset) {
+    var out = [];
+    // Cast a wide net: any small inline/block element could be a label.
+    // We filter by text content below.
+    var candidates;
+    try {
+      // Query elements that are typically used as labels in card/profile UIs.
+      // Also include <dt> (definition list term) and <th>.
+      candidates = doc.querySelectorAll(
+        'span, div, p, label, dt, th, ' +
+        '[class*="label"], [class*="key"], [class*="header"], [class*="title"], ' +
+        '[class*="caption"], [class*="field-name"]'
+      );
+    } catch (e) { return out; }
+
+    // Track value elements we've already emitted to avoid duplicates.
+    var emitted = new Set ? new Set() : {
+      _s: [], has: function(v){ return this._s.indexOf(v)!==-1; }, add: function(v){ this._s.push(v); }
+    };
+
+    for (var i = 0; i < candidates.length; i++) {
+      var labelEl = candidates[i];
+
+      // Only consider true leaf elements — no child elements at all.
+      // Container divs (e.g. a wrapper holding a label+value pair) have
+      // children.length >= 1 and must be excluded, otherwise their combined
+      // textContent (label text + value text) falsely matches a PII keyword
+      // and their next sibling gets flagged as the "value".
+      if (labelEl.childElementCount > 0) continue;
+
+      var labelText = (labelEl.textContent || "").trim();
+      // Labels are short; skip anything long
+      if (!labelText || labelText.length > 80) continue;
+
+      var category = classifyLabelText(labelText);
+      if (!category) continue;
+
+      var valueEl = findValueElement(labelEl);
+      if (!valueEl) continue;
+      // Don't emit if we already captured this element
+      if (emitted.has(valueEl)) continue;
+      // Skip if the value element is a form field (already handled by form scanner)
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test(valueEl.tagName)) continue;
+
+      var valueText = (valueEl.textContent || "").trim();
+      if (!valueText || valueText.length < 1) continue;
+
+      // Skip elements that are punctuation-only or too short to be real values.
+      // This filters out required-field indicators like "*" or "†" that appear
+      // as the next sibling of a label span in Google Forms and similar UIs.
+      var alphanumLen = valueText.replace(/[^a-zA-Z0-9]/g, "").length;
+      if (alphanumLen < 2) continue;
+
+      // Also skip if the value element is itself a form field — the form-field
+      // scanner already handles inputs; don't double-detect with a wrong rect.
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test(valueEl.tagName)) continue;
+
+      // For name fields: do a basic sanity check — value should look like a name
+      // (not a date, number, or URL). At least one alphabetic word.
+      if (category === CATEGORY.NAME && !/[A-Za-z]{2}/.test(valueText)) continue;
+
+      var rect;
+      try { rect = valueEl.getBoundingClientRect(); } catch (e) { continue; }
+
+      var vRect = {
+        left: rect.left + frameOffset.x,
+        top:  rect.top  + frameOffset.y,
+        width: rect.width,
+        height: rect.height,
+      };
+
+      if (!CU.intersectsViewport(
+            { x: vRect.left, y: vRect.top, width: vRect.width, height: vRect.height },
+            viewport.width, viewport.height)) continue;
+      if (vRect.width < 4 || vRect.height < 4) continue;
+
+      emitted.add(valueEl);
+
+      try {
+        console.debug("[V3 dom] label->value: " + category + " (label: '" + labelText.slice(0, 20) + "')");
+      } catch (e) {}
+
+      out.push({
+        category: category,
+        elementType: valueEl.tagName,
+        type: null,
+        selector: buildSelector(valueEl),
+        rect: {
+          x: Math.round(vRect.left),
+          y: Math.round(vRect.top),
+          width: Math.round(vRect.width),
+          height: Math.round(vRect.height),
+        },
+        confidence: "high",
+        _el: valueEl,
+        _isTextNode: true,   // screenshot-only mask — don't mutate display text
+      });
+    }
+    return out;
+  }
+
   function scanDocument(doc, viewport, frameOffset) {
     var out = [];
     var uninspectable = [];
@@ -525,6 +698,11 @@
     // Also scan visible text nodes for structural PII (emails in labels, etc.)
     var textNodeDets = scanTextNodes(doc, viewport, frameOffset);
     out = out.concat(textNodeDets);
+
+    // Scan label→value pairs in static display content (cards, profile pages,
+    // dashboards — any place where a label div/span precedes a value div/span).
+    var labelValueDets = scanLabeledStaticValues(doc, viewport, frameOffset);
+    out = out.concat(labelValueDets);
 
     return { detections: out, uninspectable: uninspectable };
   }

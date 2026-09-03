@@ -187,6 +187,8 @@
     }
 
     // Lines (for context analysis)
+    // We also attach each line's constituent words so contextAnalyzer can do
+    // column-aware value extraction in multi-column layouts.
     if (Array.isArray(data.lines)) {
       for (var j = 0; j < data.lines.length; j++) {
         var l = data.lines[j];
@@ -194,6 +196,15 @@
         var lText = l.text.trim();
         if (!lText) continue;
         var lbbox = l.bbox || {};
+
+        // Collect the words belonging to this line (by matching their bboxes)
+        var lineY0 = (lbbox.y0 || 0);
+        var lineY1 = (lbbox.y1 || 0);
+        var lineWords = words.filter(function (w) {
+          var wy = (w.boundingBox.y / scaleBack); // word y in scaled-image coords
+          return wy >= lineY0 - 5 && wy <= lineY1 + 5;
+        });
+
         lines.push({
           text: lText,
           boundingBox: {
@@ -202,6 +213,9 @@
             width: Math.round(((lbbox.x1 || 0) - (lbbox.x0 || 0)) * scaleBack),
             height: Math.round(((lbbox.y1 || 0) - (lbbox.y0 || 0)) * scaleBack),
           },
+          // Internal: words on this line — used by contextAnalyzer for column-aware
+          // value narrowing. Not exposed beyond the pipeline.
+          _words: lineWords,
         });
       }
     }
