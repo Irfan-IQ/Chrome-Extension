@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "AI Assistant",
+  "name": "Redact Agent",
   "version": "3.0.0",
   "description": "Gemini-powered AI chatbot with V3 hybrid DOM+OCR privacy protection in Chrome Side Panel.",
   "permissions": [
@@ -17,7 +17,7 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "Open AI Assistant",
+    "default_title": "Open Redact Agent",
     "default_icon": {
       "16": "icons/icon-16.png",
       "48": "icons/icon-48.png",

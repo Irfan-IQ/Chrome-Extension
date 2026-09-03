@@ -1,4 +1,4 @@
-# AI Assistant — Chrome Side Panel Chatbot
+# Redact Agent — Chrome Side Panel Chatbot
 
 A minimal Chrome extension (Manifest V3) that puts a Google Gemini–powered
 chatbot in Chrome's right-hand **Side Panel**. Plain HTML, CSS, and vanilla
@@ -23,8 +23,8 @@ There is nothing to compile. Load the folder directly:
 3. Turn on **Developer mode** (toggle, top-right).
 4. Click **Load unpacked**.
 5. Select this project folder (the one containing `manifest.json`).
-6. Click the puzzle-piece icon in the toolbar and **pin** "AI Assistant".
-7. Click the **AI Assistant** toolbar icon.
+6. Click the puzzle-piece icon in the toolbar and **pin** "Redact Agent".
+7. Click the **Redact Agent** toolbar icon.
 8. The Side Panel opens on the right.
 9. Click the **⚙** button, paste your Gemini API key, click **Save**.
 10. Type a message and press **Enter** to start chatting.
@@ -241,7 +241,7 @@ inside the image bounds before `ctx.fillRect()`.
 
 1. `chrome://extensions` → **Developer mode** ON.
 2. First time: **Load unpacked** → pick this folder.
-3. After pulling V2: click the **reload ↻** icon on the "AI Assistant" card
+3. After pulling V2: click the **reload ↻** icon on the "Redact Agent" card
    (new permissions are added on reload — accept them).
 4. Re-open the Side Panel (click the toolbar icon) so the new scripts load.
 
