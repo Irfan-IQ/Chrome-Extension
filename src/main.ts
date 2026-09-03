@@ -1,6 +1,5 @@
 import {
   detectObjects,
-  getDetectorBackend,
   type Detection,
 } from "./detector";
 
@@ -35,6 +34,11 @@ const warningCountElement =
     "warningCount"
   ) as HTMLSpanElement;
 
+const resultsContainer =
+  document.getElementById(
+    "results"
+  ) as HTMLDivElement;
+
 const ctx = canvas.getContext("2d");
 
 if (!ctx) {
@@ -51,7 +55,7 @@ const PERSON_PADDING_X = 10;
 const PERSON_PADDING_Y = 20;
 
 // ----------------------------------------
-// Load image
+// Image selection
 // ----------------------------------------
 
 fileInput.addEventListener("change", () => {
@@ -91,6 +95,8 @@ fileInput.addEventListener("change", () => {
     redactedCountElement.textContent = "0";
     warningCountElement.textContent = "0";
 
+    resultsContainer.innerHTML = "";
+
     status.textContent =
       "Image loaded. Ready for detection.";
 
@@ -113,156 +119,247 @@ fileInput.addEventListener("change", () => {
 // Run detection
 // ----------------------------------------
 
-runButton.addEventListener("click", async () => {
-  if (!image) {
-    status.textContent =
-      "Please select an image first.";
+runButton.addEventListener(
+  "click",
+  async () => {
+    if (!image) {
+      status.textContent =
+        "Please select an image first.";
 
-    return;
-  }
-
-  try {
-    runButton.disabled = true;
-
-    status.textContent =
-      "Running detection...";
-
-    const detections: Detection[] =
-      await detectObjects(image);
-
-    // Restore original image.
-    ctx.clearRect(
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    );
-
-    ctx.drawImage(
-      image,
-      0,
-      0
-    );
-
-    let redactedCount = 0;
-    let warningCount = 0;
-
-    // Every model detection returned after the
-    // model's threshold counts as a detection.
-    detectedCountElement.textContent =
-      String(detections.length);
-
-    for (const detection of detections) {
-      let {
-        xmin,
-        ymin,
-        xmax,
-        ymax,
-      } = detection.bbox;
-
-      const confidence =
-        detection.confidence;
-
-      const isSensitive =
-        SENSITIVE_LABELS.has(
-          detection.label
-        );
-
-      // Only sensitive objects get
-      // redaction/warning treatment.
-      if (!isSensitive) {
-        continue;
-      }
-
-      // Slight padding around people.
-      if (detection.label === "person") {
-        xmin -= PERSON_PADDING_X;
-        ymin -= PERSON_PADDING_Y;
-        xmax += PERSON_PADDING_X;
-        ymax += PERSON_PADDING_Y;
-      }
-
-      // Keep the box inside the image.
-      xmin = Math.max(
-        0,
-        xmin
-      );
-
-      ymin = Math.max(
-        0,
-        ymin
-      );
-
-      xmax = Math.min(
-        canvas.width,
-        xmax
-      );
-
-      ymax = Math.min(
-        canvas.height,
-        ymax
-      );
-
-      const width =
-        xmax - xmin;
-
-      const height =
-        ymax - ymin;
-
-      // ----------------------------------
-      // 90%+ = black redaction
-      // ----------------------------------
-
-      if (confidence >= 0.90) {
-        ctx.fillStyle = "black";
-
-        ctx.fillRect(
-          xmin,
-          ymin,
-          width,
-          height
-        );
-
-        redactedCount++;
-      }
-
-      // ----------------------------------
-      // 70%–89.99% = red outline
-      // ----------------------------------
-
-      else if (confidence >= 0.70) {
-        ctx.strokeStyle = "red";
-        ctx.lineWidth = 4;
-
-        ctx.strokeRect(
-          xmin,
-          ymin,
-          width,
-          height
-        );
-
-        warningCount++;
-      }
+      return;
     }
 
-    redactedCountElement.textContent =
-      String(redactedCount);
+    try {
+      runButton.disabled = true;
 
-    warningCountElement.textContent =
-      String(warningCount);
+      status.textContent =
+        "Running detection...";
 
-    const backend =
-      getDetectorBackend();
+      const detections: Detection[] =
+        await detectObjects(image);
 
-    status.textContent =
-      `Detection complete · ${backend ?? "unknown"}`;
+      // Restore original image.
+      ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
 
-  } catch (error) {
-    console.error(error);
+      ctx.drawImage(
+        image,
+        0,
+        0
+      );
 
-    status.textContent =
-      "Detection failed. Check the console.";
-  } finally {
-    runButton.disabled = false;
+      resultsContainer.innerHTML = "";
+
+      let redactedCount = 0;
+      let warningCount = 0;
+
+      // ------------------------------------
+      // Objects shown in the detection list
+      //
+      // Person: >= 75%
+      // Other:  >= 80%
+      // ------------------------------------
+
+      const displayedDetections =
+        detections.filter(
+          (detection) => {
+            if (
+              detection.label === "person"
+            ) {
+              return (
+                detection.confidence >= 0.75
+              );
+            }
+
+            return (
+              detection.confidence >= 0.80
+            );
+          }
+        );
+
+      detectedCountElement.textContent =
+        String(displayedDetections.length);
+
+      // ------------------------------------
+      // Draw privacy overlays
+      // ------------------------------------
+
+      for (const detection of detections) {
+        let {
+          xmin,
+          ymin,
+          xmax,
+          ymax,
+        } = detection.bbox;
+
+        const confidence =
+          detection.confidence;
+
+        const isSensitive =
+          SENSITIVE_LABELS.has(
+            detection.label
+          );
+
+        // Only person detections receive
+        // privacy treatment.
+        if (!isSensitive) {
+          continue;
+        }
+
+        // Slight padding around persons.
+        if (
+          detection.label === "person"
+        ) {
+          xmin -= PERSON_PADDING_X;
+          ymin -= PERSON_PADDING_Y;
+          xmax += PERSON_PADDING_X;
+          ymax += PERSON_PADDING_Y;
+        }
+
+        // Keep coordinates inside canvas.
+        xmin = Math.max(
+          0,
+          xmin
+        );
+
+        ymin = Math.max(
+          0,
+          ymin
+        );
+
+        xmax = Math.min(
+          canvas.width,
+          xmax
+        );
+
+        ymax = Math.min(
+          canvas.height,
+          ymax
+        );
+
+        const width =
+          xmax - xmin;
+
+        const height =
+          ymax - ymin;
+
+        // ----------------------------------
+        // >= 90% → black redaction
+        // ----------------------------------
+
+        if (confidence >= 0.90) {
+          ctx.fillStyle = "black";
+
+          ctx.fillRect(
+            xmin,
+            ymin,
+            width,
+            height
+          );
+
+          redactedCount++;
+        }
+
+        // ----------------------------------
+        // 70%–89.99% → red outline
+        // ----------------------------------
+
+        else if (confidence >= 0.70) {
+          ctx.strokeStyle = "red";
+          ctx.lineWidth = 4;
+
+          ctx.strokeRect(
+            xmin,
+            ymin,
+            width,
+            height
+          );
+
+          warningCount++;
+        }
+      }
+
+      // ------------------------------------
+      // Update counts
+      // ------------------------------------
+
+      redactedCountElement.textContent =
+        String(redactedCount);
+
+      warningCountElement.textContent =
+        String(warningCount);
+
+      // ------------------------------------
+      // Detection list
+      // ------------------------------------
+
+      for (const detection of displayedDetections) {
+        const {
+          xmin,
+          ymin,
+          xmax,
+          ymax,
+        } = detection.bbox;
+
+        const confidence =
+          detection.confidence;
+
+        const isSensitive =
+          SENSITIVE_LABELS.has(
+            detection.label
+          );
+
+        let action = "Kept";
+
+        if (isSensitive) {
+          if (confidence >= 0.90) {
+            action = "Redacted";
+          } else if (confidence >= 0.70) {
+            action = "Warning";
+          }
+        }
+
+        const detectionElement =
+          document.createElement("div");
+
+        detectionElement.className =
+          "detection";
+
+        detectionElement.innerHTML = `
+          <div class="detection-left">
+            <strong>
+              ${detection.label}
+            </strong>
+
+            <span class="confidence">
+              ${(confidence * 100).toFixed(1)}%
+            </span>
+          </div>
+
+          <span class="action ${action.toLowerCase()}">
+            ${action}
+          </span>
+        `;
+
+        resultsContainer.appendChild(
+          detectionElement
+        );
+      }
+
+      status.textContent =
+        "Detection complete.";
+
+    } catch (error) {
+      console.error(error);
+
+      status.textContent =
+        "Detection failed. Check the console.";
+    } finally {
+      runButton.disabled = false;
+    }
   }
-});
+);

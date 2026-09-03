@@ -12,9 +12,9 @@ export type Detection = {
 };
 
 let detector: any = null;
-let detectorBackend: "webgpu" | "wasm" | null = null;
 
 async function createDetector() {
+  // Try WebGPU first.
   if ("gpu" in navigator) {
     try {
       console.log("Trying WebGPU...");
@@ -28,8 +28,6 @@ async function createDetector() {
         }
       );
 
-      detectorBackend = "webgpu";
-
       console.log("Using WebGPU.");
 
       return webgpuDetector;
@@ -41,6 +39,7 @@ async function createDetector() {
     }
   }
 
+  // WASM fallback.
   console.log("Using WASM...");
 
   const wasmDetector = await pipeline(
@@ -51,8 +50,6 @@ async function createDetector() {
       dtype: "q8",
     }
   );
-
-  detectorBackend = "wasm";
 
   console.log("Using WASM.");
 
@@ -65,10 +62,6 @@ async function getDetector() {
   }
 
   return detector;
-}
-
-export function getDetectorBackend() {
-  return detectorBackend;
 }
 
 export async function detectObjects(
