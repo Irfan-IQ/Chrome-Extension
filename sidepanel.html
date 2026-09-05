@@ -11,9 +11,14 @@
       <header id="header">
         <div class="header-title">
           <span class="app-name">Redact Agent</span>
-          <span class="app-badge">Gemini · V3</span>
+          <span class="app-badge" id="app-badge">Gemini · V4</span>
         </div>
         <div class="header-right">
+          <!-- Mode toggle: Chat | Agent -->
+          <div class="mode-tabs" role="tablist" aria-label="Mode">
+            <button class="mode-tab mode-tab-active" id="mode-chat-btn" role="tab" aria-selected="true">Chat</button>
+            <button class="mode-tab" id="mode-agent-btn" role="tab" aria-selected="false">🤖 Agent</button>
+          </div>
           <span id="status-dot" class="status-dot" title="Ready"></span>
           <button id="clear-btn" class="icon-btn" title="Clear chat">Clear</button>
           <button id="settings-btn" class="icon-btn" title="Settings">⚙</button>
@@ -42,141 +47,222 @@
         </p>
       </section>
 
-      <!-- V3 privacy status strip -->
-      <section id="privacy-strip" class="privacy-strip">
-        <div class="privacy-row">
-          <label class="privacy-toggle">
-            <input type="checkbox" id="privacy-enabled" checked />
-            <span>Privacy Protection: <strong id="privacy-state">ON</strong></span>
-          </label>
-          <div class="privacy-actions">
-            <button id="scan-btn" class="scan-btn" title="Scan page and generate sanitized screenshot">🛡 Scan Page</button>
-            <button id="debug-btn" class="icon-btn v3-badge" title="Show detection debug info">Debug</button>
-            <button id="privacy-info-btn" class="icon-btn" title="About V3 privacy">?</button>
+      <!-- ============================================================== -->
+      <!-- CHAT MODE (original V3 UI — preserved intact)                  -->
+      <!-- ============================================================== -->
+      <div id="chat-mode-panel">
+        <!-- V3 privacy status strip -->
+        <section id="privacy-strip" class="privacy-strip">
+          <div class="privacy-row">
+            <label class="privacy-toggle">
+              <input type="checkbox" id="privacy-enabled" checked />
+              <span>Privacy Protection: <strong id="privacy-state">ON</strong></span>
+            </label>
+            <div class="privacy-actions">
+              <button id="scan-btn" class="scan-btn" title="Scan page and generate sanitized screenshot">🛡 Scan Page</button>
+              <button id="debug-btn" class="icon-btn v3-badge" title="Show detection debug info">Debug</button>
+              <button id="privacy-info-btn" class="icon-btn" title="About V3 privacy">?</button>
+            </div>
           </div>
-        </div>
 
-        <!-- Info panel (toggled by ?) -->
-        <div id="privacy-detail" class="privacy-detail hidden">
-          <strong>V3 Hybrid Privacy Engine</strong><br>
-          Attaches a locally-sanitised snapshot to every message when ON.<br>
-          <em>DOM scan</em> — detects form fields by attribute analysis.<br>
-          <em>OCR</em> — reads visible text in images &amp; canvas (Tesseract.js, fully local).<br>
-          <em>Pattern</em> — regex classifies email, phone, card numbers, etc.<br>
-          <em>Context / NER</em> — label-value pairs and person-name heuristics.<br>
-          <em>Fusion</em> — multiple signals for the same region → higher confidence.<br>
-          All processing is <strong>local to your browser</strong>.
-          No raw screenshot or sensitive text ever leaves your device.
-        </div>
-
-        <!-- Live status (progress / summary) -->
-        <div id="privacy-status" class="privacy-status"></div>
-
-        <!-- V3 Debug panel (toggled by Debug button) -->
-        <div id="debug-panel" class="debug-panel hidden">
-          <div class="debug-header">
-            <span>Detection Log</span>
-            <button id="debug-close-btn" class="icon-btn">✕</button>
+          <!-- Info panel (toggled by ?) -->
+          <div id="privacy-detail" class="privacy-detail hidden">
+            <strong>V4 Hybrid Privacy Engine</strong><br>
+            Attaches a locally-sanitised snapshot to every message when ON.<br>
+            <em>DOM scan</em> — detects form fields by attribute analysis.<br>
+            <em>OCR</em> — reads visible text in images &amp; canvas (Tesseract.js, fully local).<br>
+            <em>Pattern</em> — regex classifies email, phone, card numbers, etc.<br>
+            <em>Context / NER</em> — label-value pairs and person-name heuristics.<br>
+            <em>Fusion</em> — multiple signals for the same region → higher confidence.<br>
+            All processing is <strong>local to your browser</strong>.
+            No raw screenshot or sensitive text ever leaves your device.
           </div>
-          <div id="debug-list" class="debug-list">
-            <span class="debug-empty">No detections yet.</span>
+
+          <!-- Live status (progress / summary) -->
+          <div id="privacy-status" class="privacy-status"></div>
+
+          <!-- V3 Debug panel (toggled by Debug button) -->
+          <div id="debug-panel" class="debug-panel hidden">
+            <div class="debug-header">
+              <span>Detection Log</span>
+              <button id="debug-close-btn" class="icon-btn">✕</button>
+            </div>
+            <div id="debug-list" class="debug-list">
+              <span class="debug-empty">No detections yet.</span>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+
+        <!-- V3 SCAN RESULT PANEL — hidden until scan runs -->
+        <section id="scan-result-panel" class="scan-result-panel hidden">
+          <!-- Detection summary cards -->
+          <div class="scan-summary-row">
+            <div class="scan-card">
+              <div class="scan-card-value" id="card-dom">—</div>
+              <div class="scan-card-label">DOM regions</div>
+            </div>
+            <div class="scan-card">
+              <div class="scan-card-value" id="card-ocr">—</div>
+              <div class="scan-card-label">OCR regions</div>
+            </div>
+            <div class="scan-card scan-card-accent">
+              <div class="scan-card-value" id="card-fused">—</div>
+              <div class="scan-card-label">Protected</div>
+            </div>
+          </div>
+
+          <!-- Privacy guarantees -->
+          <div class="scan-guarantees">
+            <span class="guarantee-item">✓ Processed locally</span>
+            <span class="guarantee-item">✓ Sensitive data redacted</span>
+            <span class="guarantee-item" id="guarantee-ocr">✓ OCR active</span>
+          </div>
+
+          <!-- Category chips row -->
+          <div id="scan-categories" class="scan-categories"></div>
+
+          <!-- Before / After tabs -->
+          <div class="shot-tabs">
+            <button class="shot-tab" id="tab-original" data-tab="original">Original</button>
+            <button class="shot-tab shot-tab-active" id="tab-sanitized" data-tab="sanitized">Sanitized ✓</button>
+          </div>
+          <div class="shot-viewer">
+            <div id="shot-original" class="shot-pane hidden">
+              <div class="shot-warning">⚠ For local comparison only. Never sent to AI.</div>
+              <img id="img-original" class="shot-img" alt="Original page screenshot" />
+            </div>
+            <div id="shot-sanitized" class="shot-pane">
+              <div class="shot-ok">✓ This version is sent to AI — sensitive regions redacted</div>
+              <img id="img-sanitized" class="shot-img" alt="Sanitized screenshot" />
+            </div>
+          </div>
+
+          <button id="scan-result-close-btn" class="scan-result-close">✕ Close</button>
+        </section>
+
+        <!-- Chat window -->
+        <main id="chat" class="chat" aria-live="polite"></main>
+
+        <!-- Composer -->
+        <footer id="composer">
+          <textarea
+            id="input"
+            rows="1"
+            placeholder="Ask something…"
+            aria-label="Message"
+          ></textarea>
+          <button id="send-btn" class="primary-btn">Send</button>
+        </footer>
+      </div>
 
       <!-- ============================================================== -->
-      <!-- V3 SCAN RESULT PANEL — hidden until scan runs                  -->
+      <!-- AGENT MODE — LLM-driven tool-calling agent                     -->
       <!-- ============================================================== -->
-      <section id="scan-result-panel" class="scan-result-panel hidden">
-        <!-- Detection summary cards -->
-        <div class="scan-summary-row">
-          <div class="scan-card">
-            <div class="scan-card-value" id="card-dom">—</div>
-            <div class="scan-card-label">DOM regions</div>
+      <div id="agent-mode-panel" class="hidden">
+
+        <!-- Agent task composer -->
+        <section class="agent-composer-section">
+          <div class="agent-composer-hint">
+            Describe a privacy task. The agent will plan and execute it step by step using local privacy tools.
           </div>
-          <div class="scan-card">
-            <div class="scan-card-value" id="card-ocr">—</div>
-            <div class="scan-card-label">OCR regions</div>
+          <div class="agent-composer-row">
+            <textarea
+              id="agent-input"
+              class="agent-input"
+              rows="2"
+              placeholder="e.g. Redact all personal information on this page"
+              aria-label="Agent task"
+            ></textarea>
+            <button id="agent-run-btn" class="primary-btn agent-run-btn">▶ Run</button>
           </div>
-          <div class="scan-card scan-card-accent">
-            <div class="scan-card-value" id="card-fused">—</div>
-            <div class="scan-card-label">Protected</div>
+          <!-- Quick-task shortcuts -->
+          <div class="agent-quick-tasks">
+            <button class="quick-task-btn" data-task="Redact all personal information on this page">Redact all PII</button>
+            <button class="quick-task-btn" data-task="Scan this page for sensitive data and report what you find">Scan &amp; Report</button>
+            <button class="quick-task-btn" data-task="Find and redact all email addresses and phone numbers on this page">Emails &amp; Phones</button>
           </div>
-        </div>
+        </section>
 
-        <!-- Privacy guarantees -->
-        <div class="scan-guarantees">
-          <span class="guarantee-item">✓ Processed locally</span>
-          <span class="guarantee-item">✓ Sensitive data redacted</span>
-          <span class="guarantee-item" id="guarantee-ocr">✓ OCR active</span>
-        </div>
-
-        <!-- Category chips row -->
-        <div id="scan-categories" class="scan-categories"></div>
-
-        <!-- Before / After tabs -->
-        <div class="shot-tabs">
-          <button class="shot-tab" id="tab-original" data-tab="original">Original</button>
-          <button class="shot-tab shot-tab-active" id="tab-sanitized" data-tab="sanitized">Sanitized ✓</button>
-        </div>
-        <div class="shot-viewer">
-          <!-- Original (local only, never sent to AI) -->
-          <div id="shot-original" class="shot-pane hidden">
-            <div class="shot-warning">⚠ For local comparison only. Never sent to AI.</div>
-            <img id="img-original" class="shot-img" alt="Original page screenshot" />
+        <!-- Agent execution log (shown while running and after) -->
+        <section id="agent-log-panel" class="agent-log-panel hidden">
+          <div class="agent-log-header">
+            <span class="agent-log-title">Agent Execution</span>
+            <span id="agent-log-status" class="agent-log-status-badge">Running…</span>
           </div>
-          <!-- Sanitized (sent to AI) -->
-          <div id="shot-sanitized" class="shot-pane">
-            <div class="shot-ok">✓ This version is sent to AI — sensitive regions redacted</div>
-            <img id="img-sanitized" class="shot-img" alt="Sanitized screenshot" />
+          <div id="agent-step-list" class="agent-step-list"></div>
+        </section>
+
+        <!-- Agent result -->
+        <section id="agent-result-panel" class="agent-result-panel hidden">
+          <div class="agent-result-header">
+            <span>Result</span>
+            <button id="agent-result-close-btn" class="icon-btn">✕</button>
           </div>
-        </div>
+          <div id="agent-result-text" class="agent-result-text"></div>
 
-        <!-- Close scan result -->
-        <button id="scan-result-close-btn" class="scan-result-close">✕ Close</button>
-      </section>
+          <!-- Redacted screenshot (shown after redact tool runs) -->
+          <div id="agent-screenshot-section" class="hidden">
+            <div class="shot-tabs" style="margin-top:8px">
+              <button class="shot-tab shot-tab-active" id="agent-tab-redacted">Redacted ✓</button>
+            </div>
+            <div class="shot-viewer">
+              <div class="shot-pane">
+                <div class="shot-ok">✓ Sensitive regions masked by the extension — local only</div>
+                <img id="agent-result-img" class="shot-img" alt="Redacted screenshot" />
+              </div>
+            </div>
+          </div>
+        </section>
 
-      <main id="chat" class="chat" aria-live="polite"></main>
+      </div><!-- /#agent-mode-panel -->
+    </div><!-- /#app -->
 
-      <footer id="composer">
-        <textarea
-          id="input"
-          rows="1"
-          placeholder="Ask something…"
-          aria-label="Message"
-        ></textarea>
-        <button id="send-btn" class="primary-btn">Send</button>
-      </footer>
-    </div>
-
-    <!-- Zoom lightbox (shared between Original and Sanitized images) -->
+    <!-- Zoom lightbox (shared) -->
     <div id="zoom-overlay">
       <button id="zoom-close" title="Close (Esc)">✕</button>
       <img id="zoom-img" alt="Zoomed screenshot" />
     </div>
 
-    <!-- V1: Gemini API client -->
+    <!-- ============================================================ -->
+    <!-- Script load order matters — dependencies before dependents   -->
+    <!-- ============================================================ -->
+
+    <!-- V1: Gemini API client (chat mode) -->
     <script src="gemini.js"></script>
 
-    <!-- V3 OCR library (Tesseract.js v4, UMD build — local, no CDN scripts) -->
+    <!-- V3 OCR library (Tesseract.js v4, UMD, no CDN) -->
     <script src="lib/tesseract.min.js"></script>
 
-    <!-- Privacy modules — side-panel context.
-         Load order: coordinateUtils → screenshotRedactor → analyzers → fusion → engine
-         Note: domSanitizer.js is removed in V4 — page mutation is no longer needed. -->
+    <!-- Privacy modules — side-panel context
+         coordinateUtils → screenshotRedactor → analyzers → fusion → engine -->
     <script src="privacy/coordinateUtils.js"></script>
     <script src="privacy/screenshotRedactor.js"></script>
-
-    <!-- V3 new modules -->
     <script src="privacy/patternAnalyzer.js"></script>
     <script src="privacy/contextAnalyzer.js"></script>
     <script src="privacy/ocrAnalyzer.js"></script>
     <script src="privacy/detectionFusion.js"></script>
-
-    <!-- V3 orchestrator (replaces V2 privacyEngine.js in place) -->
     <script src="privacy/privacyEngine.js"></script>
 
-    <!-- App UI -->
+    <!-- Agent modules — load order:
+         state → registry → validator → tools → executor → llmClient → manager -->
+    <script src="agent/agentState.js"></script>
+    <script src="agent/toolRegistry.js"></script>
+    <script src="agent/toolValidator.js"></script>
+    <script src="agent/tools/screenshot.js"></script>
+    <script src="agent/tools/scanDom.js"></script>
+    <script src="agent/tools/scanOcr.js"></script>
+    <script src="agent/tools/fuseDetections.js"></script>
+    <script src="agent/tools/redact.js"></script>
+    <script src="agent/tools/verifyRedaction.js"></script>
+    <script src="agent/tools/getPageContext.js"></script>
+    <script src="agent/tools/clickElement.js"></script>
+    <script src="agent/tools/navigateTo.js"></script>
+    <script src="agent/tools/openTab.js"></script>
+    <script src="agent/toolExecutor.js"></script>
+    <script src="agent/llmClient.js"></script>
+    <script src="agent/agentManager.js"></script>
+
+    <!-- App UI (must load last — depends on all modules above) -->
     <script src="sidepanel.js"></script>
   </body>
 </html>

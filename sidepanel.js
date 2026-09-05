@@ -1,11 +1,13 @@
 // sidepanel.js — UI logic only. Gemini communication lives in gemini.js.
-// V3: Extended for hybrid DOM+OCR detection display and debug panel.
+// V4: Extended with Agent mode (LLM-driven tool-calling agent).
 
 const STORAGE_KEY_HISTORY = "chatHistory";
-const STORAGE_KEY_PRIVACY  = "privacyEnabled"; // V2/V3: default ON
+const STORAGE_KEY_PRIVACY  = "privacyEnabled"; // V2/V3/V4: default ON
 
 let history  = [];
 let isSending = false;
+let isAgentRunning = false;
+let currentMode = "chat"; // "chat" | "agent"
 
 // ---------- Element refs ----------
 const chatEl         = document.getElementById("chat");
@@ -53,6 +55,22 @@ const scanResultCloseBtn  = document.getElementById("scan-result-close-btn");
 const zoomOverlay = document.getElementById("zoom-overlay");
 const zoomImg     = document.getElementById("zoom-img");
 const zoomCloseBtn= document.getElementById("zoom-close");
+
+// ---------- V4 Agent mode element refs ----------
+const modeChatBtn       = document.getElementById("mode-chat-btn");
+const modeAgentBtn      = document.getElementById("mode-agent-btn");
+const chatModePanel     = document.getElementById("chat-mode-panel");
+const agentModePanel    = document.getElementById("agent-mode-panel");
+const agentInputEl      = document.getElementById("agent-input");
+const agentRunBtn       = document.getElementById("agent-run-btn");
+const agentLogPanel     = document.getElementById("agent-log-panel");
+const agentLogStatus    = document.getElementById("agent-log-status");
+const agentStepList     = document.getElementById("agent-step-list");
+const agentResultPanel  = document.getElementById("agent-result-panel");
+const agentResultClose  = document.getElementById("agent-result-close-btn");
+const agentResultText   = document.getElementById("agent-result-text");
+const agentScreenshotSection = document.getElementById("agent-screenshot-section");
+const agentResultImg    = document.getElementById("agent-result-img");
 
 // ---------- Rendering ----------
 
@@ -608,6 +626,199 @@ debugBtn.addEventListener("click", () => {
 });
 debugCloseBtn.addEventListener("click", () => {
   debugPanel.classList.add("hidden");
+});
+
+// ======================================================================
+// V4 AGENT MODE
+// ======================================================================
+
+// ---------- Mode toggle ----------
+
+function switchMode(mode) {
+  currentMode = mode;
+  const inAgent = mode === "agent";
+
+  // Update tab button states
+  modeChatBtn.classList.toggle("mode-tab-active", !inAgent);
+  modeAgentBtn.classList.toggle("mode-tab-active",  inAgent);
+  modeChatBtn.setAttribute("aria-selected", String(!inAgent));
+  modeAgentBtn.setAttribute("aria-selected", String( inAgent));
+
+  // Show / hide panels
+  chatModePanel.classList.toggle("hidden",  inAgent);
+  agentModePanel.classList.toggle("hidden", !inAgent);
+
+  if (inAgent) {
+    agentInputEl.focus();
+  } else {
+    inputEl.focus();
+  }
+}
+
+modeChatBtn.addEventListener("click", () => switchMode("chat"));
+modeAgentBtn.addEventListener("click", () => switchMode("agent"));
+
+// ---------- Quick-task shortcuts ----------
+
+document.querySelectorAll(".quick-task-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const task = btn.getAttribute("data-task");
+    if (task) {
+      agentInputEl.value = task;
+      agentInputEl.dispatchEvent(new Event("input"));
+    }
+  });
+});
+
+// ---------- Agent step log UI helpers ----------
+
+const STEP_ICONS = {
+  success:  "✓",
+  error:    "✗",
+  working:  "⟳",
+  rejected: "⚠",
+  complete: "✓",
+  done:     "✓",
+};
+
+const TOOL_LABELS = {
+  scan_dom:         "scan_dom",
+  take_screenshot:  "take_screenshot",
+  scan_ocr:         "scan_ocr",
+  fuse_detections:  "fuse_detections",
+  redact:           "redact",
+  verify_redaction: "verify_redaction",
+  get_page_context: "get_page_context",
+  done:             "agent",
+  llm:              "llm",
+};
+
+// Map from step number to DOM element (for live updates)
+const stepElements = {};
+
+function addOrUpdateStep(entry) {
+  const icon  = STEP_ICONS[entry.status] || "·";
+  const label = TOOL_LABELS[entry.tool]  || entry.tool;
+
+  // Duration string (only for completed steps with meaningful duration)
+  const durStr = entry.duration > 0
+    ? (entry.duration < 1000 ? entry.duration + "ms" : (entry.duration / 1000).toFixed(1) + "s")
+    : "";
+
+  const stepKey = String(entry.step) + "_" + entry.tool;
+
+  if (stepElements[stepKey]) {
+    // Update existing element (e.g. "working" → "success")
+    const el = stepElements[stepKey];
+    el.className = "agent-step status-" + entry.status;
+    el.querySelector(".agent-step-icon").textContent = icon;
+    el.querySelector(".agent-step-msg").textContent  = entry.message;
+    if (durStr) el.querySelector(".agent-step-duration").textContent = durStr;
+    return;
+  }
+
+  const el = document.createElement("div");
+  el.className = "agent-step status-" + entry.status;
+  el.innerHTML =
+    '<span class="agent-step-icon">' + icon + '</span>' +
+    '<span class="agent-step-body">' +
+      '<span class="agent-step-tool">' + label + '</span> ' +
+      '<span class="agent-step-msg">' + entry.message + '</span>' +
+    '</span>' +
+    '<span class="agent-step-duration">' + durStr + '</span>';
+
+  agentStepList.appendChild(el);
+  stepElements[stepKey] = el;
+  agentStepList.scrollTop = agentStepList.scrollHeight;
+}
+
+function resetAgentLog() {
+  agentStepList.innerHTML = "";
+  for (const key in stepElements) delete stepElements[key];
+  agentLogPanel.classList.add("hidden");
+  agentResultPanel.classList.add("hidden");
+  agentScreenshotSection.classList.add("hidden");
+  agentResultImg.src = "";
+  agentResultText.textContent = "";
+}
+
+// ---------- Main agent run handler ----------
+
+async function handleAgentRun() {
+  if (isAgentRunning) return;
+
+  const task = agentInputEl.value.trim();
+  if (!task) {
+    agentInputEl.focus();
+    return;
+  }
+
+  // Check API key
+  const apiKey = await window.Gemini.getApiKey().catch(() => "");
+  if (!apiKey) {
+    agentResultText.textContent =
+      "Please configure your Gemini API key in Settings (⚙ top right) before running the agent.";
+    agentResultPanel.classList.remove("hidden");
+    return;
+  }
+
+  // --- Reset and start ---
+  isAgentRunning = true;
+  agentRunBtn.disabled = true;
+  agentRunBtn.textContent = "Running…";
+  setStatus("busy");
+
+  resetAgentLog();
+  agentLogPanel.classList.remove("hidden");
+  agentLogStatus.textContent = "Running…";
+  agentLogStatus.className = "agent-log-status-badge";
+
+  // --- Run agent ---
+  try {
+    const result = await window.AgentManager.run(task, apiKey, (stepEntry) => {
+      addOrUpdateStep(stepEntry);
+    });
+
+    // Update log status
+    agentLogStatus.textContent = result.success ? "Completed ✓" : "Stopped";
+    agentLogStatus.className = "agent-log-status-badge " + (result.success ? "done" : "error");
+
+    // Show result text
+    agentResultText.textContent = result.summary || (result.success ? "Task complete." : "Task did not complete.");
+    agentResultPanel.classList.remove("hidden");
+
+    // Show redacted screenshot if available
+    if (result.redactedScreenshot) {
+      agentResultImg.src = result.redactedScreenshot;
+      agentScreenshotSection.classList.remove("hidden");
+      // Allow zoom on the agent result image
+      agentResultImg.style.cursor = "zoom-in";
+      agentResultImg.onclick = () => openZoom(agentResultImg.src);
+    }
+
+  } catch (err) {
+    console.error("[Agent] Unexpected error:", err);
+    agentLogStatus.textContent = "Error";
+    agentLogStatus.className = "agent-log-status-badge error";
+    agentResultText.textContent = "Agent error: " + ((err && err.message) || "Unknown error.");
+    agentResultPanel.classList.remove("hidden");
+  } finally {
+    isAgentRunning = false;
+    agentRunBtn.disabled = false;
+    agentRunBtn.textContent = "▶ Run";
+    setStatus("ready");
+  }
+}
+
+agentRunBtn.addEventListener("click", handleAgentRun);
+
+agentInputEl.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleAgentRun(); }
+});
+
+agentResultClose.addEventListener("click", () => {
+  agentResultPanel.classList.add("hidden");
+  agentScreenshotSection.classList.add("hidden");
 });
 
 // ---------- Init ----------

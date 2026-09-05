@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<!--
+  test/agent-test.html — Manual test page for the Agent layer
+
+  Open this file in Chrome (via the extension context if possible, or as a
+  local file) to run the unit tests for toolValidator and toolRegistry.
+
+  These tests do NOT require an API key or a live browser tab.
+  They verify the security boundary (validator) and the tool registry.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Redact Agent — Unit Tests</title>
+  <style>
+    body { font-family: -apple-system, monospace; padding: 20px; background: #0d1117; color: #e6edf3; }
+    h1   { color: #f0f6fc; }
+    h2   { color: #7d8590; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .suite  { margin-bottom: 24px; }
+    .test   { display: flex; align-items: flex-start; gap: 10px; margin: 4px 0; font-size: 13px; }
+    .pass   { color: #3fb950; }
+    .fail   { color: #f85149; }
+    .icon   { flex-shrink: 0; width: 16px; }
+    .label  { flex: 1; }
+    .detail { color: #8b949e; font-size: 11px; }
+    #summary { margin-top: 20px; font-size: 14px; border-top: 1px solid #30363d; padding-top: 12px; }
+    .ok  { color: #3fb950; }
+    .err { color: #f85149; }
+  </style>
+</head>
+<body>
+  <h1>Redact Agent — Unit Tests</h1>
+  <p style="color:#8b949e;font-size:12px">Testing: ToolRegistry, ToolValidator (no API key / network needed)</p>
+
+  <div id="output"></div>
+  <div id="summary"></div>
+
+  <!-- Load only the modules under test (no privacy engine, no Gemini) -->
+  <script src="../agent/agentState.js"></script>
+  <script src="../agent/toolRegistry.js"></script>
+  <script src="../agent/toolValidator.js"></script>
+
+  <script>
+    // -------------------------------------------------------------------------
+    // Minimal test harness
+    // -------------------------------------------------------------------------
+    const results = [];
+
+    function test(suiteName, caseName, fn) {
+      try {
+        fn();
+        results.push({ suite: suiteName, name: caseName, pass: true });
+      } catch (e) {
+        results.push({ suite: suiteName, name: caseName, pass: false, error: e.message || String(e) });
+      }
+    }
+
+    function assert(condition, message) {
+      if (!condition) throw new Error(message || "Assertion failed");
+    }
+    function assertEqual(a, b, label) {
+      if (a !== b) throw new Error((label || "") + ": expected " + JSON.stringify(b) + " got " + JSON.stringify(a));
+    }
+
+    // =========================================================================
+    // Suite 1: ToolRegistry
+    // =========================================================================
+
+    test("ToolRegistry", "getAllowedNames() returns an array", () => {
+      const names = window.ToolRegistry.getAllowedNames();
+      assert(Array.isArray(names), "should be array");
+      assert(names.length > 0,     "should not be empty");
+    });
+
+    test("ToolRegistry", "known tools are in the allowlist", () => {
+      const names = window.ToolRegistry.getAllowedNames();
+      ["scan_dom","take_screenshot","scan_ocr","fuse_detections",
+       "redact","verify_redaction","get_page_context"].forEach(n => {
+        assert(names.indexOf(n) !== -1, n + " should be in allowlist");
+      });
+    });
+
+    test("ToolRegistry", "dangerous ops are NOT in the allowlist", () => {
+      const names = window.ToolRegistry.getAllowedNames();
+      ["eval","executeScript","__proto__","constructor","fetch",
+       "shell","cmd","exec"].forEach(bad => {
+        assert(names.indexOf(bad) === -1, bad + " must NOT be in allowlist");
+      });
+    });
+
+    test("ToolRegistry", "getDefinitions() returns correct length", () => {
+      const defs = window.ToolRegistry.getDefinitions();
+      assert(Array.isArray(defs), "should be array");
+      assertEqual(defs.length, window.ToolRegistry.getAllowedNames().length,
+        "definitions count should match allowlist count");
+    });
+
+    test("ToolRegistry", "getByName() finds known tool", () => {
+      const def = window.ToolRegistry.getByName("scan_dom");
+      assert(def !== null, "should find scan_dom");
+      assertEqual(def.name, "scan_dom", "name should match");
+    });
+
+    test("ToolRegistry", "getByName() returns null for unknown tool", () => {
+      const def = window.ToolRegistry.getByName("evil_tool");
+      assert(def === null, "should return null");
+    });
+
+    test("ToolRegistry", "allowed methods includes MASK, BLACK_BOX, TOKENIZE", () => {
+      const m = window.ToolRegistry.getAllowedMethods();
+      ["MASK","BLACK_BOX","TOKENIZE"].forEach(v => {
+        assert(m.indexOf(v) !== -1, v + " should be an allowed method");
+      });
+    });
+
+    // =========================================================================
+    // Suite 2: ToolValidator — valid calls
+    // =========================================================================
+
+    test("ToolValidator/valid", "scan_dom with no args passes", () => {
+      const r = window.ToolValidator.validate({ name: "scan_dom", args: {} });
+      assert(r.valid === true, "should be valid");
+    });
+
+    test("ToolValidator/valid", "take_screenshot passes", () => {
+      const r = window.ToolValidator.validate({ name: "take_screenshot", args: {} });
+      assert(r.valid === true, "should be valid");
+    });
+
+    test("ToolValidator/valid", "scan_ocr passes", () => {
+      const r = window.ToolValidator.validate({ name: "scan_ocr" });
+      assert(r.valid === true, "should be valid");
+    });
+
+    test("ToolValidator/valid", "fuse_detections passes", () => {
+      const r = window.ToolValidator.validate({ name: "fuse_detections" });
+      assert(r.valid === true, "should be valid");
+    });
+
+    test("ToolValidator/valid", "verify_redaction passes", () => {
+      const r = window.ToolValidator.validate({ name: "verify_redaction" });
+      assert(r.valid === true, "should be valid");
+    });
+
+    test("ToolValidator/valid", "get_page_context passes", () => {
+      const r = window.ToolValidator.validate({ name: "get_page_context" });
+      assert(r.valid === true, "should be valid");
+    });
+
+    test("ToolValidator/valid", "redact with valid IDs and MASK passes", () => {
+      const r = window.ToolValidator.validate({
+        name: "redact",
+        args: { detectionIds: ["det_0", "det_1", "det_99"], method: "MASK" }
+      });
+      assert(r.valid === true, "should be valid: " + (r.error || ""));
+    });
+
+    test("ToolValidator/valid", "redact with BLACK_BOX passes", () => {
+      const r = window.ToolValidator.validate({
+        name: "redact",
+        args: { detectionIds: ["det_0"], method: "BLACK_BOX" }
+      });
+      assert(r.valid === true, "BLACK_BOX should be valid");
+    });
+
+    test("ToolValidator/valid", "redact with TOKENIZE passes", () => {
+      const r = window.ToolValidator.validate({
+        name: "redact",
+        args: { detectionIds: ["det_0"], method: "TOKENIZE" }
+      });
+      assert(r.valid === true, "TOKENIZE should be valid");
+    });
+
+    // =========================================================================
+    // Suite 3: ToolValidator — security rejections
+    // =========================================================================
+
+    test("ToolValidator/security", "unknown tool is rejected", () => {
+      const r = window.ToolValidator.validate({ name: "eval", args: {} });
+      assert(r.valid === false, "eval should be rejected");
+      assert(r.error && r.error.length > 0, "should have error message");
+    });
+
+    test("ToolValidator/security", "executeScript is rejected", () => {
+      const r = window.ToolValidator.validate({ name: "executeScript", args: { code: "alert(1)" } });
+      assert(r.valid === false, "executeScript should be rejected");
+    });
+
+    test("ToolValidator/security", "arbitrary tool name is rejected", () => {
+      const r = window.ToolValidator.validate({ name: "delete_all_cookies" });
+      assert(r.valid === false, "unknown tool should be rejected");
+    });
+
+    test("ToolValidator/security", "null tool call is rejected", () => {
+      const r = window.ToolValidator.validate(null);
+      assert(r.valid === false, "null should be rejected");
+    });
+
+    test("ToolValidator/security", "missing tool name is rejected", () => {
+      const r = window.ToolValidator.validate({ args: {} });
+      assert(r.valid === false, "missing name should be rejected");
+    });
+
+    test("ToolValidator/security", "non-string tool name is rejected", () => {
+      const r = window.ToolValidator.validate({ name: 42, args: {} });
+      assert(r.valid === false, "numeric name should be rejected");
+    });
+
+    test("ToolValidator/security", "non-object args are rejected", () => {
+      const r = window.ToolValidator.validate({ name: "scan_dom", args: "malicious string" });
+      assert(r.valid === false, "string args should be rejected");
+    });
+
+    // =========================================================================
+    // Suite 4: ToolValidator — redact parameter validation
+    // =========================================================================
+
+    test("ToolValidator/redact", "empty detectionIds is rejected", () => {
+      const r = window.ToolValidator.validate({
+        name: "redact", args: { detectionIds: [], method: "MASK" }
+      });
+      assert(r.valid === false, "empty array should be rejected");
+    });
+
+    test("ToolValidator/redact", "missing detectionIds is rejected", () => {
+      const r = window.ToolValidator.validate({
+        name: "redact", args: { method: "MASK" }
+      });
+      assert(r.valid === false, "missing detectionIds should be rejected");
+    });
+
+    test("ToolValidator/redact", "non-array detectionIds is rejected", () => {
+      const r = window.ToolValidator.validate({
+        name: "redact", args: { detectionIds: "det_0", method: "MASK" }
+      });
+      assert(r.valid === false, "string detectionIds should be rejected");
+    });
+
+    test("ToolValidator/redact", "invalid ID format is rejected", () => {
+      const r = window.ToolValidator.validate({
+        name: "redact", args: { detectionIds: ["injected_code; alert(1)"], method: "MASK" }
+      });
+      assert(r.valid === false, "injection attempt should be rejected");
+    });
+
+    test("ToolValidator/redact", "LLM-injected selector is rejected", () => {
+      const r = window.ToolValidator.validate({
+        name: "redact",
+        args: { detectionIds: ["#password-field"], method: "MASK" }
+      });
+      assert(r.valid === false, "CSS selector as ID should be rejected");
+    });
+
+    test("ToolValidator/redact", "invalid method is rejected", () => {
+      const r = window.ToolValidator.validate({
+        name: "redact", args: { detectionIds: ["det_0"], method: "DROP_TABLE" }
+      });
+      assert(r.valid === false, "unknown method should be rejected");
+    });
+
+    test("ToolValidator/redact", "missing method is rejected", () => {
+      const r = window.ToolValidator.validate({
+        name: "redact", args: { detectionIds: ["det_0"] }
+      });
+      assert(r.valid === false, "missing method should be rejected");
+    });
+
+    test("ToolValidator/redact", "numeric ID in array is rejected", () => {
+      const r = window.ToolValidator.validate({
+        name: "redact", args: { detectionIds: [0, 1, 2], method: "MASK" }
+      });
+      assert(r.valid === false, "numeric IDs should be rejected");
+    });
+
+    // =========================================================================
+    // Suite 5: AgentState
+    // =========================================================================
+
+    test("AgentState", "init() returns a state object", () => {
+      const s = window.AgentState.init("Test request");
+      assert(s && typeof s === "object", "should return object");
+      assertEqual(s.userRequest, "Test request", "userRequest");
+      assertEqual(s.stepCount, 0, "stepCount");
+      assertEqual(s.completed, false, "completed");
+    });
+
+    test("AgentState", "assignDetectionIds() creates det_N keys", () => {
+      window.AgentState.init("test");
+      window.AgentState.assignDetectionIds([
+        { category: "email",   confidence: 0.99, sources: ["dom"], rect: { x:0,y:0,w:10,h:10 } },
+        { category: "phone",   confidence: 0.80, sources: ["ocr"], rect: { x:0,y:0,w:10,h:10 } },
+      ]);
+      const meta = window.AgentState.getDetectionMetadata();
+      assertEqual(meta.length, 2, "should have 2 entries");
+      assertEqual(meta[0].id, "det_0", "first ID");
+      assertEqual(meta[1].id, "det_1", "second ID");
+    });
+
+    test("AgentState", "getDetectionMetadata() excludes rect and raw values", () => {
+      window.AgentState.init("test");
+      window.AgentState.assignDetectionIds([
+        { category: "email", confidence: 0.99, sources: ["dom"],
+          rect: { x:0,y:0,width:100,height:20 }, matchedText: "user@example.com" }
+      ]);
+      const meta = window.AgentState.getDetectionMetadata();
+      assert(!("rect" in meta[0]),        "rect should not be in metadata");
+      assert(!("matchedText" in meta[0]), "matchedText should not be in metadata");
+      assert("category" in meta[0],       "category should be present");
+      assert("confidence" in meta[0],     "confidence should be present");
+    });
+
+    test("AgentState", "resolveDetectionIds() returns found and notFound", () => {
+      window.AgentState.init("test");
+      window.AgentState.assignDetectionIds([
+        { category: "email", confidence: 0.9, sources: ["dom"] }
+      ]);
+      const r = window.AgentState.resolveDetectionIds(["det_0", "det_99"]);
+      assertEqual(r.found.length,    1, "one found");
+      assertEqual(r.notFound.length, 1, "one not found");
+      assertEqual(r.notFound[0], "det_99", "notFound ID");
+    });
+
+    // =========================================================================
+    // Render results
+    // =========================================================================
+
+    const out     = document.getElementById("output");
+    const suites  = {};
+
+    results.forEach(r => {
+      if (!suites[r.suite]) suites[r.suite] = [];
+      suites[r.suite].push(r);
+    });
+
+    for (const [suite, tests] of Object.entries(suites)) {
+      const div = document.createElement("div");
+      div.className = "suite";
+      div.innerHTML = '<h2>' + suite + '</h2>';
+      tests.forEach(t => {
+        const el = document.createElement("div");
+        el.className = "test";
+        el.innerHTML =
+          '<span class="icon ' + (t.pass ? "pass" : "fail") + '">' +
+            (t.pass ? "✓" : "✗") + '</span>' +
+          '<span class="label">' + t.name + '</span>' +
+          (t.error ? '<span class="detail">' + t.error + '</span>' : "");
+        div.appendChild(el);
+      });
+      out.appendChild(div);
+    }
+
+    const passed = results.filter(r => r.pass).length;
+    const failed = results.filter(r => !r.pass).length;
+    const sumEl = document.getElementById("summary");
+    sumEl.innerHTML =
+      '<span class="' + (failed === 0 ? "ok" : "err") + '">' +
+        passed + ' passed, ' + failed + ' failed' +
+      '</span>' +
+      ' out of ' + results.length + ' tests.';
+  </script>
+</body>
+</html>
