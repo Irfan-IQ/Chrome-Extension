@@ -36,6 +36,15 @@ class Settings:
         "BACKEND_MODE", "gemini_cloud"
     )
 
+    # Comma-separated list of allowed CORS origins.
+    # Defaults to "*" for local dev; set explicitly in production,
+    # e.g. CORS_ORIGINS="chrome-extension://abcdef123456"
+    CORS_ORIGINS: list = [
+        o.strip()
+        for o in os.getenv("CORS_ORIGINS", "*").split(",")
+        if o.strip()
+    ]
+
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 

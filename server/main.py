@@ -35,8 +35,11 @@ app = FastAPI(title="Redact Agent Server", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=settings.CORS_ORIGINS,
+    # Credentials (cookies) are never used by the extension, so this stays False.
+    # Combining allow_origins=["*"] with allow_credentials=True is invalid per
+    # the CORS spec and causes strict browsers to block the response.
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
