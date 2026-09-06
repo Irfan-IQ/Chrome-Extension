@@ -36,7 +36,9 @@
     {
       "resources": [
         "lib/tesseract.worker.min.js",
-        "lib/tesseract.min.js"
+        "lib/tesseract.min.js",
+        "lib/tesseract-core-simd.wasm",
+        "lib/eng.traineddata.gz"
       ],
       "matches": ["<all_urls>"]
     }

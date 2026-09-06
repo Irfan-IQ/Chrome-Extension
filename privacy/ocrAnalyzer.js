@@ -44,10 +44,18 @@
         ? chrome.runtime.getURL("lib/tesseract.worker.min.js")
         : "lib/tesseract.worker.min.js";
     },
-    // Language data fetched at runtime from CDN (data, not a script — allowed).
-    langPath: "https://cdn.jsdelivr.net/npm/tesseract.js-data@4.0.0/",
-    // WASM core: also from CDN (fetched via fetch(), not importScripts).
-    corePath: "https://cdn.jsdelivr.net/npm/tesseract.js-core@4.0.0/tesseract-core-simd.wasm",
+    // Language data served locally from lib/ — fully offline, no CDN needed.
+    getLangPath: function () {
+      return (typeof chrome !== "undefined" && chrome.runtime)
+        ? chrome.runtime.getURL("lib/")
+        : "lib/";
+    },
+    // WASM core served locally from lib/ — fully offline.
+    getCorePath: function () {
+      return (typeof chrome !== "undefined" && chrome.runtime)
+        ? chrome.runtime.getURL("lib/tesseract-core-simd.wasm")
+        : "lib/tesseract-core-simd.wasm";
+    },
   };
 
   // ---------------------------------------------------------------------------
@@ -79,8 +87,8 @@
 
       return Tesseract.createWorker("eng", Tesseract.OEM.LSTM_ONLY, {
         workerPath: CONFIG.getWorkerPath(),
-        langPath: CONFIG.langPath,
-        corePath: CONFIG.corePath,
+        langPath: CONFIG.getLangPath(),
+        corePath: CONFIG.getCorePath(),
         // Silent logger to avoid console spam
         logger: function (m) {
           if (m.progress && m.progress < 1) {

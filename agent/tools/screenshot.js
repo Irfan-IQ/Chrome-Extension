@@ -24,6 +24,24 @@
       return err("NO_WINDOW", "Could not determine window ID for screenshot capture.");
     }
 
+    // Scroll the page to (0, 0) before capturing so the screenshot covers the
+    // top of the page consistently. captureVisibleTab only captures the current
+    // viewport — content scrolled off-screen is NOT in the image.
+    var scrollY = 0;
+    try {
+      if (state._tabId) {
+        var scrollResult = await chrome.scripting.executeScript({
+          target: { tabId: state._tabId },
+          func: function () {
+            var prev = window.scrollY;
+            window.scrollTo(0, 0);
+            return prev;
+          },
+        });
+        scrollY = (scrollResult && scrollResult[0] && scrollResult[0].result) || 0;
+      }
+    } catch (e) { /* non-fatal — proceed with capture at current scroll */ }
+
     var dataUrl;
     try {
       dataUrl = await chrome.tabs.captureVisibleTab(state._windowId, { format: "png" });
@@ -42,13 +60,21 @@
     var dims = await getImageDimensions(dataUrl);
     state.screenshotSize = { width: dims.width, height: dims.height };
 
+    var viewportNote = scrollY > 0
+      ? "Page was scrolled " + scrollY + "px — scrolled to top before capture. " +
+        "IMPORTANT: only the visible viewport is captured. Fields below the fold " +
+        "are found by DOM scan but are NOT visible in this screenshot; ask the user " +
+        "to scroll the form into view before re-capturing if visual redaction is needed."
+      : "Screenshot captured from top of page. Only the visible viewport is captured; " +
+        "fields below the fold are detected by DOM scan but not visible here.";
+
     return {
       success: true,
       tool: "take_screenshot",
       result: {
         width:  dims.width,
         height: dims.height,
-        note:   "Screenshot captured and stored locally. Available for OCR and redaction.",
+        note:   viewportNote,
       },
     };
   }

@@ -30,7 +30,7 @@
 (function (root) {
   "use strict";
 
-  var MAX_AGENT_STEPS           = 10;
+  var MAX_AGENT_STEPS           = 15;
   var MAX_SAME_TOOL_IN_A_ROW    = 2;   // repeated-loop protection
 
   // ---------------------------------------------------------------------------
