@@ -107,6 +107,20 @@
    * @returns {Promise<{type:"tool_call"|"text", toolCall?:object, text?:string, rawContent:object}>}
    */
   async function generateWithTools(messages, toolDefinitions, apiKey) {
+    var mode = "direct";
+    var serverUrl = "http://127.0.0.1:8000";
+    try {
+      if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
+        var stored = await chrome.storage.local.get(["backendMode", "serverUrl"]);
+        if (stored.backendMode) mode = stored.backendMode;
+        if (stored.serverUrl) serverUrl = stored.serverUrl;
+      }
+    } catch (e) {}
+
+    if (mode === "server") {
+      return await generateWithServer(messages, toolDefinitions, serverUrl);
+    }
+
     if (!apiKey) throw new Error("No Gemini API key configured.");
 
     var endpoint = GEMINI_BASE + AGENT_MODEL + ":generateContent";
@@ -250,11 +264,163 @@
     }
   }
 
+  async function generateWithServer(messages, toolDefinitions, serverUrl) {
+    var endpoint = (serverUrl || "http://127.0.0.1:8000").replace(/\/+$/, "") + "/v1/chat/completions";
+
+    var tools = (toolDefinitions || []).map(function (tool) {
+      return {
+        type: "function",
+        function: {
+          name: tool.name,
+          description: tool.description,
+          parameters: tool.parameters || { type: "object", properties: {} },
+        },
+      };
+    });
+
+    var openaiMessages = [];
+    if (SYSTEM_INSTRUCTION && SYSTEM_INSTRUCTION.parts && SYSTEM_INSTRUCTION.parts[0]) {
+      openaiMessages.push({
+        role: "system",
+        content: SYSTEM_INSTRUCTION.parts[0].text,
+      });
+    }
+
+    for (var i = 0; i < messages.length; i++) {
+      var m = messages[i];
+      if (!m || !m.parts) continue;
+
+      for (var j = 0; j < m.parts.length; j++) {
+        var part = m.parts[j];
+        if (!part) continue;
+
+        if (part.functionResponse) {
+          var respStr = "{}";
+          try {
+            respStr = typeof part.functionResponse.response === "string"
+              ? part.functionResponse.response
+              : JSON.stringify(part.functionResponse.response || {});
+          } catch (e) {}
+          openaiMessages.push({
+            role: "tool",
+            name: part.functionResponse.name,
+            content: respStr,
+          });
+        } else if (part.functionCall) {
+          openaiMessages.push({
+            role: "assistant",
+            content: null,
+            tool_calls: [{
+              id: "call_" + Math.random().toString(36).slice(2, 9),
+              type: "function",
+              function: {
+                name: part.functionCall.name,
+                arguments: JSON.stringify(part.functionCall.args || {}),
+              },
+            }],
+          });
+        } else if (part.text) {
+          openaiMessages.push({
+            role: m.role === "model" ? "assistant" : "user",
+            content: part.text,
+          });
+        }
+      }
+    }
+
+    var body = {
+      messages: openaiMessages,
+      tools: tools.length > 0 ? tools : undefined,
+      tool_choice: "auto",
+      temperature: 0.1,
+      max_tokens: 2048,
+    };
+
+    var response;
+    try {
+      response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+    } catch (netErr) {
+      throw new Error("Could not reach local server at " + serverUrl + ". Is it running?");
+    }
+
+    if (!response.ok) {
+      var errDetail = "Server error (" + response.status + ")";
+      try {
+        var errJson = await response.json();
+        if (errJson && errJson.detail) errDetail = errJson.detail;
+      } catch (_) {}
+      throw new Error(errDetail);
+    }
+
+    var data;
+    try {
+      data = await response.json();
+    } catch (_) {
+      throw new Error("Invalid JSON returned from server.");
+    }
+
+    var candidate = data.choices && data.choices[0];
+    if (!candidate || !candidate.message) {
+      throw new Error("Server returned an empty response.");
+    }
+
+    var msg = candidate.message;
+
+    if (msg.tool_calls && msg.tool_calls.length > 0) {
+      var tc = msg.tool_calls[0];
+      var fnName = (tc.function && tc.function.name) || "";
+      var rawArgs = (tc.function && tc.function.arguments) || "{}";
+      var parsedArgs = {};
+      if (typeof rawArgs === "object" && rawArgs !== null) {
+        parsedArgs = rawArgs;
+      } else if (typeof rawArgs === "string") {
+        try { parsedArgs = JSON.parse(rawArgs); }
+        catch (_) { parsedArgs = {}; }
+      }
+
+      return {
+        type: "tool_call",
+        toolCall: {
+          name: fnName,
+          args: parsedArgs,
+        },
+        rawContent: {
+          role: "model",
+          parts: [{
+            functionCall: {
+              name: fnName,
+              args: parsedArgs,
+            },
+          }],
+        },
+      };
+    }
+
+    var text = msg.content || "";
+    if (!text) {
+      throw new Error("Server returned an empty response.");
+    }
+
+    return {
+      type: "text",
+      text: text,
+      rawContent: {
+        role: "model",
+        parts: [{ text: text }],
+      },
+    };
+  }
+
   // ---------------------------------------------------------------------------
   // Export
   // ---------------------------------------------------------------------------
   root.AgentLLMClient = {
     generateWithTools:          generateWithTools,
+    generateWithServer:         generateWithServer,
     buildFunctionResponseMessage: buildFunctionResponseMessage,
     AGENT_MODEL:                AGENT_MODEL,
   };

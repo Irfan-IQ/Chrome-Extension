@@ -74,6 +74,13 @@ function dataUrlToInlinePart(dataUrl) {
  * @throws {Error} with a human-readable message on any failure.
  */
 async function sendMessage(message, conversationHistory = [], options = {}) {
+  const { backendMode = "direct", serverUrl = "http://127.0.0.1:8000" } =
+    await chrome.storage.local.get(["backendMode", "serverUrl"]);
+
+  if (backendMode === "server") {
+    return await sendMessageViaServer(message, conversationHistory, options, serverUrl);
+  }
+
   const apiKey = await getApiKey();
   if (!apiKey) {
     throw new Error("Please configure your Gemini API key in Settings.");
@@ -172,5 +179,69 @@ async function sendMessage(message, conversationHistory = [], options = {}) {
   return text;
 }
 
+async function sendMessageViaServer(message, conversationHistory = [], options = {}, serverUrl = "http://127.0.0.1:8000") {
+  const endpoint = serverUrl.replace(/\/+$/, "") + "/v1/chat/completions";
+  const messages = [];
+
+  for (const msg of conversationHistory) {
+    if (!msg || !msg.content) continue;
+    messages.push({
+      role: msg.role === "assistant" || msg.role === "model" ? "assistant" : "user",
+      content: String(msg.content),
+    });
+  }
+
+  if (options && (options.pageContext || options.imageDataUrl)) {
+    const parts = [];
+    if (options.pageContext) {
+      parts.push({ type: "text", text: String(options.pageContext) });
+    }
+    if (options.imageDataUrl) {
+      parts.push({
+        type: "image_url",
+        image_url: { url: options.imageDataUrl },
+      });
+    }
+    parts.push({ type: "text", text: String(message) });
+    messages.push({ role: "user", content: parts });
+  } else {
+    messages.push({ role: "user", content: String(message) });
+  }
+
+  let response;
+  try {
+    response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages }),
+    });
+  } catch (err) {
+    throw new Error("Could not reach local server at " + serverUrl + ". Is it running?");
+  }
+
+  if (!response.ok) {
+    let detail = "Server error (" + response.status + ")";
+    try {
+      const errJson = await response.json();
+      if (errJson && errJson.detail) detail = errJson.detail;
+    } catch (_) {}
+    throw new Error(detail);
+  }
+
+  let data;
+  try {
+    data = await response.json();
+  } catch (_) {
+    throw new Error("Invalid response from local server.");
+  }
+
+  const candidate = data.choices && data.choices[0];
+  const text = (candidate && candidate.message && candidate.message.content) || "";
+  if (!text) {
+    throw new Error("Server returned an empty response.");
+  }
+  return text;
+}
+
 // Expose on window so sidepanel.js can use these without ES modules.
-window.Gemini = { sendMessage, getApiKey, setApiKey, GEMINI_MODEL };
+window.Gemini = { sendMessage, sendMessageViaServer, getApiKey, setApiKey, GEMINI_MODEL };

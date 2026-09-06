@@ -21,6 +21,9 @@ const saveKeyBtn     = document.getElementById("save-key-btn");
 const closeSettingsBtn = document.getElementById("close-settings-btn");
 const settingsStatus = document.getElementById("settings-status");
 const statusDot      = document.getElementById("status-dot");
+const backendModeSelect = document.getElementById("backend-mode-select");
+const serverUrlGroup    = document.getElementById("server-url-group");
+const serverUrlInput    = document.getElementById("server-url-input");
 
 // ---------- Privacy element refs ----------
 const privacyEnabledEl = document.getElementById("privacy-enabled");
@@ -536,6 +539,11 @@ async function openSettings() {
   try {
     const key = await window.Gemini.getApiKey();
     apiKeyInput.value = key || "";
+    const { backendMode = "direct", serverUrl = "http://127.0.0.1:8000" } =
+      await chrome.storage.local.get(["backendMode", "serverUrl"]);
+    if (backendModeSelect) backendModeSelect.value = backendMode;
+    if (serverUrlInput) serverUrlInput.value = serverUrl;
+    if (serverUrlGroup) serverUrlGroup.classList.toggle("hidden", backendMode !== "server");
   } catch (e) { console.error(e); }
   apiKeyInput.focus();
 }
@@ -543,21 +551,33 @@ async function openSettings() {
 function closeSettings() { settingsPanel.classList.add("hidden"); }
 
 async function saveKey() {
+  const mode = backendModeSelect ? backendModeSelect.value : "direct";
+  const sUrl = serverUrlInput ? serverUrlInput.value.trim() : "http://127.0.0.1:8000";
   const key = apiKeyInput.value.trim();
-  if (!key) {
-    settingsStatus.textContent = "Enter a key before saving.";
+
+  if (mode === "direct" && !key) {
+    settingsStatus.textContent = "Enter a Gemini key for direct cloud mode.";
     settingsStatus.className = "settings-status err";
     return;
   }
   try {
-    await window.Gemini.setApiKey(key);
-    settingsStatus.textContent = "Saved. You can start chatting.";
+    await chrome.storage.local.set({ backendMode: mode, serverUrl: sUrl });
+    if (key) await window.Gemini.setApiKey(key);
+    settingsStatus.textContent = "Saved.";
     settingsStatus.className = "settings-status ok";
   } catch (e) {
-    console.error("Failed to save key:", e);
-    settingsStatus.textContent = "Could not save the key.";
+    console.error("Failed to save settings:", e);
+    settingsStatus.textContent = "Could not save settings.";
     settingsStatus.className = "settings-status err";
   }
+}
+
+if (backendModeSelect) {
+  backendModeSelect.addEventListener("change", () => {
+    if (serverUrlGroup) {
+      serverUrlGroup.classList.toggle("hidden", backendModeSelect.value !== "server");
+    }
+  });
 }
 
 // ---------- Input behaviour ----------
@@ -753,9 +773,9 @@ async function handleAgentRun() {
     return;
   }
 
-  // Check API key
+  const { backendMode = "direct" } = await chrome.storage.local.get("backendMode");
   const apiKey = await window.Gemini.getApiKey().catch(() => "");
-  if (!apiKey) {
+  if (backendMode !== "server" && !apiKey) {
     agentResultText.textContent =
       "Please configure your Gemini API key in Settings (⚙ top right) before running the agent.";
     agentResultPanel.classList.remove("hidden");
@@ -829,8 +849,9 @@ agentResultClose.addEventListener("click", () => {
   await loadHistory();
 
   try {
+    const { backendMode = "direct" } = await chrome.storage.local.get("backendMode");
     const key = await window.Gemini.getApiKey();
-    if (!key) {
+    if (!key && backendMode !== "server") {
       if (chatEl.querySelector(".empty-state")) chatEl.innerHTML = "";
       renderMessage(
         "AI",

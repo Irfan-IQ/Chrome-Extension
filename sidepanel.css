@@ -126,13 +126,18 @@ body {
   color: var(--text-muted);
   margin-bottom: 4px;
 }
-#api-key-input {
+#api-key-input,
+#server-url-input,
+#backend-mode-select {
   width: 100%;
   padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 13px;
   font-family: inherit;
+  background: var(--card-bg, #fff);
+  color: var(--text, #111);
+  box-sizing: border-box;
 }
 .settings-actions {
   display: flex;
