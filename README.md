@@ -64,7 +64,15 @@ The agent uses stable detection IDs to reference specific detections without eve
 5. Click the extension icon → the side panel opens.
 6. Click ⚙ Settings and paste your [Gemini API key](https://aistudio.google.com/app/apikey).
 
+### Optional: Local Server (Only if hosting a local LLM/VLM)
+1. Create and activate a Python virtual environment (`python -m venv venv`).
+2. Install dependencies: `pip install -r server/requirements.txt`.
+3. Copy environment template: `copy server\.env.example server\.env` (or `cp server/.env.example server/.env`).
+4. Set `BACKEND_MODE=local_vlm` in `server/.env`.
+5. Start the server: `python server/main.py`.
+
 ---
+
 
 ## Usage
 
@@ -173,6 +181,12 @@ All processing runs **inside the Chrome extension**. No raw data is sent to any 
 │       ├── redact.js
 │       ├── verifyRedaction.js
 │       └── getPageContext.js
+│
+├── server/                     FastAPI backend (optional for local LLM)
+│   ├── config.py
+│   ├── main.py
+│   ├── schemas.py
+│   └── requirements.txt
 │
 ├── lib/
 │   └── tesseract.min.js        Bundled OCR engine (no CDN)
