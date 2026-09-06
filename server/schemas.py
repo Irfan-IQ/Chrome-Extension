@@ -1,15 +1,7 @@
-"""
-server/schemas.py — Pydantic schemas for OpenAI-compatible and Redact Agent endpoints.
-"""
-
 from typing import Any, Dict, List, Literal, Optional, Union
 from pydantic import BaseModel, Field
 import time
 
-
-# ------------------------------------------------------------------------------
-# Function & Tool Call Schemas (OpenAI Spec)
-# ------------------------------------------------------------------------------
 
 class FunctionDefinition(BaseModel):
     name: str
@@ -24,7 +16,7 @@ class ToolDefinition(BaseModel):
 
 class FunctionCall(BaseModel):
     name: str
-    arguments: str  # JSON-encoded string
+    arguments: str
 
 
 class ToolCall(BaseModel):
@@ -33,12 +25,8 @@ class ToolCall(BaseModel):
     function: FunctionCall
 
 
-# ------------------------------------------------------------------------------
-# Message Content & Chat Message Schemas
-# ------------------------------------------------------------------------------
-
 class ImageUrl(BaseModel):
-    url: str  # Can be a web URL or data:image/png;base64,...
+    url: str
     detail: Optional[Literal["auto", "low", "high"]] = "auto"
 
 
@@ -55,10 +43,6 @@ class ChatMessage(BaseModel):
     tool_calls: Optional[List[ToolCall]] = None
     tool_call_id: Optional[str] = None
 
-
-# ------------------------------------------------------------------------------
-# Chat Completion Request & Response
-# ------------------------------------------------------------------------------
 
 class ChatCompletionRequest(BaseModel):
     model: Optional[str] = None
@@ -91,14 +75,9 @@ class ChatCompletionResponse(BaseModel):
     usage: UsageInfo = Field(default_factory=UsageInfo)
 
 
-# ------------------------------------------------------------------------------
-# Health & Models Schemas
-# ------------------------------------------------------------------------------
-
 class HealthResponse(BaseModel):
     status: str = "ok"
     version: str = "1.0.0"
-    service: str = "Redact Agent Backend Gateway"
     backend_mode: str
     device: str
     os: str
@@ -110,7 +89,7 @@ class ModelItem(BaseModel):
     id: str
     object: Literal["model"] = "model"
     created: int = Field(default_factory=lambda: int(time.time()))
-    owned_by: str = "redact-agent"
+    owned_by: str = "server"
 
 
 class ModelsListResponse(BaseModel):
