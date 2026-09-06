@@ -5,6 +5,7 @@ from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
+from engine import get_engine
 from schemas import (
     ChatCompletionRequest,
     ChatCompletionResponse,
@@ -88,35 +89,15 @@ async def list_models():
 
 @app.post("/v1/chat/completions", response_model=ChatCompletionResponse)
 async def chat_completions(req: ChatCompletionRequest):
-    model_name = req.model or (
-        settings.GEMINI_MODEL
-        if settings.BACKEND_MODE == "gemini_cloud"
-        else settings.LOCAL_VLM_MODEL
-    )
-
     if not req.messages:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="messages cannot be empty",
         )
 
-    # placeholder reply for now
-    reply = ChatMessage(
-        role="assistant",
-        content="ready",
-    )
+    engine = get_engine()
+    return await engine.generate(req)
 
-    return ChatCompletionResponse(
-        model=model_name,
-        choices=[
-            ChatCompletionResponseChoice(
-                index=0,
-                message=reply,
-                finish_reason="stop",
-            )
-        ],
-        usage=UsageInfo(prompt_tokens=10, completion_tokens=5, total_tokens=15),
-    )
 
 
 if __name__ == "__main__":
