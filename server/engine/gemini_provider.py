@@ -14,6 +14,7 @@ from schemas import (
     ToolCall,
     UsageInfo,
 )
+from services import gemini_call_to_openai, openai_tools_to_gemini
 
 GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models/"
 
@@ -104,19 +105,6 @@ class GeminiProvider(BaseEngine):
 
         return contents, system_instruction
 
-    def _convert_tools(self, tools):
-        if not tools:
-            return None
-        decls = []
-        for t in tools:
-            fn = t.function
-            decls.append({
-                "name": fn.name,
-                "description": fn.description or "",
-                "parameters": fn.parameters or {"type": "object", "properties": {}},
-            })
-        return [{"functionDeclarations": decls}]
-
     async def generate(self, req: ChatCompletionRequest) -> ChatCompletionResponse:
         api_key = self.api_key
         if not api_key:
@@ -129,7 +117,7 @@ class GeminiProvider(BaseEngine):
         endpoint = f"{GEMINI_BASE}{model}:generateContent"
 
         contents, sys_inst = self._convert_messages(req.messages)
-        gemini_tools = self._convert_tools(req.tools)
+        gemini_tools = openai_tools_to_gemini(req.tools)
 
         body = {
             "contents": contents,
@@ -189,15 +177,7 @@ class GeminiProvider(BaseEngine):
 
         for p in parts:
             if "functionCall" in p:
-                fc = p["functionCall"]
-                tool_calls.append(
-                    ToolCall(
-                        function=FunctionCall(
-                            name=fc.get("name", ""),
-                            arguments=json.dumps(fc.get("args", {})),
-                        )
-                    )
-                )
+                tool_calls.append(gemini_call_to_openai(p["functionCall"]))
             elif "text" in p:
                 text_parts.append(p["text"])
 
