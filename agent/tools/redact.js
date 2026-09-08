@@ -56,6 +56,15 @@
     // Persist masked result; keep the raw screenshot for iterative redaction
     state.redactedScreenshot = masked;
 
+    // Log the redacted screenshot for the gallery
+    if (!Array.isArray(state.screenshotLog)) state.screenshotLog = [];
+    state.screenshotLog.push({
+      step:          state.stepCount,
+      dataUrl:       masked,
+      redactedCount: detectionsToRedact.length,
+      autoRedacted:  false,
+    });
+
     // Track which IDs were redacted (for verify_redaction)
     var newIds = resolved.found.map(function (r) { return r.id; });
     for (var i = 0; i < newIds.length; i++) {

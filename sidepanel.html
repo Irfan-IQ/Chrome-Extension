@@ -235,6 +235,22 @@
           </div>
         </section>
 
+        <!-- View all redacted screenshots button (shown after run if screenshots exist) -->
+        <div id="agent-screenshots-toggle-wrap" class="agent-screenshots-toggle-wrap hidden">
+          <button id="agent-view-screenshots-btn" class="secondary-btn agent-view-screenshots-btn">
+            📷 View Redacted Screenshots
+          </button>
+        </div>
+
+        <!-- Screenshots gallery (expandable) -->
+        <section id="agent-screenshots-panel" class="agent-screenshots-panel hidden">
+          <div class="agent-screenshots-header">
+            <span id="agent-screenshots-title">Redacted Screenshots</span>
+            <button id="agent-screenshots-close-btn" class="icon-btn">✕</button>
+          </div>
+          <div id="agent-screenshots-grid" class="agent-screenshots-grid"></div>
+        </section>
+
       </div><!-- /#agent-mode-panel -->
     </div><!-- /#app -->
 

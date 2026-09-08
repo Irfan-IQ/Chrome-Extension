@@ -356,7 +356,14 @@
   // These patterns are distinctive enough to flag without needing label context.
   var TEXT_NODE_PATTERNS = [
     { re: /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/, category: CATEGORY.EMAIL },
-    { re: /\b\d{3}[-\s]\d{2}[-\s]\d{4}\b/, category: "ssn" },
+    { re: /\b\d{3}[-\s]\d{2}[-\s]\d{4}\b/,                     category: "ssn" },
+    // LinkedIn full or short-form profile URL
+    { re: /linkedin\.com\/in\/[A-Za-z0-9\-_%]+/i,               category: CATEGORY.USERNAME },
+    { re: /^in\/[A-Za-z0-9][A-Za-z0-9\-]+-[a-f0-9]{6,}/i,      category: CATEGORY.USERNAME },
+    // GitHub profile URL
+    { re: /github\.com\/[A-Za-z0-9][A-Za-z0-9\-]{0,38}(?:$|[^\/A-Za-z0-9\-])/i, category: CATEGORY.USERNAME },
+    // @handle (Twitter, GitHub, Instagram, etc.)
+    { re: /^@[A-Za-z0-9_][A-Za-z0-9_.]{1,49}$/,                category: CATEGORY.USERNAME },
   ];
 
   // Scan visible TEXT nodes in an element's subtree for structural PII patterns.
@@ -590,6 +597,157 @@
     return out;
   }
 
+  // ---------------------------------------------------------------------------
+  // Scan <a href="mailto:..."> links — the most reliable email signal
+  // ---------------------------------------------------------------------------
+  function scanMailtoLinks(doc, viewport, frameOffset) {
+    var out = [];
+    var links;
+    try { links = doc.querySelectorAll('a[href^="mailto:"]'); }
+    catch (e) { return out; }
+
+    var seen = new Set ? new Set() : { _s:[], has:function(v){return this._s.indexOf(v)!==-1;}, add:function(v){this._s.push(v);} };
+
+    for (var i = 0; i < links.length; i++) {
+      var link = links[i];
+      var href = link.getAttribute("href") || "";
+      var email = href.slice("mailto:".length).split("?")[0].trim();
+      if (!email || !/@/.test(email)) continue;
+      if (seen.has(email)) continue;
+      seen.add(email);
+
+      var rect;
+      try { rect = link.getBoundingClientRect(); } catch(e) { continue; }
+      var vRect = { left: rect.left + frameOffset.x, top: rect.top + frameOffset.y,
+                    width: rect.width, height: rect.height };
+      if (!CU.intersectsViewport({ x:vRect.left, y:vRect.top, width:vRect.width, height:vRect.height },
+                                  viewport.width, viewport.height)) continue;
+      if (vRect.width < 4 || vRect.height < 4) continue;
+
+      try { console.debug("[dom] mailto: email detected"); } catch(e) {}
+      out.push({ category: CATEGORY.EMAIL, elementType: link.tagName, type: null,
+                 selector: buildSelector(link),
+                 rect: { x:Math.round(vRect.left), y:Math.round(vRect.top),
+                         width:Math.round(vRect.width), height:Math.round(vRect.height) },
+                 confidence: "high", _el: link, _isTextNode: true });
+    }
+    return out;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Scan social-profile and structured-data elements
+  //   • itemprop attributes (schema.org microdata — used by GitHub, LinkedIn, etc.)
+  //   • Platform-specific selectors (GitHub vcard, LinkedIn profile fields)
+  //   • <a href="https://linkedin.com/..."> links
+  // ---------------------------------------------------------------------------
+
+  // itemprop → PII category mapping (schema.org)
+  var ITEMPROP_CATEGORY = {
+    "email":        CATEGORY.EMAIL,
+    "name":         CATEGORY.NAME,
+    "givenName":    CATEGORY.NAME,
+    "familyName":   CATEGORY.NAME,
+    "additionalName": CATEGORY.NAME,
+    "nickname":     CATEGORY.USERNAME,
+    "alternateName":CATEGORY.USERNAME,
+    "telephone":    CATEGORY.PHONE,
+    "url":          CATEGORY.USERNAME,
+    "sameAs":       CATEGORY.USERNAME,
+    "identifier":   CATEGORY.USERNAME,
+    "birthDate":    "date_of_birth",
+  };
+
+  // Platform-specific CSS selector → PII category mapping
+  // These selectors target the DISPLAY elements, not form inputs.
+  var PLATFORM_SELECTORS = [
+    // GitHub vcard / profile page
+    { sel: ".p-name",                category: CATEGORY.NAME },
+    { sel: ".p-nickname",            category: CATEGORY.USERNAME },
+    { sel: ".p-org",                 category: CATEGORY.NAME },
+    { sel: "[itemprop='email']",     category: CATEGORY.EMAIL },
+    { sel: "a[href^='mailto:']",     category: CATEGORY.EMAIL },   // handled above but belt+braces
+    // LinkedIn profile elements
+    { sel: ".pv-top-card--list li",  category: CATEGORY.NAME },
+    { sel: ".text-heading-xlarge",   category: CATEGORY.NAME },
+    // Twitter / X
+    { sel: "[data-testid='UserName']",    category: CATEGORY.USERNAME },
+    { sel: "[data-testid='UserDescription']", category: CATEGORY.NAME },
+    // Generic social profile patterns
+    { sel: "[class*='profile-name']",category: CATEGORY.NAME },
+    { sel: "[class*='display-name']",category: CATEGORY.NAME },
+    { sel: "[class*='user-name']",   category: CATEGORY.USERNAME },
+    { sel: "[class*='handle']",      category: CATEGORY.USERNAME },
+    { sel: "[class*='username']",    category: CATEGORY.USERNAME },
+    // LinkedIn URL anchor links
+    { sel: "a[href*='linkedin.com/in/']", category: CATEGORY.USERNAME },
+    // GitHub username link
+    { sel: "a[href*='github.com/']",      category: CATEGORY.USERNAME },
+  ];
+
+  var LINKEDIN_HREF_RE = /linkedin\.com\/in\/[A-Za-z0-9\-_%]+/i;
+  var GITHUB_HREF_RE   = /github\.com\/[A-Za-z0-9][A-Za-z0-9\-]{0,38}(?:$|[^\/A-Za-z0-9\-])/i;
+
+  function scanSocialProfileElements(doc, viewport, frameOffset) {
+    var out = [];
+    var emitted = new Set ? new Set() : {
+      _s:[], has:function(v){return this._s.indexOf(v)!==-1;}, add:function(v){this._s.push(v);}
+    };
+
+    function addElement(el, category) {
+      if (emitted.has(el)) return;
+      var text = (el.textContent || el.getAttribute("content") || "").trim();
+      if (!text || text.length < 2 || text.length > 300) return;
+      var rect;
+      try { rect = el.getBoundingClientRect(); } catch(e) { return; }
+      var vRect = { left: rect.left + frameOffset.x, top: rect.top + frameOffset.y,
+                    width: rect.width, height: rect.height };
+      if (!CU.intersectsViewport({ x:vRect.left, y:vRect.top, width:vRect.width, height:vRect.height },
+                                  viewport.width, viewport.height)) return;
+      if (vRect.width < 4 || vRect.height < 4) return;
+      emitted.add(el);
+      try { console.debug("[dom] social/profile element: " + category); } catch(e) {}
+      out.push({ category: category, elementType: el.tagName, type: null,
+                 selector: buildSelector(el),
+                 rect: { x:Math.round(vRect.left), y:Math.round(vRect.top),
+                         width:Math.round(vRect.width), height:Math.round(vRect.height) },
+                 confidence: "high", _el: el, _isTextNode: true });
+    }
+
+    // 1. itemprop elements
+    try {
+      var itempropEls = doc.querySelectorAll("[itemprop]");
+      for (var ip = 0; ip < itempropEls.length; ip++) {
+        var ipEl = itempropEls[ip];
+        var prop = (ipEl.getAttribute("itemprop") || "").trim();
+        var cat = ITEMPROP_CATEGORY[prop];
+        if (cat) addElement(ipEl, cat);
+      }
+    } catch(e) {}
+
+    // 2. Platform-specific selectors
+    for (var ps = 0; ps < PLATFORM_SELECTORS.length; ps++) {
+      try {
+        var matched = doc.querySelectorAll(PLATFORM_SELECTORS[ps].sel);
+        for (var mi = 0; mi < matched.length; mi++) {
+          addElement(matched[mi], PLATFORM_SELECTORS[ps].category);
+        }
+      } catch(e) {}
+    }
+
+    // 3. Any anchor whose href is a LinkedIn or GitHub profile URL
+    try {
+      var anchors = doc.querySelectorAll("a[href]");
+      for (var ai = 0; ai < anchors.length; ai++) {
+        var href = anchors[ai].getAttribute("href") || "";
+        if (LINKEDIN_HREF_RE.test(href) || GITHUB_HREF_RE.test(href)) {
+          addElement(anchors[ai], CATEGORY.USERNAME);
+        }
+      }
+    } catch(e) {}
+
+    return out;
+  }
+
   function scanDocument(doc, viewport, frameOffset) {
     var out = [];
     var uninspectable = [];
@@ -703,6 +861,15 @@
     // dashboards — any place where a label div/span precedes a value div/span).
     var labelValueDets = scanLabeledStaticValues(doc, viewport, frameOffset);
     out = out.concat(labelValueDets);
+
+    // Scan mailto: links — definitive email signal (no OCR needed)
+    var mailtoDetections = scanMailtoLinks(doc, viewport, frameOffset);
+    out = out.concat(mailtoDetections);
+
+    // Scan social/profile elements via itemprop, data attributes, and
+    // platform-specific selectors (GitHub, LinkedIn, Twitter, etc.)
+    var profileDets = scanSocialProfileElements(doc, viewport, frameOffset);
+    out = out.concat(profileDets);
 
     return { detections: out, uninspectable: uninspectable };
   }

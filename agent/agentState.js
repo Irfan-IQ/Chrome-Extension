@@ -51,6 +51,9 @@
       stepCount:      0,
       completed:      false,
 
+      // All redacted screenshots produced during the session (for gallery)
+      screenshotLog: [],
+
       // For UI observability (step log shown to user)
       stepLog: [],
     };

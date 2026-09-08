@@ -75,6 +75,14 @@ const agentResultText   = document.getElementById("agent-result-text");
 const agentScreenshotSection = document.getElementById("agent-screenshot-section");
 const agentResultImg    = document.getElementById("agent-result-img");
 
+// ---------- V4 Agent screenshots gallery refs ----------
+const agentScreenshotsToggleWrap = document.getElementById("agent-screenshots-toggle-wrap");
+const agentViewScreenshotsBtn    = document.getElementById("agent-view-screenshots-btn");
+const agentScreenshotsPanel      = document.getElementById("agent-screenshots-panel");
+const agentScreenshotsTitle      = document.getElementById("agent-screenshots-title");
+const agentScreenshotsCloseBtn   = document.getElementById("agent-screenshots-close-btn");
+const agentScreenshotsGrid       = document.getElementById("agent-screenshots-grid");
+
 // ---------- Rendering ----------
 
 function renderEmptyState() {
@@ -760,7 +768,15 @@ function resetAgentLog() {
   agentScreenshotSection.classList.add("hidden");
   agentResultImg.src = "";
   agentResultText.textContent = "";
+  // Reset screenshots gallery
+  agentScreenshotsToggleWrap.classList.add("hidden");
+  agentScreenshotsPanel.classList.add("hidden");
+  agentScreenshotsGrid.innerHTML = "";
+  _screenshotLogCount = 0;
 }
+
+// Tracks screenshot count for the current run (used to update button label on toggle)
+let _screenshotLogCount = 0;
 
 // ---------- Main agent run handler ----------
 
@@ -816,6 +832,40 @@ async function handleAgentRun() {
       agentResultImg.onclick = () => openZoom(agentResultImg.src);
     }
 
+    // Build and show screenshot gallery if the agent produced any redacted screenshots
+    if (result.screenshotLog && result.screenshotLog.length > 0) {
+      _screenshotLogCount = result.screenshotLog.length;
+      agentScreenshotsTitle.textContent =
+        "Redacted Screenshots (" + _screenshotLogCount + ")";
+      agentViewScreenshotsBtn.textContent =
+        "📷 View Redacted Screenshots (" + _screenshotLogCount + ")";
+
+      // Populate grid
+      agentScreenshotsGrid.innerHTML = "";
+      result.screenshotLog.forEach((shot, idx) => {
+        const thumb = document.createElement("div");
+        thumb.className = "agent-screenshot-thumb";
+        thumb.title = "Click to zoom";
+
+        const label = document.createElement("div");
+        label.className = "agent-screenshot-thumb-label";
+        label.textContent =
+          "Step " + shot.step + " · " + shot.redactedCount + " region" +
+          (shot.redactedCount !== 1 ? "s" : "") + " redacted";
+
+        const img = document.createElement("img");
+        img.src = shot.dataUrl;
+        img.alt = "Redacted screenshot " + (idx + 1);
+        img.addEventListener("click", () => openZoom(shot.dataUrl));
+
+        thumb.appendChild(label);
+        thumb.appendChild(img);
+        agentScreenshotsGrid.appendChild(thumb);
+      });
+
+      agentScreenshotsToggleWrap.classList.remove("hidden");
+    }
+
   } catch (err) {
     console.error("[Agent] Unexpected error:", err);
     agentLogStatus.textContent = "Error";
@@ -839,6 +889,23 @@ agentInputEl.addEventListener("keydown", e => {
 agentResultClose.addEventListener("click", () => {
   agentResultPanel.classList.add("hidden");
   agentScreenshotSection.classList.add("hidden");
+});
+
+// Screenshots gallery toggle
+agentViewScreenshotsBtn.addEventListener("click", () => {
+  const nowHidden = agentScreenshotsPanel.classList.toggle("hidden");
+  agentViewScreenshotsBtn.textContent = nowHidden
+    ? "📷 View Redacted Screenshots (" + _screenshotLogCount + ")"
+    : "🔼 Hide Screenshots (" + _screenshotLogCount + ")";
+  if (!nowHidden) {
+    agentScreenshotsPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+});
+
+agentScreenshotsCloseBtn.addEventListener("click", () => {
+  agentScreenshotsPanel.classList.add("hidden");
+  agentViewScreenshotsBtn.textContent =
+    "📷 View Redacted Screenshots (" + _screenshotLogCount + ")";
 });
 
 // ---------- Init ----------

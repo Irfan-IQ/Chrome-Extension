@@ -166,6 +166,16 @@ body {
   border-radius: 4px;
 }
 
+/* ---------- Chat mode panel ---------- */
+#chat-mode-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+#chat-mode-panel.hidden { display: none; }
+
 /* ---------- V2/V3 Privacy strip ---------- */
 .privacy-strip {
   background: #f0f6ff;
@@ -931,4 +941,79 @@ body {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 10px 12px;
+}
+
+/* ---------- Screenshots gallery toggle button ---------- */
+.agent-screenshots-toggle-wrap {
+  padding: 0 12px 12px;
+  flex-shrink: 0;
+}
+.agent-screenshots-toggle-wrap.hidden { display: none; }
+
+.agent-view-screenshots-btn {
+  width: 100%;
+  font-size: 12px;
+  padding: 8px 12px;
+  text-align: center;
+  border-radius: 8px;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+.agent-view-screenshots-btn:hover { background: #dbeafe; }
+
+/* ---------- Screenshots gallery panel ---------- */
+.agent-screenshots-panel {
+  background: var(--panel-bg);
+  border-top: 1px solid var(--border);
+  padding: 10px 12px 12px;
+  flex-shrink: 0;
+}
+.agent-screenshots-panel.hidden { display: none; }
+
+.agent-screenshots-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.agent-screenshots-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.agent-screenshot-thumb {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #000;
+  cursor: zoom-in;
+  transition: opacity 0.12s;
+}
+.agent-screenshot-thumb:hover { opacity: 0.85; }
+
+.agent-screenshot-thumb-label {
+  font-size: 10px;
+  padding: 3px 6px;
+  background: #dcfce7;
+  color: #15803d;
+  border-bottom: 1px solid #86efac;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agent-screenshot-thumb img {
+  width: 100%;
+  display: block;
+  max-height: 110px;
+  object-fit: cover;
+  background: #111;
 }

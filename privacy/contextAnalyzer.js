@@ -260,7 +260,9 @@
       // Two-word names: find the spatially nearest word to the RIGHT on the same
       // line rather than relying on array order (which breaks in multi-column
       // layouts where words from other columns interleave in the array).
-      var w2 = findRightNeighbor(words, wi, 60, 10);
+      // Use wider gaps (120px horiz, 15px vert) to handle large heading fonts
+      // where letters are spread out and inter-word spacing is larger.
+      var w2 = findRightNeighbor(words, wi, 120, 15);
       if (w2) {
         var twoWordText = word.text + " " + w2.text;
         if (looksLikePersonName(twoWordText)) {
@@ -275,7 +277,7 @@
           safeLog("NER-name", twoWordText);
           results.push({
             category: "name",
-            confidence: 0.60,  // bumped from 0.55 — spatial match is more reliable
+            confidence: 0.65,  // raised — larger gap still found spatial neighbor
             boundingBox: mergedBox,
             sources: ["ocr", "ner"],
             evidence: "person-name-pattern",
@@ -283,7 +285,7 @@
           // Also look for a three-word name (wi → w2 → w3)
           var w2idx = words.indexOf(w2);
           if (w2idx !== -1) {
-            var w3 = findRightNeighbor(words, w2idx, 60, 10);
+            var w3 = findRightNeighbor(words, w2idx, 120, 15);
             if (w3) {
               var threeWordText = word.text + " " + w2.text + " " + w3.text;
               if (looksLikePersonName(threeWordText)) {
@@ -298,7 +300,7 @@
                 safeLog("NER-name-3", threeWordText);
                 results.push({
                   category: "name",
-                  confidence: 0.58,
+                  confidence: 0.63,  // raised
                   boundingBox: mergedBox3,
                   sources: ["ocr", "ner"],
                   evidence: "person-name-3-word",
@@ -308,6 +310,38 @@
           }
         }
       }
+    }
+
+    // ---- Pass 2b: standalone profile-heading name detection -----------------
+    // On profile pages (GitHub, LinkedIn, Twitter) the person's name is the
+    // dominant heading at the top of the page. It has no "Name:" label beside
+    // it, but it IS the largest / most prominent text on the page. We detect it
+    // by looking for 2-3 capitalised words that appear in an OCR line by
+    // themselves (nothing else on that line) and have a large bounding box
+    // height (≥18 px in screenshot coords → roughly a 16px+ CSS font at 1x).
+    for (var phi = 0; phi < allLines.length; phi++) {
+      var phLine = allLines[phi];
+      var phText = (phLine.text || "").trim();
+      // Only consider short lines (just the name, not a paragraph)
+      if (!phText || phText.length > 60 || phText.length < 3) continue;
+      if (!looksLikePersonName(phText, false /* require ≥2 words */)) continue;
+      // Large font heuristic: box height ≥ 16px
+      var phBox = phLine.boundingBox;
+      if (!phBox || phBox.height < 16) continue;
+      // Skip if already covered by a context or NER detection on this line
+      var phCovered = results.some(function (r) {
+        return r.category === "name" && r.boundingBox &&
+               Math.abs(r.boundingBox.y - phBox.y) < phBox.height * 1.5;
+      });
+      if (phCovered) continue;
+      safeLog("NER-name-heading", phText);
+      results.push({
+        category: "name",
+        confidence: 0.68,   // above threshold (0.60) — prominent heading name
+        boundingBox: phBox,
+        sources: ["ocr", "ner"],
+        evidence: "profile-heading-name",
+      });
     }
 
     // ---- Pass 3: address fragment detection (label-gated) -------------------

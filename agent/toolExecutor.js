@@ -11,6 +11,50 @@
   "use strict";
 
   /**
+   * Auto-capture + auto-redact a screenshot after navigation actions.
+   * Calls PrivacyEngine.sanitizeCurrentPage() directly — the same pipeline
+   * chat mode uses — so the gallery only ever stores redacted images.
+   * Runs silently; failures are ignored so the agent never stops because of this.
+   */
+  async function autoCapture(state) {
+    try {
+      // Let the page settle after navigation / click
+      await new Promise(function (r) { setTimeout(r, 1500); });
+
+      if (!root.PrivacyEngine ||
+          typeof root.PrivacyEngine.sanitizeCurrentPage !== "function") return;
+
+      var privResult = await root.PrivacyEngine.sanitizeCurrentPage();
+
+      if (privResult && privResult.sanitizedScreenshot) {
+        if (!Array.isArray(state.screenshotLog)) state.screenshotLog = [];
+        state.screenshotLog.push({
+          step:          state.stepCount,
+          dataUrl:       privResult.sanitizedScreenshot,
+          redactedCount: privResult.detectedElements
+                         ? privResult.detectedElements.length : 0,
+          autoRedacted:  true,
+        });
+      }
+
+      // Make the raw screenshot available for the redact tool if it runs later
+      if (privResult && privResult.beforeScreenshot) {
+        state.rawScreenshot = privResult.beforeScreenshot;
+        if (privResult.sanitizedScreenshot) {
+          var img = new Image();
+          img.onload = function () {
+            state.screenshotSize = { width: img.naturalWidth, height: img.naturalHeight };
+          };
+          img.src = privResult.beforeScreenshot;
+        }
+      }
+    } catch (e) {
+      // Non-fatal — agent continues; this entry is simply skipped in the gallery
+      console.warn("[autoCapture]", e && e.message);
+    }
+  }
+
+  /**
    * Execute a validated tool call.
    *
    * @param {string}   toolName    - The tool to execute (already validated)
@@ -44,14 +88,23 @@
       case "get_page_context":
         return await root.GetPageContextTool.execute(s);
 
-      case "click_element":
-        return await root.ClickElementTool.execute(s, args);
+      case "click_element": {
+        var clickResult = await root.ClickElementTool.execute(s, args);
+        if (clickResult.success) await autoCapture(s);
+        return clickResult;
+      }
 
-      case "navigate_to":
-        return await root.NavigateToTool.execute(s, args);
+      case "navigate_to": {
+        var navResult = await root.NavigateToTool.execute(s, args);
+        if (navResult.success) await autoCapture(s);
+        return navResult;
+      }
 
-      case "open_tab":
-        return await root.OpenTabTool.execute(s, args);
+      case "open_tab": {
+        var tabResult = await root.OpenTabTool.execute(s, args);
+        if (tabResult.success) await autoCapture(s);
+        return tabResult;
+      }
 
       default:
         // Should be unreachable — toolValidator rejects unknown names first.

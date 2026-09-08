@@ -84,7 +84,7 @@
         notify({ step: state.stepCount, tool: "llm", status: "error",
                  message: "LLM error: " + errText, duration: Date.now() - t0 });
         return { success: false, summary: "Agent stopped — LLM error: " + errText,
-                 state: state, redactedScreenshot: null };
+                 state: state, redactedScreenshot: null, screenshotLog: state.screenshotLog || [] };
       }
 
       // --- Step B: Did the LLM emit a final text answer? ----------------------
@@ -100,7 +100,7 @@
       // --- Step C: Handle a tool call -----------------------------------------
       if (llmResponse.type !== "tool_call") {
         return { success: false, summary: "Unexpected LLM response type: " + llmResponse.type,
-                 state: state, redactedScreenshot: null };
+                 state: state, redactedScreenshot: null, screenshotLog: state.screenshotLog || [] };
       }
 
       var toolCall = llmResponse.toolCall;
@@ -145,7 +145,7 @@
           toolRunCount[toolName] + " consecutive times without progress. Stopping.";
         root.AgentState.addError(loopMsg);
         return { success: false, summary: loopMsg, state: state,
-                 redactedScreenshot: state.redactedScreenshot || null };
+                 redactedScreenshot: state.redactedScreenshot || null, screenshotLog: state.screenshotLog || [] };
       }
 
       // --- Step F: EXECUTE (trusted extension code) ---------------------------
@@ -219,6 +219,7 @@
       summary:            finalSummary,
       state:              state,
       redactedScreenshot: state.redactedScreenshot || null,
+      screenshotLog:      state.screenshotLog || [],
     };
   }
 

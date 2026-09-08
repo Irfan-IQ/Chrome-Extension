@@ -157,6 +157,44 @@
       extract: function (t) { return t.trim(); },
     },
 
+    // ---- LinkedIn profile URL -----------------------------------------------
+    {
+      category: "username",
+      confidence: 0.88,
+      test: function (t) {
+        return /linkedin\.com\/in\/[A-Za-z0-9\-_%]+/i.test(t) ||
+               /^in\/[A-Za-z0-9][A-Za-z0-9\-]+-[a-f0-9]{6,}/i.test(t.trim());
+      },
+      extract: function (t) { return t.trim(); },
+    },
+
+    // ---- GitHub profile URL -------------------------------------------------
+    {
+      category: "username",
+      confidence: 0.85,
+      test: function (t) {
+        return /github\.com\/[A-Za-z0-9][A-Za-z0-9\-]{0,38}(?:$|[^\/A-Za-z0-9\-])/i.test(t);
+      },
+      extract: function (t) { return t.trim(); },
+    },
+
+    // ---- @handle / social username ------------------------------------------
+    {
+      category: "username",
+      confidence: 0.78,
+      test: function (t) {
+        var s = t.trim();
+        // @handle: 1-50 chars, alphanumeric + _ + .
+        if (/^@[A-Za-z0-9_][A-Za-z0-9_.]{1,49}$/.test(s)) return true;
+        // Bare handle that looks like a GitHub username (no @): letters+digits+hyphens, 1-39 chars
+        // Only flag if text is very short and fits exactly
+        if (/^[A-Za-z0-9][A-Za-z0-9\-]{0,38}$/.test(s) && s.length >= 3 && s.length <= 39 &&
+            /[A-Za-z]/.test(s) && /[\-]/.test(s)) return true;  // hyphens suggest username not word
+        return false;
+      },
+      extract: function (t) { return t.trim(); },
+    },
+
     // ---- API key / token (32+ hex or base64 chars) --------------------------
     {
       category: "api_key",
