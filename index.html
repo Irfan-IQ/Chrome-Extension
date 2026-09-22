@@ -14,10 +14,7 @@
   <body>
     <main class="app">
 
-      <!-- ======================================================
-           HEADER
-      ======================================================= -->
-
+      <!-- Header -->
       <header class="header">
         <div>
           <h1>Vision Model Comparison</h1>
@@ -33,10 +30,7 @@
       </header>
 
 
-      <!-- ======================================================
-           CONTROLS
-      ======================================================= -->
-
+      <!-- Controls -->
       <section class="controls">
 
         <div class="file-control">
@@ -51,7 +45,6 @@
           />
         </div>
 
-
         <button
           id="runDetection"
           type="button"
@@ -62,10 +55,7 @@
       </section>
 
 
-      <!-- ======================================================
-           GLOBAL STATUS
-      ======================================================= -->
-
+      <!-- Global status -->
       <div class="status-bar">
         <span class="status-dot"></span>
 
@@ -75,17 +65,10 @@
       </div>
 
 
-      <!-- ======================================================
-           MODEL COMPARISON
-      ======================================================= -->
-
+      <!-- Model comparison -->
       <section class="comparison">
 
-
-        <!-- ====================================================
-             YOLOS
-        ===================================================== -->
-
+        <!-- YOLOS -->
         <article class="model-panel">
 
           <div class="model-header">
@@ -108,8 +91,7 @@
           </div>
 
 
-          <!-- Image -->
-
+          <!-- YOLOS image -->
           <div class="canvas-container">
 
             <canvas
@@ -119,115 +101,79 @@
           </div>
 
 
-          <!-- Statistics -->
-
+          <!-- YOLOS statistics -->
           <div class="model-stats">
 
             <div class="stat-card">
+              <span>Objects</span>
 
-              <span>
-                Objects
-              </span>
-
-              <strong
-                id="yolosDetected"
-              >
+              <strong id="yolosDetected">
                 0
               </strong>
-
             </div>
 
 
             <div class="stat-card">
+              <span>Redacted</span>
 
-              <span>
-                Redacted
-              </span>
-
-              <strong
-                id="yolosRedacted"
-              >
+              <strong id="yolosRedacted">
                 0
               </strong>
-
             </div>
 
 
             <div class="stat-card">
+              <span>Warnings</span>
 
-              <span>
-                Warnings
-              </span>
-
-              <strong
-                id="yolosWarnings"
-              >
+              <strong id="yolosWarnings">
                 0
               </strong>
-
             </div>
 
           </div>
 
 
-          <!-- Timing -->
-
+          <!-- YOLOS performance -->
           <div class="timing-card">
 
             <div class="section-title">
               Performance
             </div>
 
-
             <div class="timing-row">
-
               <span>
-                Model load
+                Cold start
               </span>
 
-              <strong
-                id="yolosLoad"
-              >
+              <strong id="yolosCold">
                 -
               </strong>
-
             </div>
 
-
             <div class="timing-row">
-
               <span>
-                Inference
+                Warm p50
               </span>
 
-              <strong
-                id="yolosInference"
-              >
+              <strong id="yolosP50">
                 -
               </strong>
-
             </div>
 
-
             <div class="timing-row">
-
               <span>
-                Total run
+                Warm p90
               </span>
 
-              <strong
-                id="yolosTotal"
-              >
+              <strong id="yolosP90">
                 -
               </strong>
-
             </div>
 
           </div>
 
 
-          <!-- Detection list -->
-
+          <!-- YOLOS results -->
           <div class="results-section">
 
             <h3>
@@ -244,11 +190,7 @@
         </article>
 
 
-
-        <!-- ====================================================
-             YUNET
-        ===================================================== -->
-
+        <!-- YuNet -->
         <article class="model-panel">
 
           <div class="model-header">
@@ -271,8 +213,7 @@
           </div>
 
 
-          <!-- Image -->
-
+          <!-- YuNet image -->
           <div class="canvas-container">
 
             <canvas
@@ -282,115 +223,79 @@
           </div>
 
 
-          <!-- Statistics -->
-
+          <!-- YuNet statistics -->
           <div class="model-stats">
 
             <div class="stat-card">
+              <span>Faces</span>
 
-              <span>
-                Faces
-              </span>
-
-              <strong
-                id="yunetDetected"
-              >
+              <strong id="yunetDetected">
                 0
               </strong>
-
             </div>
 
 
             <div class="stat-card">
+              <span>Redacted</span>
 
-              <span>
-                Redacted
-              </span>
-
-              <strong
-                id="yunetRedacted"
-              >
+              <strong id="yunetRedacted">
                 0
               </strong>
-
             </div>
 
 
             <div class="stat-card">
+              <span>Warnings</span>
 
-              <span>
-                Warnings
-              </span>
-
-              <strong
-                id="yunetWarnings"
-              >
+              <strong id="yunetWarnings">
                 0
               </strong>
-
             </div>
 
           </div>
 
 
-          <!-- Timing -->
-
+          <!-- YuNet performance -->
           <div class="timing-card">
 
             <div class="section-title">
               Performance
             </div>
 
-
             <div class="timing-row">
-
               <span>
-                Model load
+                Cold start
               </span>
 
-              <strong
-                id="yunetLoad"
-              >
+              <strong id="yunetCold">
                 -
               </strong>
-
             </div>
 
-
             <div class="timing-row">
-
               <span>
-                Inference
+                Warm p50
               </span>
 
-              <strong
-                id="yunetInference"
-              >
+              <strong id="yunetP50">
                 -
               </strong>
-
             </div>
 
-
             <div class="timing-row">
-
               <span>
-                Total run
+                Warm p90
               </span>
 
-              <strong
-                id="yunetTotal"
-              >
+              <strong id="yunetP90">
                 -
               </strong>
-
             </div>
 
           </div>
 
 
-          <!-- Detection list -->
-
+          <!-- YuNet results -->
           <div class="results-section">
 
             <h3>

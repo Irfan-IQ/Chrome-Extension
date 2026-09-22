@@ -127,6 +127,7 @@ body {
 
 .file-control {
   display: flex;
+
   flex-direction: column;
 
   gap: 8px;
@@ -137,6 +138,7 @@ body {
 
 .file-control label {
   font-size: 13px;
+
   font-weight: 600;
 
   color: #475467;
@@ -218,7 +220,7 @@ body {
 
 
 /* ============================================================
-   COMPARISON LAYOUT
+   COMPARISON
 ============================================================ */
 
 .comparison {
@@ -244,6 +246,7 @@ body {
   padding: 20px;
 
   border: 1px solid #e4e7ec;
+
   border-radius: 16px;
 
   background: #ffffff;
@@ -290,6 +293,7 @@ body {
   color: #475467;
 
   font-size: 12px;
+
   font-weight: 600;
 
   white-space: nowrap;
@@ -306,6 +310,7 @@ body {
   overflow: hidden;
 
   border: 1px solid #e4e7ec;
+
   border-radius: 12px;
 
   background: #f9fafb;
@@ -342,6 +347,7 @@ body {
   padding: 13px;
 
   border: 1px solid #e4e7ec;
+
   border-radius: 10px;
 
   background: #ffffff;
@@ -369,7 +375,7 @@ body {
 
 
 /* ============================================================
-   TIMING
+   PERFORMANCE
 ============================================================ */
 
 .timing-card {
@@ -389,6 +395,7 @@ body {
   margin-bottom: 10px;
 
   font-size: 13px;
+
   font-weight: 700;
 
   color: #344054;
@@ -423,7 +430,7 @@ body {
 
 
 /* ============================================================
-   DETECTION RESULTS
+   RESULTS
 ============================================================ */
 
 .results-section {
@@ -460,6 +467,7 @@ body {
   padding: 12px 14px;
 
   border: 1px solid #e4e7ec;
+
   border-radius: 10px;
 
   background: #ffffff;
@@ -496,6 +504,7 @@ body {
 
 .action {
   font-size: 11px;
+
   font-weight: 700;
 
   text-transform: uppercase;
