@@ -8,331 +8,413 @@
       content="width=device-width, initial-scale=1.0"
     />
 
-    <title>Vision Model Basic Test</title>
-
-    <style>
-      * {
-        box-sizing: border-box;
-      }
-
-      body {
-        margin: 0;
-        padding: 32px;
-
-        font-family:
-          Arial,
-          Helvetica,
-          sans-serif;
-
-        background: #f3f4f6;
-        color: #111827;
-      }
-
-      main {
-        width: min(1100px, 100%);
-        margin: 0 auto;
-
-        background: #ffffff;
-
-        padding: 28px;
-
-        border-radius: 14px;
-
-        box-shadow:
-          0 8px 30px
-          rgba(0, 0, 0, 0.08);
-      }
-
-      h1 {
-        margin: 0;
-
-        font-size: 28px;
-        font-weight: 700;
-      }
-
-      .subtitle {
-        margin: 8px 0 0;
-
-        color: #6b7280;
-        font-size: 14px;
-      }
-
-      .controls {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-
-        margin-top: 24px;
-      }
-
-      input[type="file"] {
-        max-width: 100%;
-      }
-
-      button {
-        padding: 10px 18px;
-
-        border: 0;
-        border-radius: 8px;
-
-        background: #111827;
-        color: #ffffff;
-
-        font-size: 14px;
-
-        cursor: pointer;
-      }
-
-      button:hover {
-        background: #1f2937;
-      }
-
-      button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-
-      #status {
-        margin: 16px 0;
-
-        color: #4b5563;
-        font-size: 14px;
-      }
-
-      .stats {
-        display: grid;
-
-        grid-template-columns:
-          repeat(3, 1fr);
-
-        gap: 12px;
-
-        margin-bottom: 18px;
-      }
-
-      .stat {
-        padding: 16px;
-
-        background: #f9fafb;
-
-        border:
-          1px solid #e5e7eb;
-
-        border-radius: 10px;
-      }
-
-      .stat-label {
-        display: block;
-
-        margin-bottom: 6px;
-
-        color: #6b7280;
-
-        font-size: 13px;
-      }
-
-      .stat-value {
-        font-size: 24px;
-        font-weight: 700;
-      }
-
-      .viewer {
-        overflow: auto;
-
-        padding: 12px;
-
-        background: #fafafa;
-
-        border:
-          1px solid #e5e7eb;
-
-        border-radius: 10px;
-      }
-
-      #canvas {
-        display: block;
-
-        max-width: 100%;
-        height: auto;
-
-        border:
-          1px solid #d1d5db;
-
-        border-radius: 6px;
-      }
-
-      /* ----------------------------------
-         Detection list
-         ---------------------------------- */
-
-      .results-section {
-        margin-top: 24px;
-      }
-
-      .results-title {
-        margin: 0 0 12px;
-
-        font-size: 18px;
-      }
-
-      #results {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .detection {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-
-        padding: 12px 14px;
-
-        border:
-          1px solid #e5e7eb;
-
-        border-radius: 8px;
-
-        background: #f9fafb;
-      }
-
-      .detection-left {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .confidence {
-        color: #6b7280;
-        font-size: 13px;
-      }
-
-      .action {
-        font-size: 12px;
-        font-weight: 700;
-        text-transform: uppercase;
-      }
-
-      .action.redacted {
-        color: #111827;
-      }
-
-      .action.warning {
-        color: #dc2626;
-      }
-
-      .action.kept {
-        color: #6b7280;
-      }
-
-      @media (max-width: 700px) {
-        body {
-          padding: 16px;
-        }
-
-        main {
-          padding: 20px;
-        }
-
-        .stats {
-          grid-template-columns: 1fr;
-        }
-
-        .controls {
-          align-items: stretch;
-          flex-direction: column;
-        }
-
-        .detection {
-          align-items: flex-start;
-          gap: 8px;
-          flex-direction: column;
-        }
-      }
-    </style>
+    <title>Vision Model Comparison</title>
   </head>
 
   <body>
-    <main>
-      <h1>Vision Model Basic Test</h1>
+    <main class="app">
 
-      <p class="subtitle">
-        Visual object detection and redaction
-      </p>
+      <!-- ======================================================
+           HEADER
+      ======================================================= -->
 
-      <div class="controls">
-        <input
-          type="file"
-          id="imageInput"
-          accept="image/*"
-        />
+      <header class="header">
+        <div>
+          <h1>Vision Model Comparison</h1>
 
-        <button id="runDetection">
-          Run Detection
+          <p>
+            Local visual detection and privacy redaction benchmark
+          </p>
+        </div>
+
+        <div class="local-badge">
+          On-device
+        </div>
+      </header>
+
+
+      <!-- ======================================================
+           CONTROLS
+      ======================================================= -->
+
+      <section class="controls">
+
+        <div class="file-control">
+          <label for="imageInput">
+            Test image
+          </label>
+
+          <input
+            id="imageInput"
+            type="file"
+            accept="image/*"
+          />
+        </div>
+
+
+        <button
+          id="runDetection"
+          type="button"
+        >
+          Run Comparison
         </button>
-      </div>
 
-      <p id="status">
-        Select an image to begin.
-      </p>
-
-      <div class="stats">
-        <div class="stat">
-          <span class="stat-label">
-            Objects Detected
-          </span>
-
-          <span
-            class="stat-value"
-            id="detectedCount"
-          >
-            0
-          </span>
-        </div>
-
-        <div class="stat">
-          <span class="stat-label">
-            Redacted
-          </span>
-
-          <span
-            class="stat-value"
-            id="redactedCount"
-          >
-            0
-          </span>
-        </div>
-
-        <div class="stat">
-          <span class="stat-label">
-            Warnings
-          </span>
-
-          <span
-            class="stat-value"
-            id="warningCount"
-          >
-            0
-          </span>
-        </div>
-      </div>
-
-      <div class="viewer">
-        <canvas id="canvas"></canvas>
-      </div>
-
-      <section class="results-section">
-        <h2 class="results-title">
-          Detected Objects
-        </h2>
-
-        <div id="results"></div>
       </section>
+
+
+      <!-- ======================================================
+           GLOBAL STATUS
+      ======================================================= -->
+
+      <div class="status-bar">
+        <span class="status-dot"></span>
+
+        <p id="status">
+          Select an image to begin.
+        </p>
+      </div>
+
+
+      <!-- ======================================================
+           MODEL COMPARISON
+      ======================================================= -->
+
+      <section class="comparison">
+
+
+        <!-- ====================================================
+             YOLOS
+        ===================================================== -->
+
+        <article class="model-panel">
+
+          <div class="model-header">
+
+            <div>
+              <h2>YOLOS-Tiny</h2>
+
+              <p>
+                General object detector
+              </p>
+            </div>
+
+            <span
+              id="yolosStatus"
+              class="model-status"
+            >
+              Waiting
+            </span>
+
+          </div>
+
+
+          <!-- Image -->
+
+          <div class="canvas-container">
+
+            <canvas
+              id="yolosCanvas"
+            ></canvas>
+
+          </div>
+
+
+          <!-- Statistics -->
+
+          <div class="model-stats">
+
+            <div class="stat-card">
+
+              <span>
+                Objects
+              </span>
+
+              <strong
+                id="yolosDetected"
+              >
+                0
+              </strong>
+
+            </div>
+
+
+            <div class="stat-card">
+
+              <span>
+                Redacted
+              </span>
+
+              <strong
+                id="yolosRedacted"
+              >
+                0
+              </strong>
+
+            </div>
+
+
+            <div class="stat-card">
+
+              <span>
+                Warnings
+              </span>
+
+              <strong
+                id="yolosWarnings"
+              >
+                0
+              </strong>
+
+            </div>
+
+          </div>
+
+
+          <!-- Timing -->
+
+          <div class="timing-card">
+
+            <div class="section-title">
+              Performance
+            </div>
+
+
+            <div class="timing-row">
+
+              <span>
+                Model load
+              </span>
+
+              <strong
+                id="yolosLoad"
+              >
+                -
+              </strong>
+
+            </div>
+
+
+            <div class="timing-row">
+
+              <span>
+                Inference
+              </span>
+
+              <strong
+                id="yolosInference"
+              >
+                -
+              </strong>
+
+            </div>
+
+
+            <div class="timing-row">
+
+              <span>
+                Total run
+              </span>
+
+              <strong
+                id="yolosTotal"
+              >
+                -
+              </strong>
+
+            </div>
+
+          </div>
+
+
+          <!-- Detection list -->
+
+          <div class="results-section">
+
+            <h3>
+              Detected Objects
+            </h3>
+
+            <div
+              id="yolosResults"
+              class="results"
+            ></div>
+
+          </div>
+
+        </article>
+
+
+
+        <!-- ====================================================
+             YUNET
+        ===================================================== -->
+
+        <article class="model-panel">
+
+          <div class="model-header">
+
+            <div>
+              <h2>YuNet</h2>
+
+              <p>
+                Lightweight face detector
+              </p>
+            </div>
+
+            <span
+              id="yunetStatus"
+              class="model-status"
+            >
+              Waiting
+            </span>
+
+          </div>
+
+
+          <!-- Image -->
+
+          <div class="canvas-container">
+
+            <canvas
+              id="yunetCanvas"
+            ></canvas>
+
+          </div>
+
+
+          <!-- Statistics -->
+
+          <div class="model-stats">
+
+            <div class="stat-card">
+
+              <span>
+                Faces
+              </span>
+
+              <strong
+                id="yunetDetected"
+              >
+                0
+              </strong>
+
+            </div>
+
+
+            <div class="stat-card">
+
+              <span>
+                Redacted
+              </span>
+
+              <strong
+                id="yunetRedacted"
+              >
+                0
+              </strong>
+
+            </div>
+
+
+            <div class="stat-card">
+
+              <span>
+                Warnings
+              </span>
+
+              <strong
+                id="yunetWarnings"
+              >
+                0
+              </strong>
+
+            </div>
+
+          </div>
+
+
+          <!-- Timing -->
+
+          <div class="timing-card">
+
+            <div class="section-title">
+              Performance
+            </div>
+
+
+            <div class="timing-row">
+
+              <span>
+                Model load
+              </span>
+
+              <strong
+                id="yunetLoad"
+              >
+                -
+              </strong>
+
+            </div>
+
+
+            <div class="timing-row">
+
+              <span>
+                Inference
+              </span>
+
+              <strong
+                id="yunetInference"
+              >
+                -
+              </strong>
+
+            </div>
+
+
+            <div class="timing-row">
+
+              <span>
+                Total run
+              </span>
+
+              <strong
+                id="yunetTotal"
+              >
+                -
+              </strong>
+
+            </div>
+
+          </div>
+
+
+          <!-- Detection list -->
+
+          <div class="results-section">
+
+            <h3>
+              Detected Faces
+            </h3>
+
+            <div
+              id="yunetResults"
+              class="results"
+            ></div>
+
+          </div>
+
+        </article>
+
+      </section>
+
     </main>
+
 
     <script
       type="module"
       src="/src/main.ts"
     ></script>
+
   </body>
 </html>

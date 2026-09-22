@@ -5,104 +5,113 @@ import {
 
 import {
   detectYuNet,
+  getYuNetSession,
 } from "./yunet-detector";
 
-const fileInput = document.getElementById(
-  "imageInput"
-) as HTMLInputElement;
+import "./style.css";
 
-const runButton = document.getElementById(
-  "runDetection"
-) as HTMLButtonElement;
 
-const canvas = document.getElementById(
-  "canvas"
-) as HTMLCanvasElement;
+const fileInput =
+  document.getElementById("imageInput") as HTMLInputElement;
 
-const status = document.getElementById(
-  "status"
-) as HTMLParagraphElement;
+const runButton =
+  document.getElementById("runDetection") as HTMLButtonElement;
 
-const detectedCountElement =
-  document.getElementById(
-    "detectedCount"
-  ) as HTMLSpanElement;
+const status =
+  document.getElementById("status") as HTMLParagraphElement;
 
-const redactedCountElement =
-  document.getElementById(
-    "redactedCount"
-  ) as HTMLSpanElement;
 
-const warningCountElement =
-  document.getElementById(
-    "warningCount"
-  ) as HTMLSpanElement;
+// YOLOS
+const yolosCanvas =
+  document.getElementById("yolosCanvas") as HTMLCanvasElement;
 
-const resultsContainer =
-  document.getElementById(
-    "results"
-  ) as HTMLDivElement;
+const yolosCtx = yolosCanvas.getContext("2d");
 
-const ctx = canvas.getContext("2d");
-
-if (!ctx) {
-  throw new Error("Could not get canvas context");
+if (!yolosCtx) {
+  throw new Error("Could not get YOLOS canvas context");
 }
 
+
+// YuNet
+const yunetCanvas =
+  document.getElementById("yunetCanvas") as HTMLCanvasElement;
+
+const yunetCtx = yunetCanvas.getContext("2d");
+
+if (!yunetCtx) {
+  throw new Error("Could not get YuNet canvas context");
+}
+
+
+// Shared state
 let image: HTMLImageElement | null = null;
 
+
+// Privacy policy
 const SENSITIVE_LABELS = new Set([
   "person",
+  "face",
 ]);
 
 const PERSON_PADDING_X = 10;
 const PERSON_PADDING_Y = 20;
 
-// ----------------------------------------
-// Image selection
-// ----------------------------------------
+const FACE_PADDING_X = 20;
+const FACE_PADDING_Y = 20;
 
+
+// File selection
 fileInput.addEventListener("change", () => {
   const file = fileInput.files?.[0];
 
-  if (!file) {
-    return;
-  }
+  if (!file) return;
 
   const url = URL.createObjectURL(file);
-
   const selectedImage = new Image();
 
   selectedImage.onload = () => {
     image = selectedImage;
 
-    canvas.width =
-      selectedImage.naturalWidth;
+    yolosCanvas.width = selectedImage.naturalWidth;
+    yolosCanvas.height = selectedImage.naturalHeight;
 
-    canvas.height =
-      selectedImage.naturalHeight;
+    yunetCanvas.width = selectedImage.naturalWidth;
+    yunetCanvas.height = selectedImage.naturalHeight;
 
-    ctx.clearRect(
+    yolosCtx.clearRect(
       0,
       0,
-      canvas.width,
-      canvas.height
+      yolosCanvas.width,
+      yolosCanvas.height
     );
 
-    ctx.drawImage(
+    yunetCtx.clearRect(
+      0,
+      0,
+      yunetCanvas.width,
+      yunetCanvas.height
+    );
+
+    yolosCtx.drawImage(
       selectedImage,
       0,
       0
     );
 
-    detectedCountElement.textContent = "0";
-    redactedCountElement.textContent = "0";
-    warningCountElement.textContent = "0";
-
-    resultsContainer.innerHTML = "";
+    yunetCtx.drawImage(
+      selectedImage,
+      0,
+      0
+    );
 
     status.textContent =
-      "Image loaded. Ready for detection.";
+      "Image loaded. Ready for comparison.";
+
+    document.getElementById("yolosStatus")!.textContent =
+      "Ready";
+
+    document.getElementById("yunetStatus")!.textContent =
+      "Ready";
 
     URL.revokeObjectURL(url);
   };
@@ -119,254 +128,409 @@ fileInput.addEventListener("change", () => {
   selectedImage.src = url;
 });
 
-// ----------------------------------------
-// Run detection
-// ----------------------------------------
 
-runButton.addEventListener(
-  "click",
-  async () => {
-    if (!image) {
-      status.textContent =
-        "Please select an image first.";
+// Run both models
+runButton.addEventListener("click", async () => {
+  if (!image) {
+    status.textContent =
+      "Please select an image first.";
 
-      return;
-    }
-
-    try {
-      runButton.disabled = true;
-
-      status.textContent =
-        "Running detection...";
-
-      const yunetDetections =
-  await detectYuNet(image);
-
-const detections: Detection[] =
-  yunetDetections;
-
-      // Restore original image.
-      ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-      );
-
-      ctx.drawImage(
-        image,
-        0,
-        0
-      );
-
-      resultsContainer.innerHTML = "";
-
-      let redactedCount = 0;
-      let warningCount = 0;
-
-      // ------------------------------------
-      // Objects shown in the detection list
-      //
-      // Person: >= 75%
-      // Other:  >= 80%
-      // ------------------------------------
-
-      const displayedDetections =
-        detections.filter(
-          (detection) => {
-            if (
-              detection.label === "person"
-            ) {
-              return (
-                detection.confidence >= 0.75
-              );
-            }
-
-            return (
-              detection.confidence >= 0.80
-            );
-          }
-        );
-
-      detectedCountElement.textContent =
-        String(displayedDetections.length);
-
-      // ------------------------------------
-      // Draw privacy overlays
-      // ------------------------------------
-
-      for (const detection of detections) {
-        let {
-          xmin,
-          ymin,
-          xmax,
-          ymax,
-        } = detection.bbox;
-
-        const confidence =
-          detection.confidence;
-
-        const isSensitive =
-          SENSITIVE_LABELS.has(
-            detection.label
-          );
-
-        // Only person detections receive
-        // privacy treatment.
-        if (!isSensitive) {
-          continue;
-        }
-
-        // Slight padding around persons.
-        if (
-          detection.label === "person"
-        ) {
-          xmin -= PERSON_PADDING_X;
-          ymin -= PERSON_PADDING_Y;
-          xmax += PERSON_PADDING_X;
-          ymax += PERSON_PADDING_Y;
-        }
-
-        // Keep coordinates inside canvas.
-        xmin = Math.max(
-          0,
-          xmin
-        );
-
-        ymin = Math.max(
-          0,
-          ymin
-        );
-
-        xmax = Math.min(
-          canvas.width,
-          xmax
-        );
-
-        ymax = Math.min(
-          canvas.height,
-          ymax
-        );
-
-        const width =
-          xmax - xmin;
-
-        const height =
-          ymax - ymin;
-
-        // ----------------------------------
-        // >= 90% → black redaction
-        // ----------------------------------
-
-        if (confidence >= 0.90) {
-          ctx.fillStyle = "black";
-
-          ctx.fillRect(
-            xmin,
-            ymin,
-            width,
-            height
-          );
-
-          redactedCount++;
-        }
-
-        // ----------------------------------
-        // 70%–89.99% → red outline
-        // ----------------------------------
-
-        else if (confidence >= 0.70) {
-          ctx.strokeStyle = "red";
-          ctx.lineWidth = 4;
-
-          ctx.strokeRect(
-            xmin,
-            ymin,
-            width,
-            height
-          );
-
-          warningCount++;
-        }
-      }
-
-      // ------------------------------------
-      // Update counts
-      // ------------------------------------
-
-      redactedCountElement.textContent =
-        String(redactedCount);
-
-      warningCountElement.textContent =
-        String(warningCount);
-
-      // ------------------------------------
-      // Detection list
-      // ------------------------------------
-
-      for (const detection of displayedDetections) {
-        const {
-          xmin,
-          ymin,
-          xmax,
-          ymax,
-        } = detection.bbox;
-
-        const confidence =
-          detection.confidence;
-
-        const isSensitive =
-          SENSITIVE_LABELS.has(
-            detection.label
-          );
-
-        let action = "Kept";
-
-        if (isSensitive) {
-          if (confidence >= 0.90) {
-            action = "Redacted";
-          } else if (confidence >= 0.70) {
-            action = "Warning";
-          }
-        }
-
-        const detectionElement =
-          document.createElement("div");
-
-        detectionElement.className =
-          "detection";
-
-        detectionElement.innerHTML = `
-          <div class="detection-left">
-            <strong>
-              ${detection.label}
-            </strong>
-
-            <span class="confidence">
-              ${(confidence * 100).toFixed(1)}%
-            </span>
-          </div>
-
-          <span class="action ${action.toLowerCase()}">
-            ${action}
-          </span>
-        `;
-
-        resultsContainer.appendChild(
-          detectionElement
-        );
-      }
-
-      status.textContent =
-        "Detection complete.";
-
-    } catch (error) {
-      console.error(error);
-
-      status.textContent =
-        "Detection failed. Check the console.";
-    } finally {
-      runButton.disabled = false;
-    }
+    return;
   }
-);
+
+  try {
+    runButton.disabled = true;
+
+    status.textContent =
+      "Running YOLOS and YuNet...";
+
+
+    // ============================================================
+    // YOLOS
+    // ============================================================
+
+    document.getElementById("yolosStatus")!.textContent =
+      "Running...";
+
+    const yolosStart = performance.now();
+
+    const yolosDetections: Detection[] =
+      await detectObjects(image);
+
+    const yolosTotal =
+      performance.now() - yolosStart;
+
+    document.getElementById("yolosStatus")!.textContent =
+      "Complete";
+
+    document.getElementById("yolosTotal")!.textContent =
+      `${yolosTotal.toFixed(2)} ms`;
+
+
+    // ============================================================
+    // YuNet
+    // ============================================================
+
+    document.getElementById("yunetStatus")!.textContent =
+      "Running...";
+
+    const yunetStart = performance.now();
+
+    const yunetDetections =
+      await detectYuNet(image);
+
+    const yunetTotal =
+      performance.now() - yunetStart;
+
+    document.getElementById("yunetStatus")!.textContent =
+      "Complete";
+
+    document.getElementById("yunetTotal")!.textContent =
+      `${yunetTotal.toFixed(2)} ms`;
+
+
+    // ============================================================
+    // Draw results
+    // ============================================================
+
+    yolosCtx.clearRect(
+      0,
+      0,
+      yolosCanvas.width,
+      yolosCanvas.height
+    );
+
+    yunetCtx.clearRect(
+      0,
+      0,
+      yunetCanvas.width,
+      yunetCanvas.height
+    );
+
+    yolosCtx.drawImage(
+      image,
+      0,
+      0
+    );
+
+    yunetCtx.drawImage(
+      image,
+      0,
+      0
+    );
+
+
+    // ============================================================
+    // YOLOS results
+    // ============================================================
+
+    let yolosRedacted = 0;
+    let yolosWarnings = 0;
+
+    const displayedYolos =
+      yolosDetections.filter((detection) => {
+        if (detection.label === "face") {
+          return detection.confidence >= 0.75;
+        }
+
+        return detection.confidence >= 0.80;
+      });
+
+    for (const detection of yolosDetections) {
+
+      let {
+        xmin,
+        ymin,
+        xmax,
+        ymax,
+      } = detection.bbox;
+
+      const confidence =
+        detection.confidence;
+
+      const isSensitive =
+        SENSITIVE_LABELS.has(
+          detection.label
+        );
+
+      if (!isSensitive) continue;
+
+
+      if (detection.label === "face") {
+        xmin -= FACE_PADDING_X;
+        ymin -= FACE_PADDING_Y;
+        xmax += FACE_PADDING_X;
+        ymax += FACE_PADDING_Y;
+      }
+
+
+      if (detection.label === "face") {
+        xmin -= FACE_PADDING_X;
+        ymin -= FACE_PADDING_Y;
+        xmax += FACE_PADDING_X;
+        ymax += FACE_PADDING_Y;
+      }
+
+      xmin = Math.max(0, xmin);
+      ymin = Math.max(0, ymin);
+
+      xmax = Math.min(
+        yolosCanvas.width,
+        xmax
+      );
+
+      ymax = Math.min(
+        yolosCanvas.height,
+        ymax
+      );
+
+
+      const width =
+        xmax - xmin;
+
+      const height =
+        ymax - ymin;
+
+
+      if (confidence >= 0.90) {
+
+        yolosCtx.fillStyle = "black";
+
+        yolosCtx.fillRect(
+          xmin,
+          ymin,
+          width,
+          height
+        );
+
+        yolosRedacted++;
+
+      } else if (confidence >= 0.70) {
+
+        yolosCtx.strokeStyle = "red";
+        yolosCtx.lineWidth = 4;
+
+        yolosCtx.strokeRect(
+          xmin,
+          ymin,
+          width,
+          height
+        );
+
+        yolosWarnings++;
+      }
+    }
+
+
+    // ============================================================
+    // YuNet results
+    // ============================================================
+
+    let yunetRedacted = 0;
+    let yunetWarnings = 0;
+
+
+    for (const detection of yunetDetections) {
+
+      let {
+        xmin,
+        ymin,
+        xmax,
+        ymax,
+      } = detection.bbox;
+
+      const confidence =
+        detection.confidence;
+
+
+      if (detection.label !== "face") {
+        continue;
+      }
+
+
+      xmin -= FACE_PADDING_X;
+      ymin -= FACE_PADDING_Y;
+      xmax += FACE_PADDING_X;
+      ymax += FACE_PADDING_Y;
+
+
+      xmin = Math.max(0, xmin);
+      ymin = Math.max(0, ymin);
+
+      xmax = Math.min(
+        yunetCanvas.width,
+        xmax
+      );
+
+      ymax = Math.min(
+        yunetCanvas.height,
+        ymax
+      );
+
+
+      const width =
+        xmax - xmin;
+
+      const height =
+        ymax - ymin;
+
+
+      if (confidence >= 0.90) {
+
+        yunetCtx.fillStyle = "black";
+
+        yunetCtx.fillRect(
+          xmin,
+          ymin,
+          width,
+          height
+        );
+
+        yunetRedacted++;
+
+      } else if (confidence >= 0.70) {
+
+        yunetCtx.strokeStyle = "red";
+        yunetCtx.lineWidth = 4;
+
+        yunetCtx.strokeRect(
+          xmin,
+          ymin,
+          width,
+          height
+        );
+
+        yunetWarnings++;
+      }
+    }
+
+
+    // ============================================================
+    // Update statistics
+    // ============================================================
+
+    document.getElementById("yolosDetected")!.textContent =
+      String(displayedYolos.length);
+
+    document.getElementById("yolosRedacted")!.textContent =
+      String(yolosRedacted);
+
+    document.getElementById("yolosWarnings")!.textContent =
+      String(yolosWarnings);
+
+
+    document.getElementById("yunetDetected")!.textContent =
+      String(yunetDetections.length);
+
+    document.getElementById("yunetRedacted")!.textContent =
+      String(yunetRedacted);
+
+    document.getElementById("yunetWarnings")!.textContent =
+      String(yunetWarnings);
+
+
+    // ============================================================
+    // Results lists
+    // ============================================================
+
+    const yolosResults =
+      document.getElementById("yolosResults")!;
+
+    const yunetResults =
+      document.getElementById("yunetResults")!;
+
+    yolosResults.innerHTML = "";
+    yunetResults.innerHTML = "";
+
+
+    for (const detection of displayedYolos) {
+
+      const isSensitive =
+        SENSITIVE_LABELS.has(
+          detection.label
+        );
+
+      let action = "Kept";
+
+      if (isSensitive) {
+
+        if (detection.confidence >= 0.90) {
+          action = "Redacted";
+        } else if (detection.confidence >= 0.70) {
+          action = "Warning";
+        }
+      }
+
+
+      const element =
+        document.createElement("div");
+
+      element.className =
+        "detection";
+
+      element.innerHTML = `
+        <div class="detection-left">
+          <strong>${detection.label}</strong>
+          <span class="confidence">
+            ${(detection.confidence * 100).toFixed(1)}%
+          </span>
+        </div>
+
+        <span class="action ${action.toLowerCase()}">
+          ${action}
+        </span>
+      `;
+
+      yolosResults.appendChild(element);
+    }
+
+
+    for (const detection of yunetDetections) {
+
+      let action = "Kept";
+
+      if (detection.confidence >= 0.90) {
+        action = "Redacted";
+      } else if (detection.confidence >= 0.70) {
+        action = "Warning";
+      }
+
+
+      const element =
+        document.createElement("div");
+
+      element.className =
+        "detection";
+
+      element.innerHTML = `
+        <div class="detection-left">
+          <strong>${detection.label}</strong>
+          <span class="confidence">
+            ${(detection.confidence * 100).toFixed(1)}%
+          </span>
+        </div>
+
+        <span class="action ${action.toLowerCase()}">
+          ${action}
+        </span>
+      `;
+
+      yunetResults.appendChild(element);
+    }
+
+
+    status.textContent =
+      "Comparison complete.";
+
+  } catch (error) {
+
+    console.error(error);
+
+    status.textContent =
+      "Comparison failed. Check the console.";
+
+  } finally {
+
+    runButton.disabled = false;
+  }
+});
