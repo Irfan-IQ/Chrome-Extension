@@ -3,7 +3,9 @@ import {
   type Detection,
 } from "./detector";
 
-import { getYuNetSession } from "./yunet-detector";
+import {
+  detectYuNet,
+} from "./yunet-detector";
 
 const fileInput = document.getElementById(
   "imageInput"
@@ -137,8 +139,11 @@ runButton.addEventListener(
       status.textContent =
         "Running detection...";
 
-      const detections: Detection[] =
-        await detectObjects(image);
+      const yunetDetections =
+  await detectYuNet(image);
+
+const detections: Detection[] =
+  yunetDetections;
 
       // Restore original image.
       ctx.clearRect(
@@ -365,32 +370,3 @@ runButton.addEventListener(
     }
   }
 );
-
-getYuNetSession()
-    .then((session) => {
-        console.log("================================");
-        console.log("YuNet smoke test SUCCESS");
-        console.log("Inputs:", session.inputNames);
-        console.log("Outputs:", session.outputNames);
-        console.log("================================");
-
-        for (const inputName of session.inputNames) {
-            console.log(
-                `Input "${inputName}":`,
-                session.inputMetadata[inputName]
-            );
-        }
-
-        for (const outputName of session.outputNames) {
-            console.log(
-                `Output "${outputName}":`,
-                session.outputMetadata[outputName]
-            );
-        }
-    })
-    .catch((error) => {
-        console.error("================================");
-        console.error("YuNet smoke test FAILED");
-        console.error(error);
-        console.error("================================");
-    });
