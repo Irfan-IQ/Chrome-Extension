@@ -3,6 +3,8 @@ import {
   type Detection,
 } from "./detector";
 
+import { getYuNetSession } from "./yunet-detector";
+
 const fileInput = document.getElementById(
   "imageInput"
 ) as HTMLInputElement;
@@ -363,3 +365,32 @@ runButton.addEventListener(
     }
   }
 );
+
+getYuNetSession()
+    .then((session) => {
+        console.log("================================");
+        console.log("YuNet smoke test SUCCESS");
+        console.log("Inputs:", session.inputNames);
+        console.log("Outputs:", session.outputNames);
+        console.log("================================");
+
+        for (const inputName of session.inputNames) {
+            console.log(
+                `Input "${inputName}":`,
+                session.inputMetadata[inputName]
+            );
+        }
+
+        for (const outputName of session.outputNames) {
+            console.log(
+                `Output "${outputName}":`,
+                session.outputMetadata[outputName]
+            );
+        }
+    })
+    .catch((error) => {
+        console.error("================================");
+        console.error("YuNet smoke test FAILED");
+        console.error(error);
+        console.error("================================");
+    });
