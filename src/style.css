@@ -1,11 +1,6 @@
-/* ============================================================
-   GLOBAL
-============================================================ */
-
 * {
   box-sizing: border-box;
 }
-
 
 html,
 body {
@@ -26,19 +21,13 @@ body {
   color: #101828;
 }
 
-
 body {
   padding: 32px;
 }
 
-
-/* ============================================================
-   APPLICATION
-============================================================ */
-
 .app {
   width: 100%;
-  max-width: 1500px;
+  max-width: 1100px;
 
   margin: 0 auto;
 
@@ -52,7 +41,6 @@ body {
     0 10px 40px
     rgba(16, 24, 40, 0.08);
 }
-
 
 /* ============================================================
    HEADER
@@ -69,7 +57,6 @@ body {
   margin-bottom: 28px;
 }
 
-
 .header h1 {
   margin: 0;
 
@@ -79,7 +66,6 @@ body {
   color: #101828;
 }
 
-
 .header p {
   margin: 8px 0 0;
 
@@ -87,7 +73,6 @@ body {
 
   color: #667085;
 }
-
 
 .local-badge {
   padding: 8px 14px;
@@ -103,7 +88,6 @@ body {
 
   white-space: nowrap;
 }
-
 
 /* ============================================================
    CONTROLS
@@ -124,7 +108,6 @@ body {
   background: #fafafa;
 }
 
-
 .file-control {
   display: flex;
 
@@ -135,7 +118,6 @@ body {
   flex: 1;
 }
 
-
 .file-control label {
   font-size: 13px;
 
@@ -144,11 +126,9 @@ body {
   color: #475467;
 }
 
-
 .file-control input {
   font-size: 14px;
 }
-
 
 #runDetection {
   border: none;
@@ -170,11 +150,9 @@ body {
     opacity 0.15s ease;
 }
 
-
 #runDetection:hover {
   transform: translateY(-1px);
 }
-
 
 #runDetection:disabled {
   opacity: 0.55;
@@ -183,7 +161,6 @@ body {
 
   transform: none;
 }
-
 
 /* ============================================================
    STATUS
@@ -201,13 +178,11 @@ body {
   color: #475467;
 }
 
-
 .status-bar p {
   margin: 0;
 
   font-size: 14px;
 }
-
 
 .status-dot {
   width: 8px;
@@ -218,27 +193,13 @@ body {
   background: #667085;
 }
 
-
 /* ============================================================
-   COMPARISON
+   MODEL
 ============================================================ */
 
 .comparison {
-  display: grid;
-
-  grid-template-columns:
-    minmax(0, 1fr)
-    minmax(0, 1fr);
-
-  gap: 24px;
-
-  align-items: start;
+  display: block;
 }
-
-
-/* ============================================================
-   MODEL PANEL
-============================================================ */
 
 .model-panel {
   min-width: 0;
@@ -252,7 +213,6 @@ body {
   background: #ffffff;
 }
 
-
 .model-header {
   display: flex;
 
@@ -264,7 +224,6 @@ body {
   margin-bottom: 18px;
 }
 
-
 .model-header h2 {
   margin: 0;
 
@@ -273,7 +232,6 @@ body {
   color: #101828;
 }
 
-
 .model-header p {
   margin: 5px 0 0;
 
@@ -281,7 +239,6 @@ body {
 
   color: #667085;
 }
-
 
 .model-status {
   padding: 6px 10px;
@@ -299,7 +256,6 @@ body {
   white-space: nowrap;
 }
 
-
 /* ============================================================
    CANVAS
 ============================================================ */
@@ -316,7 +272,6 @@ body {
   background: #f9fafb;
 }
 
-
 .model-panel canvas {
   display: block;
 
@@ -326,22 +281,54 @@ body {
   background: #f9fafb;
 }
 
+/* ============================================================
+   REDACTION INFO
+============================================================ */
+
+.redaction-info {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 5px;
+
+  margin-top: 16px;
+
+  padding: 14px;
+
+  border-radius: 12px;
+
+  background: #f8fafc;
+
+  border: 1px solid #eaecf0;
+}
+
+.redaction-info strong {
+  font-size: 13px;
+
+  color: #344054;
+}
+
+.redaction-info span {
+  font-size: 13px;
+
+  color: #667085;
+}
 
 /* ============================================================
-   MODEL STATISTICS
+   STATISTICS
 ============================================================ */
 
 .model-stats {
   display: grid;
 
   grid-template-columns:
-    repeat(3, minmax(0, 1fr));
+    repeat(2, minmax(0, 1fr));
 
   gap: 10px;
 
   margin-top: 16px;
 }
-
 
 .stat-card {
   padding: 13px;
@@ -353,7 +340,6 @@ body {
   background: #ffffff;
 }
 
-
 .stat-card span {
   display: block;
 
@@ -364,7 +350,6 @@ body {
   font-size: 12px;
 }
 
-
 .stat-card strong {
   display: block;
 
@@ -372,7 +357,6 @@ body {
 
   color: #101828;
 }
-
 
 /* ============================================================
    PERFORMANCE
@@ -390,7 +374,6 @@ body {
   border: 1px solid #eaecf0;
 }
 
-
 .section-title {
   margin-bottom: 10px;
 
@@ -400,7 +383,6 @@ body {
 
   color: #344054;
 }
-
 
 .timing-row {
   display: flex;
@@ -415,11 +397,9 @@ body {
   font-size: 13px;
 }
 
-
 .timing-row span {
   color: #667085;
 }
-
 
 .timing-row strong {
   color: #101828;
@@ -427,7 +407,6 @@ body {
   font-variant-numeric:
     tabular-nums;
 }
-
 
 /* ============================================================
    RESULTS
@@ -437,7 +416,6 @@ body {
   margin-top: 20px;
 }
 
-
 .results-section h3 {
   margin: 0 0 12px;
 
@@ -446,7 +424,6 @@ body {
   color: #101828;
 }
 
-
 .results {
   display: flex;
 
@@ -454,7 +431,6 @@ body {
 
   gap: 8px;
 }
-
 
 .detection {
   display: flex;
@@ -475,7 +451,6 @@ body {
   font-size: 13px;
 }
 
-
 .detection-left {
   display: flex;
 
@@ -484,11 +459,9 @@ body {
   gap: 10px;
 }
 
-
 .detection-left strong {
   color: #101828;
 }
-
 
 .confidence {
   color: #667085;
@@ -496,7 +469,6 @@ body {
   font-variant-numeric:
     tabular-nums;
 }
-
 
 /* ============================================================
    ACTION LABELS
@@ -510,51 +482,22 @@ body {
   text-transform: uppercase;
 }
 
-
 .action.kept {
   color: #475467;
 }
-
 
 .action.redacted {
   color: #b42318;
 }
 
-
-.action.warning {
-  color: #b54708;
-}
-
-
 /* ============================================================
    RESPONSIVE
 ============================================================ */
 
-@media (max-width: 1000px) {
-
-  body {
-    padding: 18px;
-  }
-
-
-  .app {
-    padding: 22px;
-  }
-
-
-  .comparison {
-    grid-template-columns: 1fr;
-  }
-
-}
-
-
 @media (max-width: 650px) {
-
   body {
     padding: 10px;
   }
-
 
   .app {
     padding: 16px;
@@ -562,16 +505,13 @@ body {
     border-radius: 14px;
   }
 
-
   .header {
     flex-direction: column;
   }
 
-
   .header h1 {
     font-size: 25px;
   }
-
 
   .controls {
     flex-direction: column;
@@ -579,14 +519,11 @@ body {
     align-items: stretch;
   }
 
-
   #runDetection {
     width: 100%;
   }
 
-
   .model-stats {
     grid-template-columns: 1fr;
   }
-
 }

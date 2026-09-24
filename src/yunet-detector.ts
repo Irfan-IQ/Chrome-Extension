@@ -90,10 +90,6 @@ function createInputTensor(
     );
   }
 
-  // --------------------------------------
-  // Preserve aspect ratio.
-  // --------------------------------------
-
   const scale = Math.min(
     INPUT_SIZE / image.naturalWidth,
     INPUT_SIZE / image.naturalHeight
@@ -118,10 +114,6 @@ function createInputTensor(
     Math.floor(
       (INPUT_SIZE - resizedHeight) / 2
     );
-
-  // --------------------------------------
-  // Black padding.
-  // --------------------------------------
 
   ctx.fillStyle = "black";
 
@@ -153,16 +145,6 @@ function createInputTensor(
 
   const pixelCount =
     INPUT_SIZE * INPUT_SIZE;
-
-  // YuNet expects:
-  //
-  // [1, 3, 640, 640]
-  //
-  // BGR
-  // NCHW
-  // float32
-  //
-  // No normalization.
 
   const inputData =
     new Float32Array(
@@ -301,7 +283,6 @@ function decodeOutputs(
       const objectness =
         obj[index];
 
-      // YuNet uses classification × objectness.
       const confidence =
         classScore *
         objectness;
@@ -320,10 +301,6 @@ function decodeOutputs(
         Math.floor(
           index / featureWidth
         );
-
-      // ----------------------------------
-      // Decode bounding box.
-      // ----------------------------------
 
       const bboxIndex =
         index * 4;
@@ -372,10 +349,6 @@ function decodeOutputs(
         centerY +
         height / 2;
 
-      // ----------------------------------
-      // Undo letterboxing.
-      // ----------------------------------
-
       xmin =
         (xmin - offsetX) /
         scale;
@@ -391,10 +364,6 @@ function decodeOutputs(
       ymax =
         (ymax - offsetY) /
         scale;
-
-      // ----------------------------------
-      // Clamp to original image.
-      // ----------------------------------
 
       xmin =
         Math.max(
