@@ -1,0 +1,101 @@
+[
+  {
+    "model": "yunet",
+    "onnx_path": "C:\\Users\\Dell\\Projects\\vision-model\\vision-test\\training-new\\models\\yunet\\face_detection_yunet_2023mar.onnx",
+    "model_size_mb": 0.23,
+    "load_ms": 94.0,
+    "rss_load_mb": 8.0,
+    "rss_peak_mb": 55.7,
+    "threshold": 0.3,
+    "threads": 4,
+    "latency_ms": {
+      "preprocess": {
+        "p50": 35.98,
+        "p90": 46.48,
+        "max": 90.19
+      },
+      "inference": {
+        "p50": 27.1,
+        "p90": 38.31,
+        "max": 51.15
+      },
+      "postprocess": {
+        "p50": 0.38,
+        "p90": 0.93,
+        "max": 5.09
+      }
+    },
+    "per_image": [
+      {
+        "image": "benchmark_test.jpeg",
+        "width": 1874,
+        "height": 865,
+        "detections": [
+          {
+            "label": "face",
+            "score": 0.5951530337333679,
+            "box": [
+              75.3,
+              461.4,
+              259.0,
+              629.6
+            ]
+          },
+          {
+            "label": "face",
+            "score": 0.3200836181640625,
+            "box": [
+              147.1,
+              578.5,
+              211.1,
+              621.1
+            ]
+          }
+        ],
+        "pre_ms": [],
+        "infer_ms": [],
+        "post_ms": []
+      },
+      {
+        "image": "Screenshot_2-9-2026_224726_.jpeg",
+        "width": 1874,
+        "height": 1051,
+        "detections": [
+          {
+            "label": "face",
+            "score": 0.8778367042541504,
+            "box": [
+              113.2,
+              335.4,
+              199.4,
+              414.7
+            ]
+          }
+        ],
+        "pre_ms": [],
+        "infer_ms": [],
+        "post_ms": []
+      },
+      {
+        "image": "Screenshot_2-9-2026_232057_.jpeg",
+        "width": 1876,
+        "height": 1049,
+        "detections": [
+          {
+            "label": "face",
+            "score": 0.8574682474136353,
+            "box": [
+              172.7,
+              381.9,
+              334.3,
+              529.1
+            ]
+          }
+        ],
+        "pre_ms": [],
+        "infer_ms": [],
+        "post_ms": []
+      }
+    ]
+  }
+]

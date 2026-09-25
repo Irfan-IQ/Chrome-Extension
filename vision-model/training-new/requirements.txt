@@ -1,0 +1,14 @@
+# Deliberately does NOT include `ultralytics`.
+# Ultralytics is AGPL-3.0 and we do not want it anywhere near a shipped
+# browser extension's dependency graph. All YOLO-family models here are
+# run through raw ONNX Runtime instead.
+
+onnxruntime>=1.20.0
+numpy>=1.26
+Pillow>=10.0
+huggingface_hub>=0.26
+psutil>=5.9
+
+# Only needed for `export_conditional_detr.py` (one-off ONNX export).
+# Install separately if/when you run that script:
+#   pip install "optimum[onnxruntime]>=1.23" "transformers>=4.45" torch --index-url https://download.pytorch.org/whl/cpu
