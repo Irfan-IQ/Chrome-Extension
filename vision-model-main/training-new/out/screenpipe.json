@@ -1,0 +1,371 @@
+[
+  {
+    "model": "screenpipe_pii",
+    "onnx_path": "C:\\Users\\Dell\\Projects\\vision-model\\vision-test\\training-new\\models\\screenpipe_pii\\rfdetr_v11.onnx",
+    "model_size_mb": 113.99,
+    "load_ms": 1745.3,
+    "rss_load_mb": 133.9,
+    "rss_peak_mb": 293.4,
+    "threshold": 0.3,
+    "threads": 4,
+    "latency_ms": {
+      "preprocess": {
+        "p50": 41.9,
+        "p90": 61.12,
+        "max": 77.61
+      },
+      "inference": {
+        "p50": 981.42,
+        "p90": 1033.05,
+        "max": 1200.85
+      },
+      "postprocess": {
+        "p50": 0.27,
+        "p90": 0.73,
+        "max": 1.12
+      }
+    },
+    "per_image": [
+      {
+        "image": "benchmark_test.jpeg",
+        "width": 1874,
+        "height": 865,
+        "detections": [
+          {
+            "label": "private_email",
+            "score": 0.6516268849372864,
+            "box": [
+              56.3,
+              452.3,
+              300.0,
+              637.3
+            ]
+          },
+          {
+            "label": "private_person",
+            "score": 0.472647100687027,
+            "box": [
+              47.7,
+              301.2,
+              203.7,
+              327.3
+            ]
+          },
+          {
+            "label": "private_company",
+            "score": 0.5428835153579712,
+            "box": [
+              885.3,
+              30.5,
+              1054.7,
+              56.4
+            ]
+          },
+          {
+            "label": "private_person",
+            "score": 0.45561251044273376,
+            "box": [
+              1313.0,
+              703.1,
+              1655.4,
+              726.0
+            ]
+          },
+          {
+            "label": "private_person",
+            "score": 0.319511353969574,
+            "box": [
+              739.1,
+              301.3,
+              1177.0,
+              333.1
+            ]
+          },
+          {
+            "label": "private_person",
+            "score": 0.47860294580459595,
+            "box": [
+              457.0,
+              548.8,
+              648.5,
+              570.8
+            ]
+          },
+          {
+            "label": "private_person",
+            "score": 0.32232439517974854,
+            "box": [
+              757.3,
+              768.4,
+              859.4,
+              791.7
+            ]
+          },
+          {
+            "label": "private_id",
+            "score": 0.3633464276790619,
+            "box": [
+              453.3,
+              516.6,
+              564.7,
+              538.6
+            ]
+          },
+          {
+            "label": "private_person",
+            "score": 0.524895191192627,
+            "box": [
+              1014.0,
+              682.2,
+              1073.5,
+              705.7
+            ]
+          },
+          {
+            "label": "private_person",
+            "score": 0.4041860103607178,
+            "box": [
+              472.6,
+              580.3,
+              595.0,
+              602.2
+            ]
+          },
+          {
+            "label": "private_person",
+            "score": 0.3634464144706726,
+            "box": [
+              759.9,
+              683.4,
+              829.7,
+              705.8
+            ]
+          }
+        ],
+        "pre_ms": [],
+        "infer_ms": [],
+        "post_ms": []
+      },
+      {
+        "image": "Screenshot_2-9-2026_224726_.jpeg",
+        "width": 1874,
+        "height": 1051,
+        "detections": [
+          {
+            "label": "private_person",
+            "score": 0.8279627561569214,
+            "box": [
+              369.7,
+              350.7,
+              472.2,
+              374.8
+            ]
+          },
+          {
+            "label": "private_email",
+            "score": 0.5413662195205688,
+            "box": [
+              84.0,
+              388.2,
+              303.2,
+              597.8
+            ]
+          },
+          {
+            "label": "private_url",
+            "score": 0.8247532844543457,
+            "box": [
+              974.0,
+              635.8,
+              1179.9,
+              659.5
+            ]
+          },
+          {
+            "label": "private_person",
+            "score": 0.4751129746437073,
+            "box": [
+              1734.6,
+              922.1,
+              1799.1,
+              947.9
+            ]
+          },
+          {
+            "label": "private_email",
+            "score": 0.4816332459449768,
+            "box": [
+              333.6,
+              925.2,
+              607.4,
+              951.5
+            ]
+          },
+          {
+            "label": "secret",
+            "score": 0.453767329454422,
+            "box": [
+              944.9,
+              774.2,
+              1018.5,
+              798.5
+            ]
+          },
+          {
+            "label": "secret",
+            "score": 0.6774070262908936,
+            "box": [
+              973.7,
+              575.4,
+              1229.9,
+              599.1
+            ]
+          },
+          {
+            "label": "private_person",
+            "score": 0.6315417885780334,
+            "box": [
+              61.0,
+              774.6,
+              151.8,
+              798.8
+            ]
+          },
+          {
+            "label": "secret",
+            "score": 0.48898863792419434,
+            "box": [
+              640.9,
+              542.3,
+              767.1,
+              566.3
+            ]
+          },
+          {
+            "label": "private_company",
+            "score": 0.3305765390396118,
+            "box": [
+              875.9,
+              23.6,
+              1101.1,
+              50.6
+            ]
+          }
+        ],
+        "pre_ms": [],
+        "infer_ms": [],
+        "post_ms": []
+      },
+      {
+        "image": "Screenshot_2-9-2026_232057_.jpeg",
+        "width": 1876,
+        "height": 1049,
+        "detections": [
+          {
+            "label": "private_person",
+            "score": 0.8449215292930603,
+            "box": [
+              370.5,
+              348.1,
+              471.6,
+              372.7
+            ]
+          },
+          {
+            "label": "private_email",
+            "score": 0.5472676157951355,
+            "box": [
+              66.6,
+              451.8,
+              335.8,
+              625.9
+            ]
+          },
+          {
+            "label": "private_url",
+            "score": 0.7765237092971802,
+            "box": [
+              975.0,
+              633.5,
+              1181.3,
+              657.7
+            ]
+          },
+          {
+            "label": "private_person",
+            "score": 0.4800436496734619,
+            "box": [
+              945.9,
+              771.8,
+              1019.2,
+              796.4
+            ]
+          },
+          {
+            "label": "private_email",
+            "score": 0.5155436992645264,
+            "box": [
+              335.3,
+              923.4,
+              609.4,
+              949.6
+            ]
+          },
+          {
+            "label": "private_person",
+            "score": 0.6231599450111389,
+            "box": [
+              62.2,
+              772.3,
+              155.1,
+              796.7
+            ]
+          },
+          {
+            "label": "secret",
+            "score": 0.5511353015899658,
+            "box": [
+              641.7,
+              539.8,
+              769.0,
+              563.9
+            ]
+          },
+          {
+            "label": "secret",
+            "score": 0.38563257455825806,
+            "box": [
+              974.9,
+              573.4,
+              1230.6,
+              597.0
+            ]
+          },
+          {
+            "label": "private_person",
+            "score": 0.37312600016593933,
+            "box": [
+              1737.1,
+              919.6,
+              1801.0,
+              946.1
+            ]
+          },
+          {
+            "label": "secret",
+            "score": 0.5221791863441467,
+            "box": [
+              884.2,
+              924.4,
+              1181.0,
+              952.5
+            ]
+          }
+        ],
+        "pre_ms": [],
+        "infer_ms": [],
+        "post_ms": []
+      }
+    ]
+  }
+]
