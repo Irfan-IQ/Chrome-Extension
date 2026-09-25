@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YuNet + OpenCV Concurrent Test</title>
+  </head>
+  <body>
+    <main class="app">
+      <header class="header">
+        <div>
+          <h1>YuNet + OpenCV Concurrent Test</h1>
+          <p>Local face detection and document-region proposals running in separate browser workers.</p>
+        </div>
+        <div class="local-badge">On-device</div>
+      </header>
+
+      <section class="controls">
+        <div class="file-control">
+          <label for="imageInput">Test image</label>
+          <input id="imageInput" type="file" accept="image/*" />
+        </div>
+        <button id="runDetection" type="button">Run Concurrent Test</button>
+      </section>
+
+      <div class="status-bar">
+        <span class="status-dot"></span>
+        <p id="status">Select an image to begin.</p>
+      </div>
+
+      <section class="comparison">
+        <article class="model-panel">
+          <div class="model-header">
+            <div>
+              <h2>YuNet</h2>
+              <p>Face detector running in its own Web Worker</p>
+            </div>
+            <span id="yunetStatus" class="model-status">Waiting</span>
+          </div>
+
+          <div class="canvas-container"><canvas id="yunetCanvas"></canvas></div>
+
+          <div class="redaction-info">
+            <strong>Privacy threshold</strong>
+            <span>Faces with confidence ≥ 70% are automatically redacted.</span>
+          </div>
+
+          <div class="model-stats">
+            <div class="stat-card"><span>Faces detected</span><strong id="yunetDetected">0</strong></div>
+            <div class="stat-card"><span>Faces redacted</span><strong id="yunetRedacted">0</strong></div>
+          </div>
+
+          <div class="timing-card">
+            <div class="section-title">Performance</div>
+            <div class="timing-row"><span>Cold start</span><strong id="yunetCold">-</strong></div>
+            <div class="timing-row"><span>Warm p50</span><strong id="yunetP50">-</strong></div>
+            <div class="timing-row"><span>Warm p90</span><strong id="yunetP90">-</strong></div>
+            <div class="timing-row"><span>Latest worker time</span><strong id="yunetWorker">-</strong></div>
+          </div>
+
+          <div class="results-section">
+            <h3>Detected Faces</h3>
+            <div id="yunetResults" class="results"></div>
+          </div>
+        </article>
+
+        <article class="model-panel">
+          <div class="model-header">
+            <div>
+              <h2>OpenCV</h2>
+              <p>Canny + contour + quadrilateral document-region proposal</p>
+            </div>
+            <span id="opencvStatus" class="model-status">Waiting</span>
+          </div>
+
+          <div class="canvas-container"><canvas id="opencvCanvas"></canvas></div>
+
+          <div class="redaction-info">
+            <strong>Role</strong>
+            <span>Class-agnostic candidate generator. It does not know whether a rectangle is a passport, ID card, or payment card.</span>
+          </div>
+
+          <div class="model-stats">
+            <div class="stat-card"><span>Quad candidates</span><strong id="opencvDetected">0</strong></div>
+            <div class="stat-card"><span>Latest quad count</span><strong id="opencvCountStat">0</strong></div>
+          </div>
+
+          <div class="timing-card">
+            <div class="section-title">Performance</div>
+            <div class="timing-row"><span>Warm p50</span><strong id="opencvP50">-</strong></div>
+            <div class="timing-row"><span>Warm p90</span><strong id="opencvP90">-</strong></div>
+            <div class="timing-row"><span>Latest worker time</span><strong id="opencvWorker">-</strong></div>
+          </div>
+
+          <div class="results-section">
+            <h3>Candidate Regions</h3>
+            <div id="opencvResults" class="results"></div>
+          </div>
+        </article>
+      </section>
+
+      <section class="timing-card combined-card">
+        <div class="section-title">Concurrent wall-clock time</div>
+        <div class="timing-row"><span>Warm p50</span><strong id="combinedP50">-</strong></div>
+        <div class="timing-row"><span>Warm p90</span><strong id="combinedP90">-</strong></div>
+        <p class="small-note">This is measured around both worker requests together. It is the key number for testing whether the two detectors actually overlap in execution.</p>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

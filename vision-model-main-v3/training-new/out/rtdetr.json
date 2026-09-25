@@ -1,0 +1,141 @@
+[
+  {
+    "model": "rtdetrv2_r18",
+    "onnx_path": "C:\\Users\\Dell\\Projects\\vision-model\\vision-test\\training-new\\models\\rtdetrv2_r18\\onnx\\model.onnx",
+    "model_size_mb": 81.06,
+    "load_ms": 3110.2,
+    "rss_load_mb": 98.0,
+    "rss_peak_mb": 239.2,
+    "threshold": 0.3,
+    "threads": 4,
+    "latency_ms": {
+      "preprocess": {
+        "p50": 39.43,
+        "p90": 54.9,
+        "max": 68.17
+      },
+      "inference": {
+        "p50": 860.32,
+        "p90": 1062.66,
+        "max": 1126.36
+      },
+      "postprocess": {
+        "p50": 0.27,
+        "p90": 0.31,
+        "max": 0.63
+      }
+    },
+    "per_image": [
+      {
+        "image": "benchmark_test.jpeg",
+        "width": 1874,
+        "height": 865,
+        "detections": [
+          {
+            "label": "person",
+            "score": 0.929935097694397,
+            "box": [
+              49.2,
+              398.2,
+              304.9,
+              674.3
+            ]
+          },
+          {
+            "label": "parking meter",
+            "score": 0.30827274918556213,
+            "box": [
+              0.9,
+              1.1,
+              1874.6,
+              860.2
+            ]
+          }
+        ],
+        "pre_ms": [],
+        "infer_ms": [],
+        "post_ms": []
+      },
+      {
+        "image": "Screenshot_2-9-2026_224726_.jpeg",
+        "width": 1874,
+        "height": 1051,
+        "detections": [
+          {
+            "label": "person",
+            "score": 0.9051082730293274,
+            "box": [
+              76.1,
+              325.3,
+              325.9,
+              653.2
+            ]
+          },
+          {
+            "label": "cell phone",
+            "score": 0.8615580201148987,
+            "box": [
+              0.9,
+              -1.3,
+              1874.9,
+              1044.6
+            ]
+          },
+          {
+            "label": "tv",
+            "score": 0.3467225730419159,
+            "box": [
+              1.6,
+              -2.8,
+              1875.6,
+              1048.0
+            ]
+          },
+          {
+            "label": "tv",
+            "score": 0.3761034607887268,
+            "box": [
+              3.4,
+              6.0,
+              1877.4,
+              1030.8
+            ]
+          }
+        ],
+        "pre_ms": [],
+        "infer_ms": [],
+        "post_ms": []
+      },
+      {
+        "image": "Screenshot_2-9-2026_232057_.jpeg",
+        "width": 1876,
+        "height": 1049,
+        "detections": [
+          {
+            "label": "person",
+            "score": 0.941404402256012,
+            "box": [
+              65.4,
+              322.5,
+              344.1,
+              650.9
+            ]
+          },
+          {
+            "label": "tv",
+            "score": 0.6895496845245361,
+            "box": [
+              -0.5,
+              0.9,
+              1875.5,
+              1040.2
+            ]
+          }
+        ],
+        "pre_ms": [],
+        "infer_ms": [],
+        "post_ms": []
+      }
+    ]
+  }
+]
