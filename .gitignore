@@ -1,4 +1,6 @@
-# Nothing to build — this loads directly as an unpacked extension.
+# Vite + React build outputs
+node_modules/
+dist/
 
 # OS / editor cruft
 .DS_Store
