@@ -229,21 +229,6 @@ No API key or network access required.
 - All PII detection and redaction runs **100% locally** — no external services except the Gemini API for reasoning.
 - The Gemini API receives only: the user's task text, safe page metadata, and detection IDs/categories — never raw PII or the raw screenshot.
 - The agent architecture demonstrates a real **Observe → Decide → Act** loop with native function calling, not prompt engineering tricks.
-
-## Local vision model diagnostics
-
-The privacy scan now verifies the YuNet ONNX model during initialization instead of silently assuming it loaded.
-
-1. Run `npm install` and `npm run build`.
-2. Load the generated `dist/` folder as an unpacked extension in Chrome.
-3. Open the extension side panel and click **Scan Page**.
-4. Open **Debug** in the Privacy Protection bar.
-5. Check **Vision model**:
-   - `ready` means the YuNet ONNX session loaded successfully.
-   - `error` means the model/runtime failed to initialize. The error and resolved extension URL are shown.
-6. The scan result also shows the number of YuNet face detections and OpenCV card candidates.
-
-The expected model path inside the extension source is:
 `public/models/yunet/face_detection_yunet_2023mar.onnx`
 
 The current repository ZIP does not contain the ONNX weights. The detector code alone is not enough to load the model. Obtain the official YuNet weight from OpenCV Zoo and place it at the path above before building. OpenCV Zoo lists `face_detection_yunet_2023mar.onnx` in its face detection model directory and documents the model as MIT licensed. 
