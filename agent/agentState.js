@@ -25,6 +25,7 @@
       // Raw detections from each pipeline stage (stored locally)
       domDetections:  [],   // from contentScript / detector.js
       ocrDetections:  [],   // from OcrAnalyzer + PatternAnalyzer + ContextAnalyzer
+      visionDetections:[],   // from local YuNet + OpenCV vision pipeline
       fusedDetections:[],   // from DetectionFusion
 
       // ID → detection map; LLM only sees the keys ("det_0", "det_1", …)

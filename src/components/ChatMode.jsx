@@ -108,7 +108,6 @@ export default function ChatMode({ setStatus, openZoom, clearSignal, active }) {
         text: `No sensitive fields detected (${modeLabel} scan). Page snapshot attached.`,
         html: null,
       });
-      return;
     }
 
     const counts = countByCategory(dets);
@@ -123,12 +122,17 @@ export default function ChatMode({ setStatus, openZoom, clearSignal, active }) {
       html += `<div class='uninspectable-note'>${uninspectable.length} uninspectable region(s) — cross-origin iframe, not scanned.</div>`;
     }
 
-    setPrivacyStatus({ kind: 'ok', text: '', html });
+    if (dets.length > 0 || uninspectable.length > 0) {
+      setPrivacyStatus({ kind: 'ok', text: '', html });
+    }
     setDebugData({
       dets,
       fusionSummary: result.fusionSummary,
       ocrEnabled,
       ocrWordCount: ocrWC,
+      visionEnabled: !!result.visionEnabled,
+      visionSummary: result.visionSummary || null,
+      visionStatus: result.visionStatus || null,
     });
   }
 
@@ -225,6 +229,9 @@ export default function ChatMode({ setStatus, openZoom, clearSignal, active }) {
         ocrCount,
         totalCount: dets.length,
         ocrOn: !!result.ocrEnabled,
+        visionOn: !!result.visionEnabled,
+        visionSummary: result.visionSummary || null,
+        visionStatus: result.visionStatus || null,
         counts,
         before: result.beforeScreenshot || '',
         sanitized: result.sanitizedScreenshot || '',
@@ -399,7 +406,7 @@ export default function ChatMode({ setStatus, openZoom, clearSignal, active }) {
 }
 
 function ScanResultPanel({ result, activeTab, setActiveTab, onZoom, onClose }) {
-  const { domCount, ocrCount, totalCount, ocrOn, counts, before, sanitized } = result;
+  const { domCount, ocrCount, totalCount, ocrOn, visionOn, visionSummary, visionStatus, counts, before, sanitized } = result;
   return (
     <section className="scan-result-panel">
       <div className="scan-summary-row">
@@ -415,6 +422,11 @@ function ScanResultPanel({ result, activeTab, setActiveTab, onZoom, onClose }) {
           <div className="scan-card-value">{totalCount}</div>
           <div className="scan-card-label">Protected</div>
         </div>
+      </div>
+
+      <div className="scan-guarantees">
+        <span className="guarantee-item">{visionStatus?.state === 'ready' ? '✓ YuNet loaded' : visionStatus?.state === 'loading' ? '⟳ YuNet loading' : '⚠ YuNet unavailable'}</span>
+        {visionSummary && <span className="guarantee-item">Vision: {visionSummary.faces || 0} faces · {visionSummary.cardCandidates || 0} cards</span>}
       </div>
 
       <div className="scan-guarantees">
@@ -482,20 +494,23 @@ function ScanResultPanel({ result, activeTab, setActiveTab, onZoom, onClose }) {
 }
 
 function DebugList({ data }) {
-  if (!data || !data.dets || data.dets.length === 0) {
+  if (!data) {
     return (
       <div className="debug-list">
-        <span className="debug-empty">No detections yet.</span>
+        <span className="debug-empty">Run Scan Page to populate diagnostics.</span>
       </div>
     );
   }
-  const { dets, fusionSummary, ocrEnabled, ocrWordCount } = data;
+  const { dets = [], fusionSummary, ocrEnabled, ocrWordCount, visionEnabled, visionSummary, visionStatus } = data;
   const modeLabel = ocrEnabled
     ? 'DOM + OCR + Pattern + Context + Fusion'
     : 'DOM-only (OCR fallback)';
   return (
     <div className="debug-list">
       <div className="debug-mode">Mode: {modeLabel}</div>
+      <div className="debug-mode">Vision model: {visionStatus?.state || 'unknown'}{visionStatus?.message ? ` — ${visionStatus.message}` : ''}</div>
+      {visionStatus?.modelUrl && <div className="debug-mode">YuNet path: {visionStatus.modelUrl}</div>}
+      {visionSummary && <div className="debug-mode">Vision detections: {visionSummary.faces || 0} face(s), {visionSummary.cardCandidates || 0} card candidate(s), {Math.round(visionSummary.wallMs || 0)} ms</div>}
       {ocrEnabled && <div className="debug-mode">OCR words found: {ocrWordCount || 0}</div>}
       {fusionSummary?.bySource && (
         <>
@@ -508,6 +523,7 @@ function DebugList({ data }) {
         </>
       )}
       <div className="debug-section">Detections:</div>
+      {dets.length === 0 && <div className="debug-empty">No detections survived the fusion/redaction threshold.</div>}
       {dets.map((d, i) => {
         const conf =
           typeof d.confidence === 'number'

@@ -152,7 +152,12 @@
   function makeOcrDet(ocrDet, scale) {
     var sources = ocrDet.sources || ["ocr"];
     var baseConf = typeof ocrDet.confidence === "number" ? ocrDet.confidence : 0.50;
-    baseConf = Math.min(0.99, baseConf + sourceBonus(sources));
+    // Vision detections already carry a calibrated detector confidence.
+    // Do not force them through the OCR-only bonus path, otherwise a 0.30
+    // YuNet/OpenCV detection would be discarded by the 0.60 fusion cutoff.
+    if (sources.indexOf("vision") === -1) {
+      baseConf = Math.min(0.99, baseConf + sourceBonus(sources));
+    }
 
     // Convert bbox (screenshot px) → CSS px
     var cssPxRect = shotToCss(ocrDet.boundingBox, scale);

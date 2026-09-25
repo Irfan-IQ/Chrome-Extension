@@ -254,6 +254,12 @@
     var sanitizedScreenshot, sanitizedDOM, fusedDetections;
     var ocrEnabled  = false;
     var ocrWordCount = 0;
+    var visionEnabled = false;
+    var visionDetections = [];
+    var visionSummary = null;
+    var visionStatus = root.VisionEngine && typeof root.VisionEngine.getStatus === "function"
+      ? root.VisionEngine.getStatus()
+      : { state: "unavailable", message: "Vision engine is not loaded." };
 
     try {
       // ---- Step 4: Capture visible tab -------------------------------------
@@ -275,7 +281,33 @@
       // Get screenshot dimensions for coordinate mapping
       var shotSize = await getImageDimensions(rawShot);
 
-      // ---- Step 5-7: OCR → Pattern → Context (soft failure) ---------------
+      // ---- Step 5: Local vision detectors ---------------------------------
+      // YuNet + OpenCV run concurrently in dedicated workers. Vision is a
+      // soft failure so the existing DOM/OCR pipeline remains usable if the
+      // model weights are not installed.
+      try {
+        if (root.VisionEngine &&
+            typeof root.VisionEngine.detectScreenshot === "function") {
+          progress("Loading local vision model and running vision detectors…");
+          var visionResult = await root.VisionEngine.detectScreenshot(rawShot);
+          visionDetections = visionResult.detections || [];
+          visionSummary = visionResult.visionSummary || null;
+          visionStatus = root.VisionEngine.getStatus();
+          visionEnabled = true;
+        }
+      } catch (visionErr) {
+        console.warn(
+          "[V4] Vision layer failed (continuing with DOM + OCR):",
+          (visionErr && visionErr.message) || visionErr
+        );
+        visionEnabled = false;
+        visionDetections = [];
+        visionStatus = root.VisionEngine && typeof root.VisionEngine.getStatus === "function"
+          ? root.VisionEngine.getStatus()
+          : { state: "error", message: (visionErr && visionErr.message) || String(visionErr) };
+      }
+
+      // ---- Step 6-8: OCR → Pattern → Context (soft failure) ---------------
       var ocrDetections = [];
       var ocrError = null;
 
@@ -324,19 +356,28 @@
       if (root.DetectionFusion && ocrDetections.length > 0) {
         fusedDetections = root.DetectionFusion.fuse(
           domDetections,
-          ocrDetections,
+          ocrDetections.concat(visionDetections),
           viewport,
           shotSize
         );
       } else {
-        // No OCR or fusion module — use DOM detections directly (V2 fallback)
-        // Map to the same shape as fused detections
+        // No fusion module — preserve the old DOM fallback, but still include
+        // local vision detections when available.
         fusedDetections = domDetections.map(function (d) {
           return Object.assign({}, d, {
             sources: ["dom"],
             confidenceLabel: d.confidence,
           });
         });
+
+        if (visionDetections.length > 0 && root.DetectionFusion) {
+          fusedDetections = root.DetectionFusion.fuse(
+            [],
+            visionDetections,
+            viewport,
+            shotSize
+          ).concat(fusedDetections);
+        }
       }
 
       // ---- Step 9: Screenshot redaction with fused detections --------------
@@ -377,6 +418,9 @@
       host: safeHost(tab.url),
       ocrEnabled: ocrEnabled,
       ocrWordCount: ocrWordCount,
+      visionEnabled: visionEnabled,
+      visionSummary: visionSummary,
+      visionStatus: visionStatus,
       fusionSummary: buildFusionSummary(fusedDetections || []),
     };
   }

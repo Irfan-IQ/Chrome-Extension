@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "onnxruntime-web": "^1.30.0",
+    "@opencvjs/worker": "^5.0.0-release.2"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",

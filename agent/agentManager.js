@@ -242,7 +242,8 @@
           (r.categorySummary ? " — " + summariseCats(r.categorySummary) : "") + ".";
       case "fuse_detections":
         return "Fused to " + (r.totalDetections || 0) + " unique detection(s)" +
-          (r.categorySummary ? " — " + summariseCats(r.categorySummary) : "") + ".";
+          (r.categorySummary ? " — " + summariseCats(r.categorySummary) : "") +
+          (r.visionEnabled ? " — local vision active." : "") + ".";
       case "redact":
         return "Redacted " + (r.redactedCount || 0) + " region(s)" +
           (r.categorySummary ? " — " + summariseCats(r.categorySummary) : "") + ".";
