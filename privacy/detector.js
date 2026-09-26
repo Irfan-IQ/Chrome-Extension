@@ -651,9 +651,6 @@
     "nickname":     CATEGORY.USERNAME,
     "alternateName":CATEGORY.USERNAME,
     "telephone":    CATEGORY.PHONE,
-    "url":          CATEGORY.USERNAME,
-    "sameAs":       CATEGORY.USERNAME,
-    "identifier":   CATEGORY.USERNAME,
     "birthDate":    "date_of_birth",
   };
 
@@ -672,20 +669,48 @@
     // Twitter / X
     { sel: "[data-testid='UserName']",    category: CATEGORY.USERNAME },
     { sel: "[data-testid='UserDescription']", category: CATEGORY.NAME },
-    // Generic social profile patterns
-    { sel: "[class*='profile-name']",category: CATEGORY.NAME },
-    { sel: "[class*='display-name']",category: CATEGORY.NAME },
-    { sel: "[class*='user-name']",   category: CATEGORY.USERNAME },
-    { sel: "[class*='handle']",      category: CATEGORY.USERNAME },
-    { sel: "[class*='username']",    category: CATEGORY.USERNAME },
-    // LinkedIn URL anchor links
+    // Generic social profile patterns (tightened: match only leaf-ish
+    // display nodes, not layout wrappers whose class merely CONTAINS these
+    // substrings — e.g. GitHub's design system reuses "handle"/"user-name"
+    // fragments across chrome and would blanket the page otherwise)
+    { sel: "span[class*='profile-name'], div[class*='profile-name']", category: CATEGORY.NAME },
+    { sel: "span[class*='display-name'], div[class*='display-name']", category: CATEGORY.NAME },
+    { sel: "span.username, span.user-name, span.handle, .p-nickname a", category: CATEGORY.USERNAME },
+    // LinkedIn URL anchor links (path-scoped)
     { sel: "a[href*='linkedin.com/in/']", category: CATEGORY.USERNAME },
-    // GitHub username link
-    { sel: "a[href*='github.com/']",      category: CATEGORY.USERNAME },
+    // NOTE: broad "a[href*='github.com/']" was removed — it matched every link
+    // on any github.com page (nav, footer, repos, contribution cells). Profile
+    // URLs are handled by GITHUB_HREF_RE below with a reserved-path denylist.
   ];
 
   var LINKEDIN_HREF_RE = /linkedin\.com\/in\/[A-Za-z0-9\-_%]+/i;
-  var GITHUB_HREF_RE   = /github\.com\/[A-Za-z0-9][A-Za-z0-9\-]{0,38}(?:$|[^\/A-Za-z0-9\-])/i;
+
+  // GitHub reserved top-level paths that are NOT usernames. Anchors pointing
+  // to these must not be flagged (they blanket the page on github.com itself).
+  var GITHUB_RESERVED = {
+    "login":1,"signup":1,"join":1,"logout":1,"sessions":1,"new":1,"settings":1,
+    "notifications":1,"search":1,"explore":1,"trending":1,"topics":1,"collections":1,
+    "events":1,"about":1,"pricing":1,"features":1,"enterprise":1,"security":1,
+    "customer-stories":1,"contact":1,"marketplace":1,"sponsors":1,"readme":1,
+    "issues":1,"pulls":1,"codespaces":1,"discussions":1,"gist":1,"orgs":1,
+    "organizations":1,"users":1,"apps":1,"integrations":1,"site":1,"solutions":1,
+    "resources":1,"open-source":1,"github-copilot":1,"copilot":1
+  };
+
+  // Match ONLY a profile URL shape: github.com/<username> with no further path
+  // segments. Query/fragment ok. Captures the username for reserved-path check.
+  var GITHUB_HREF_RE = /(?:^|\/\/)github\.com\/([A-Za-z0-9][A-Za-z0-9\-]{0,38})(?:$|[/?#])/i;
+
+  function isGitHubProfileHref(href) {
+    var m = GITHUB_HREF_RE.exec(href || "");
+    if (!m) return false;
+    // Reject trailing path segment (e.g. /user/repo) — profile only.
+    var idx = m.index + m[0].length - 1;
+    if (m[0].charAt(m[0].length - 1) === "/" && href.length > idx + 1) return false;
+    var user = m[1].toLowerCase();
+    if (GITHUB_RESERVED[user]) return false;
+    return true;
+  }
 
   function scanSocialProfileElements(doc, viewport, frameOffset) {
     var out = [];
@@ -739,7 +764,7 @@
       var anchors = doc.querySelectorAll("a[href]");
       for (var ai = 0; ai < anchors.length; ai++) {
         var href = anchors[ai].getAttribute("href") || "";
-        if (LINKEDIN_HREF_RE.test(href) || GITHUB_HREF_RE.test(href)) {
+        if (LINKEDIN_HREF_RE.test(href) || isGitHubProfileHref(href)) {
           addElement(anchors[ai], CATEGORY.USERNAME);
         }
       }
