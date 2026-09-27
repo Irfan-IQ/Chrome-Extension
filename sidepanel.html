@@ -8,18 +8,15 @@
   <body>
     <div id="root"></div>
 
-    <!-- Legacy vanilla modules — load first so the privacy analyzers
-         (window.PrivacyEngine, OcrAnalyzer, PatternAnalyzer, ContextAnalyzer,
-         DetectionFusion, ScreenshotRedactor) exist before the React app mounts.
-         Gemini + agent layer are bundled via /src/main.jsx below. -->
+    <!-- Classic scripts required in the sidepanel context:
+         • tesseract.min.js — sets window.Tesseract, used by src/privacy/ocrAnalyzer.js.
+         • privacy/coordinateUtils.js — sets window.CoordinateUtils, used by
+           src/privacy/screenshotRedactor.js in the sidepanel. The SAME file is
+           also injected into pages by src/privacy/privacyEngine.js, so it must
+           remain a classic script.
+         Everything else (gemini, agent, privacy analyzers) is bundled via /src/main.jsx. -->
     <script src="./lib/tesseract.min.js"></script>
     <script src="./privacy/coordinateUtils.js"></script>
-    <script src="./privacy/screenshotRedactor.js"></script>
-    <script src="./privacy/patternAnalyzer.js"></script>
-    <script src="./privacy/contextAnalyzer.js"></script>
-    <script src="./privacy/ocrAnalyzer.js"></script>
-    <script src="./privacy/detectionFusion.js"></script>
-    <script src="./privacy/privacyEngine.js"></script>
 
     <script type="module" src="/src/main.jsx"></script>
   </body>
