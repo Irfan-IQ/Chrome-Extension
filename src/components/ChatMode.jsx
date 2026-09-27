@@ -379,6 +379,7 @@ export default function ChatMode({ setStatus, openZoom, clearSignal, active }) {
 
       <footer id="composer">
         <textarea
+          id="input"
           ref={textareaRef}
           rows="1"
           placeholder="Ask something…"

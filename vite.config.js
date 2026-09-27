@@ -3,23 +3,21 @@ import react from '@vitejs/plugin-react';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import { resolve } from 'path';
 
-// Vite builds the React sidepanel into dist/. All legacy vanilla modules
-// (gemini.js, privacy/*, agent/*, lib/*, background.js, icons/*) are copied
-// verbatim so they load into `window.*` exactly like the old build.
+// Vite builds the React sidepanel into dist/. Vanilla modules that predate the
+// React rewrite (gemini.js, privacy/*, agent/*) are copied verbatim so they load
+// into `window.*` just like the old build. Static assets under public/ (icons,
+// lib, models) are copied automatically by Vite.
+//
 // Load the dist/ folder as the unpacked extension in Chrome.
 export default defineConfig({
   plugins: [
     react(),
     viteStaticCopy({
       targets: [
-        { src: 'manifest.json', dest: '.' },
-        { src: 'background.js', dest: '.' },
-        { src: 'gemini.js',     dest: '.' },
-        { src: 'privacy/*.js',  dest: 'privacy' },
-        { src: 'agent/*.js',    dest: 'agent' },
-        { src: 'agent/tools/*.js', dest: 'agent/tools' },
-        { src: 'lib/*',   dest: 'lib' },
-        { src: 'icons/*', dest: 'icons' },
+        { src: 'manifest.json',      dest: '.' },
+        { src: 'src/background.js',  dest: '.' },
+        { src: 'src/gemini.js',      dest: '.' },
+        { src: 'privacy/*.js',       dest: 'privacy' },
       ],
     }),
   ],

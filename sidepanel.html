@@ -8,8 +8,10 @@
   <body>
     <div id="root"></div>
 
-    <!-- Legacy vanilla modules — load first so window.Gemini / window.PrivacyEngine /
-         window.AgentManager exist before the React app mounts. Order matters. -->
+    <!-- Legacy vanilla modules — load first so window.Gemini and the privacy
+         analyzers (window.PrivacyEngine, OcrAnalyzer, PatternAnalyzer,
+         ContextAnalyzer, DetectionFusion, ScreenshotRedactor) exist before
+         the React app mounts. Agent layer is bundled via /src/main.jsx below. -->
     <script src="./gemini.js"></script>
     <script src="./lib/tesseract.min.js"></script>
     <script src="./privacy/coordinateUtils.js"></script>
@@ -19,22 +21,6 @@
     <script src="./privacy/ocrAnalyzer.js"></script>
     <script src="./privacy/detectionFusion.js"></script>
     <script src="./privacy/privacyEngine.js"></script>
-    <script src="./agent/agentState.js"></script>
-    <script src="./agent/toolRegistry.js"></script>
-    <script src="./agent/toolValidator.js"></script>
-    <script src="./agent/tools/screenshot.js"></script>
-    <script src="./agent/tools/scanDom.js"></script>
-    <script src="./agent/tools/scanOcr.js"></script>
-    <script src="./agent/tools/fuseDetections.js"></script>
-    <script src="./agent/tools/redact.js"></script>
-    <script src="./agent/tools/verifyRedaction.js"></script>
-    <script src="./agent/tools/getPageContext.js"></script>
-    <script src="./agent/tools/clickElement.js"></script>
-    <script src="./agent/tools/navigateTo.js"></script>
-    <script src="./agent/tools/openTab.js"></script>
-    <script src="./agent/toolExecutor.js"></script>
-    <script src="./agent/llmClient.js"></script>
-    <script src="./agent/agentManager.js"></script>
 
     <script type="module" src="/src/main.jsx"></script>
   </body>
