@@ -243,5 +243,4 @@ async function sendMessageViaServer(message, conversationHistory = [], options =
   return text;
 }
 
-// Expose on window so sidepanel.js can use these without ES modules.
-window.Gemini = { sendMessage, sendMessageViaServer, getApiKey, setApiKey, GEMINI_MODEL };
+export const Gemini = { sendMessage, sendMessageViaServer, getApiKey, setApiKey, GEMINI_MODEL };

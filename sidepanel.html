@@ -8,11 +8,10 @@
   <body>
     <div id="root"></div>
 
-    <!-- Legacy vanilla modules — load first so window.Gemini and the privacy
-         analyzers (window.PrivacyEngine, OcrAnalyzer, PatternAnalyzer,
-         ContextAnalyzer, DetectionFusion, ScreenshotRedactor) exist before
-         the React app mounts. Agent layer is bundled via /src/main.jsx below. -->
-    <script src="./gemini.js"></script>
+    <!-- Legacy vanilla modules — load first so the privacy analyzers
+         (window.PrivacyEngine, OcrAnalyzer, PatternAnalyzer, ContextAnalyzer,
+         DetectionFusion, ScreenshotRedactor) exist before the React app mounts.
+         Gemini + agent layer are bundled via /src/main.jsx below. -->
     <script src="./lib/tesseract.min.js"></script>
     <script src="./privacy/coordinateUtils.js"></script>
     <script src="./privacy/screenshotRedactor.js"></script>

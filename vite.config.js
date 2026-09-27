@@ -16,7 +16,6 @@ export default defineConfig({
       targets: [
         { src: 'manifest.json',      dest: '.' },
         { src: 'src/background.js',  dest: '.' },
-        { src: 'src/gemini.js',      dest: '.' },
         { src: 'privacy/*.js',       dest: 'privacy' },
       ],
     }),
