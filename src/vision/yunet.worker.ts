@@ -58,7 +58,11 @@ async function getSession(): Promise<{ session: ort.InferenceSession; loadMs: nu
   session = await sessionLoadPromise;
 
   const loadMs = performance.now() - start;
-  console.log(`YuNet worker loaded in ${loadMs.toFixed(2)} ms`);
+  // Suppressed in production; the load timing is also returned to the
+  // caller via the 'ready' message, so the info is not lost.
+  if ((self as unknown as { __REDACT_DEBUG?: boolean }).__REDACT_DEBUG === true) {
+    console.debug(`YuNet worker loaded in ${loadMs.toFixed(2)} ms`);
+  }
 
   return { session, loadMs };
 }

@@ -7,6 +7,8 @@
 // bounding-box redaction. Values are NEVER forwarded to Gemini or logged.
 // Log format: "Detected EMAIL: ra***@gm***" (first 2 chars + stars).
 
+import { debug } from '../debug.js';
+
 var THRESHOLDS = {
   HIGH: 0.80,
   MEDIUM: 0.60,
@@ -155,7 +157,7 @@ var PATTERNS = [
 function safeLog(category, text) {
   try {
     var preview = String(text || "").slice(0, 2) + "***";
-    console.debug("[V3 pattern] Detected " + category + ": " + preview);
+    debug("[V3 pattern] Detected " + category + ": " + preview);
   } catch (e) {}
 }
 

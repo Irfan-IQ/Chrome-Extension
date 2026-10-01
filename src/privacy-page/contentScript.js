@@ -88,5 +88,7 @@
     }
   });
 
-  console.debug("[V4 privacy] content bridge installed (scan-only, no DOM mutation)");
+  if (window.__REDACT_DEBUG === true) {
+    console.debug("[V4 privacy] content bridge installed (scan-only, no DOM mutation)");
+  }
 })();

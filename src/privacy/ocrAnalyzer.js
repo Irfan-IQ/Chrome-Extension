@@ -9,6 +9,8 @@
 //   * Screenshots are never sent outside the browser.
 //   * The module logs word count and confidence stats, NEVER the text itself.
 
+import { debug } from '../debug.js';
+
 var CONFIG = {
   MIN_WORD_CONFIDENCE: 30,
   MAX_OCR_WIDTH: 1920,
@@ -47,7 +49,7 @@ function ensureWorker(onProgress) {
     }
 
     if (onProgress) onProgress("Initialising OCR engine (first run may take ~10 s)…");
-    console.debug("[V3 OCR] Creating Tesseract worker…");
+    debug("[V3 OCR] Creating Tesseract worker…");
 
     return Tesseract.createWorker("eng", Tesseract.OEM.LSTM_ONLY, {
       workerPath: CONFIG.getWorkerPath(),
@@ -64,7 +66,7 @@ function ensureWorker(onProgress) {
       _worker = w;
       _workerReady = true;
       _initPromise = null;
-      console.debug("[V3 OCR] Worker ready.");
+      debug("[V3 OCR] Worker ready.");
       return w;
     });
   })();
@@ -188,7 +190,7 @@ async function analyzeScreenshot(dataUrl, onProgress) {
 
   var extracted = extractResults(data, prepared.imgW, prepared.scaledW);
 
-  console.debug(
+  debug(
     "[V3 OCR] words:", extracted.words.length,
     "lines:", extracted.lines.length,
     "(image:", prepared.imgW + "×" + prepared.imgH + "px)"

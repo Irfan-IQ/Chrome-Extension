@@ -3,6 +3,8 @@
 // Context-aware and NER-style classification layer. See docs/ARCHITECTURE.md.
 // PRIVACY RULE: logged output shows category + masked preview only.
 
+import { debug } from '../debug.js';
+
 var LABEL_RULES = [
   { pattern: /\b(full\s*name|your\s*name|customer\s*name|applicant\s*name|student\s*name|candidate\s*name|member\s*name|account\s*name|name)\s*:?\s*$/i, category: "name", bonus: 0.30 },
   { pattern: /\b(first\s*name|given\s*name|forename)\s*:?\s*$/i,                 category: "name",          bonus: 0.28 },
@@ -268,7 +270,7 @@ function analyze(words, lines) {
 function safeLog(type, text) {
   try {
     var preview = String(text || "").slice(0, 3) + "***";
-    console.debug("[V3 context] " + type + " ← " + preview);
+    debug("[V3 context] " + type + " ← " + preview);
   } catch (e) {}
 }
 

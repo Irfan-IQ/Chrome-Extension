@@ -15,6 +15,7 @@ import { ContextAnalyzer }    from './contextAnalyzer.js';
 import { DetectionFusion }    from './detectionFusion.js';
 import { ScreenshotRedactor } from './screenshotRedactor.js';
 import { VisionEngine }       from '../vision/visionEngine.js';
+import { debug }              from '../debug.js';
 
 class PrivacyError extends Error {
   constructor(message) {
@@ -151,11 +152,66 @@ function buildFusionSummary(detections) {
 }
 
 async function scanPage(onProgress) {
-  return sanitizeCurrentPage(onProgress);
+  // Scan Page always runs a fresh pipeline — it's the user's explicit
+  // "show me what you see" button, so a cached snapshot would be surprising.
+  return sanitizeCurrentPage(onProgress, { force: true });
 }
 
-async function sanitizeCurrentPage(onProgress) {
+// -----------------------------------------------------------------------
+// Result cache
+// -----------------------------------------------------------------------
+// Repeated chat messages in the same tab trigger sanitizeCurrentPage once
+// per send. The full pipeline (screenshot → DOM scan → OCR → vision →
+// fusion → redaction) takes several seconds, so if the user sends two or
+// three messages back-to-back without navigating we re-use the previous
+// result instead of re-running everything.
+//
+// Keyed by (tabId, url). TTL is intentionally short so page edits (typing
+// into a form, scrolling, async-loaded content) can't go unnoticed for
+// long. The cache is invalidated eagerly on any tab navigation.
+
+var CACHE_TTL_MS = 10_000;
+var resultCache = new Map();
+
+function cacheKey(tab) {
+  return tab.id + "|" + (tab.url || "");
+}
+
+function readCache(tab) {
+  var entry = resultCache.get(cacheKey(tab));
+  if (!entry) return null;
+  if (Date.now() - entry.ts > CACHE_TTL_MS) {
+    resultCache.delete(cacheKey(tab));
+    return null;
+  }
+  return entry.result;
+}
+
+function writeCache(tab, result) {
+  resultCache.set(cacheKey(tab), { ts: Date.now(), result: result });
+}
+
+function invalidateCache(tabId) {
+  if (tabId == null) { resultCache.clear(); return; }
+  for (var key of Array.from(resultCache.keys())) {
+    if (key.indexOf(tabId + "|") === 0) resultCache.delete(key);
+  }
+}
+
+// Hook tab navigation so a reload or URL change busts stale entries
+// immediately rather than waiting out the TTL.
+if (typeof chrome !== "undefined" && chrome.tabs && chrome.tabs.onUpdated) {
+  chrome.tabs.onUpdated.addListener(function (tabId, info) {
+    if (info.status === "loading" || info.url) invalidateCache(tabId);
+  });
+  if (chrome.tabs.onRemoved) {
+    chrome.tabs.onRemoved.addListener(function (tabId) { invalidateCache(tabId); });
+  }
+}
+
+async function sanitizeCurrentPage(onProgress, opts) {
   var progress = typeof onProgress === "function" ? onProgress : noop;
+  var options  = opts || {};
 
   if (!chrome.scripting || !chrome.tabs || !chrome.tabs.captureVisibleTab) {
     throw new PrivacyError(
@@ -166,6 +222,14 @@ async function sanitizeCurrentPage(onProgress) {
   progress("Locating active tab…");
   var tab = await getActiveTab();
   assertScannable(tab);
+
+  if (!options.force) {
+    var cached = readCache(tab);
+    if (cached) {
+      progress("Reusing recent scan (same tab, no change).");
+      return cached;
+    }
+  }
 
   progress("Injecting privacy engine…");
   await injectModules(tab.id);
@@ -253,7 +317,7 @@ async function sanitizeCurrentPage(onProgress) {
 
       ocrDetections = patternDetections.concat(contextDetections);
       ocrEnabled = true;
-      console.debug(
+      debug(
         "[V3] OCR words:", ocrWordCount,
         "pattern detections:", patternDetections.length,
         "context detections:", contextDetections.length
@@ -315,7 +379,7 @@ async function sanitizeCurrentPage(onProgress) {
   }
 
   progress("Ready.");
-  return {
+  var result = {
     ok: true,
     sanitizedScreenshot: sanitizedScreenshot,
     beforeScreenshot: beforeScreenshot,
@@ -330,10 +394,13 @@ async function sanitizeCurrentPage(onProgress) {
     visionStatus: visionStatus,
     fusionSummary: buildFusionSummary(fusedDetections || []),
   };
+  writeCache(tab, result);
+  return result;
 }
 
 export const PrivacyEngine = {
   sanitizeCurrentPage,
   scanPage,
+  invalidateCache,
   PrivacyError,
 };

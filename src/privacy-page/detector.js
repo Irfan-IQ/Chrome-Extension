@@ -17,6 +17,14 @@
 
   var CU = root.CoordinateUtils;
 
+  // Set `window.__REDACT_DEBUG = true` in the page's console to see detector
+  // diagnostics. Silent by default so the extension does not pollute every
+  // scanned page's console log.
+  function _dbg() {
+    if (root.__REDACT_DEBUG !== true) return;
+    try { console.debug.apply(console, arguments); } catch (e) {}
+  }
+
   // Categories we support in V2.
   var CATEGORY = {
     NAME: "name",
@@ -409,7 +417,7 @@
         if (vRect.width < 4 || vRect.height < 4) continue;
 
         try {
-          console.debug("[V3 dom] Detected " + pat.category + " in text node");
+          _dbg("[V3 dom] Detected " + pat.category + " in text node");
         } catch (e) {}
 
         out.push({
@@ -575,7 +583,7 @@
       emitted.add(valueEl);
 
       try {
-        console.debug("[V3 dom] label->value: " + category + " (label: '" + labelText.slice(0, 20) + "')");
+        _dbg("[V3 dom] label->value: " + category + " (label: '" + labelText.slice(0, 20) + "')");
       } catch (e) {}
 
       out.push({
@@ -624,7 +632,7 @@
                                   viewport.width, viewport.height)) continue;
       if (vRect.width < 4 || vRect.height < 4) continue;
 
-      try { console.debug("[dom] mailto: email detected"); } catch(e) {}
+      try { _dbg("[dom] mailto: email detected"); } catch(e) {}
       out.push({ category: CATEGORY.EMAIL, elementType: link.tagName, type: null,
                  selector: buildSelector(link),
                  rect: { x:Math.round(vRect.left), y:Math.round(vRect.top),
@@ -730,7 +738,7 @@
                                   viewport.width, viewport.height)) return;
       if (vRect.width < 4 || vRect.height < 4) return;
       emitted.add(el);
-      try { console.debug("[dom] social/profile element: " + category); } catch(e) {}
+      try { _dbg("[dom] social/profile element: " + category); } catch(e) {}
       out.push({ category: category, elementType: el.tagName, type: null,
                  selector: buildSelector(el),
                  rect: { x:Math.round(vRect.left), y:Math.round(vRect.top),
@@ -820,7 +828,7 @@
 
       // Privacy-safe log: category only, never the value.
       try {
-        console.debug("[V2 privacy] Detected " + verdict.category + " field (" + verdict.confidence + ")");
+        _dbg("[V2 privacy] Detected " + verdict.category + " field (" + verdict.confidence + ")");
       } catch (e) {}
 
       out.push(buildDetection(el, signals, verdict, vRect));
