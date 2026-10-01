@@ -13,20 +13,19 @@ import { GetPageContextTool }  from './tools/getPageContext.js';
 import { ClickElementTool }    from './tools/clickElement.js';
 import { NavigateToTool }      from './tools/navigateTo.js';
 import { OpenTabTool }         from './tools/openTab.js';
+import { PrivacyEngine }       from '../privacy/privacyEngine.js';
 
 /**
  * Auto-capture + auto-redact a screenshot after navigation actions.
- * Calls PrivacyEngine.sanitizeCurrentPage() (still classic-loaded on window).
  * Runs silently; failures are ignored so the agent never stops because of this.
  */
 async function autoCapture(state) {
   try {
     await new Promise(function (r) { setTimeout(r, 1500); });
 
-    if (!window.PrivacyEngine ||
-        typeof window.PrivacyEngine.sanitizeCurrentPage !== "function") return;
+    if (typeof PrivacyEngine.sanitizeCurrentPage !== "function") return;
 
-    var privResult = await window.PrivacyEngine.sanitizeCurrentPage();
+    var privResult = await PrivacyEngine.sanitizeCurrentPage();
 
     if (privResult && privResult.sanitizedScreenshot) {
       if (!Array.isArray(state.screenshotLog)) state.screenshotLog = [];

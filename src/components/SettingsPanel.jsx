@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Gemini } from '../gemini.js';
 
 export default function SettingsPanel({ onClose }) {
   const [backendMode, setBackendMode] = useState('direct');
@@ -9,7 +10,7 @@ export default function SettingsPanel({ onClose }) {
   useEffect(() => {
     (async () => {
       try {
-        const key = await window.Gemini.getApiKey();
+        const key = await Gemini.getApiKey();
         setApiKey(key || '');
         const stored = await chrome.storage.local.get(['backendMode', 'serverUrl']);
         setBackendMode(stored.backendMode || 'direct');
@@ -30,7 +31,7 @@ export default function SettingsPanel({ onClose }) {
         backendMode,
         serverUrl: serverUrl.trim() || 'http://127.0.0.1:8000',
       });
-      if (apiKey.trim()) await window.Gemini.setApiKey(apiKey.trim());
+      if (apiKey.trim()) await Gemini.setApiKey(apiKey.trim());
       setStatus({ text: 'Saved.', kind: 'ok' });
     } catch (e) {
       console.error('Failed to save settings:', e);

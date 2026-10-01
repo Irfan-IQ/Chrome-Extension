@@ -6,6 +6,10 @@ import {
   humanLabel,
   buildPageContextText,
 } from '../utils.js';
+import { Gemini } from '../gemini.js';
+import { PrivacyEngine } from '../privacy/privacyEngine.js';
+import ScanResultPanel from './ScanResultPanel.jsx';
+import DebugList from './DebugList.jsx';
 
 export default function ChatMode({ setStatus, openZoom, clearSignal, active }) {
   const [history, setHistory] = useState([]);
@@ -38,7 +42,7 @@ export default function ChatMode({ setStatus, openZoom, clearSignal, active }) {
       }
       try {
         const { backendMode = 'direct' } = await chrome.storage.local.get('backendMode');
-        const key = await window.Gemini.getApiKey();
+        const key = await Gemini.getApiKey();
         if (!key && backendMode !== 'server') {
           setHistory((h) =>
             h.length === 0
@@ -169,7 +173,7 @@ export default function ChatMode({ setStatus, openZoom, clearSignal, active }) {
     if (privacyEnabled) {
       try {
         setPrivacyStatus({ kind: 'working', text: 'Scanning page…', node: null });
-        const result = await window.PrivacyEngine.sanitizeCurrentPage((m) =>
+        const result = await PrivacyEngine.sanitizeCurrentPage((m) =>
           setPrivacyStatus({ kind: 'working', text: m, node: null }),
         );
         renderPrivacySummary(result);
@@ -201,7 +205,7 @@ export default function ChatMode({ setStatus, openZoom, clearSignal, active }) {
     }
 
     try {
-      const reply = await window.Gemini.sendMessage(text, priorHistory, geminiOptions);
+      const reply = await Gemini.sendMessage(text, priorHistory, geminiOptions);
       const next = [...withUser, { role: 'assistant', content: reply }];
       setHistory(next);
       await saveHistory(next);
@@ -227,7 +231,7 @@ export default function ChatMode({ setStatus, openZoom, clearSignal, active }) {
     setScanResult(null);
 
     try {
-      const result = await window.PrivacyEngine.scanPage((m) =>
+      const result = await PrivacyEngine.scanPage((m) =>
         setPrivacyStatus({ kind: 'working', text: m, node: null }),
       );
 
@@ -417,144 +421,3 @@ export default function ChatMode({ setStatus, openZoom, clearSignal, active }) {
   );
 }
 
-function ScanResultPanel({ result, activeTab, setActiveTab, onZoom, onClose }) {
-  const { domCount, ocrCount, totalCount, ocrOn, visionOn, visionSummary, visionStatus, counts, before, sanitized } = result;
-  return (
-    <section className="scan-result-panel">
-      <div className="scan-summary-row">
-        <div className="scan-card">
-          <div className="scan-card-value">{domCount}</div>
-          <div className="scan-card-label">DOM regions</div>
-        </div>
-        <div className="scan-card">
-          <div className="scan-card-value">{ocrCount}</div>
-          <div className="scan-card-label">OCR regions</div>
-        </div>
-        <div className="scan-card scan-card-accent">
-          <div className="scan-card-value">{totalCount}</div>
-          <div className="scan-card-label">Protected</div>
-        </div>
-      </div>
-
-      <div className="scan-guarantees">
-        <span className="guarantee-item">{visionStatus?.state === 'ready' ? '✓ YuNet loaded' : visionStatus?.state === 'loading' ? '⟳ YuNet loading' : '⚠ YuNet unavailable'}</span>
-        {visionSummary && <span className="guarantee-item">Vision: {visionSummary.faces || 0} faces · {visionSummary.cardCandidates || 0} cards</span>}
-      </div>
-
-      <div className="scan-guarantees">
-        <span className="guarantee-item">✓ Processed locally</span>
-        <span className="guarantee-item">✓ Sensitive data redacted</span>
-        <span className="guarantee-item">{ocrOn ? '✓ OCR active' : '✓ DOM scan active'}</span>
-      </div>
-
-      <div className="scan-categories">
-        {Object.entries(counts).map(([k, v]) => (
-          <span key={k} className="scan-cat-chip">
-            {v} {humanLabel(k)}
-          </span>
-        ))}
-      </div>
-
-      <div className="shot-tabs">
-        {before && (
-          <button
-            className={'shot-tab' + (activeTab === 'original' ? ' shot-tab-active' : '')}
-            onClick={() => setActiveTab('original')}
-          >
-            Original
-          </button>
-        )}
-        <button
-          className={'shot-tab' + (activeTab === 'sanitized' ? ' shot-tab-active' : '')}
-          onClick={() => setActiveTab('sanitized')}
-        >
-          Sanitized ✓
-        </button>
-      </div>
-
-      <div className="shot-viewer">
-        {activeTab === 'original' && before ? (
-          <div className="shot-pane">
-            <div className="shot-warning">⚠ For local comparison only. Never sent to AI.</div>
-            <img
-              className="shot-img"
-              alt="Original page screenshot"
-              src={before}
-              onClick={() => onZoom(before)}
-            />
-          </div>
-        ) : (
-          <div className="shot-pane">
-            <div className="shot-ok">
-              ✓ This version is sent to AI — sensitive regions redacted
-            </div>
-            <img
-              className="shot-img"
-              alt="Sanitized screenshot"
-              src={sanitized}
-              onClick={() => onZoom(sanitized)}
-            />
-          </div>
-        )}
-      </div>
-
-      <button className="scan-result-close" onClick={onClose}>
-        ✕ Close
-      </button>
-    </section>
-  );
-}
-
-function DebugList({ data }) {
-  if (!data) {
-    return (
-      <div className="debug-list">
-        <span className="debug-empty">Run Scan Page to populate diagnostics.</span>
-      </div>
-    );
-  }
-  const { dets = [], fusionSummary, ocrEnabled, ocrWordCount, visionEnabled, visionSummary, visionStatus } = data;
-  const modeLabel = ocrEnabled
-    ? 'DOM + OCR + Pattern + Context + Fusion'
-    : 'DOM-only (OCR fallback)';
-  return (
-    <div className="debug-list">
-      <div className="debug-mode">Mode: {modeLabel}</div>
-      <div className="debug-mode">Vision model: {visionStatus?.state || 'unknown'}{visionStatus?.message ? ` — ${visionStatus.message}` : ''}</div>
-      {visionStatus?.modelUrl && <div className="debug-mode">YuNet path: {visionStatus.modelUrl}</div>}
-      {visionSummary && <div className="debug-mode">Vision detections: {visionSummary.faces || 0} face(s), {visionSummary.cardCandidates || 0} card candidate(s), {Math.round(visionSummary.wallMs || 0)} ms</div>}
-      {ocrEnabled && <div className="debug-mode">OCR words found: {ocrWordCount || 0}</div>}
-      {fusionSummary?.bySource && (
-        <>
-          <div className="debug-section">Source breakdown:</div>
-          {Object.entries(fusionSummary.bySource).map(([src, count]) => (
-            <div key={src} className="debug-src-row">
-              <span className="src-key">{src}</span>: {count}
-            </div>
-          ))}
-        </>
-      )}
-      <div className="debug-section">Detections:</div>
-      {dets.length === 0 && <div className="debug-empty">No detections survived the fusion/redaction threshold.</div>}
-      {dets.map((d, i) => {
-        const conf =
-          typeof d.confidence === 'number'
-            ? (d.confidence * 100).toFixed(0) + '%'
-            : String(d.confidence);
-        const confClass =
-          d.confidence >= 0.8 ? 'conf-high' : d.confidence >= 0.6 ? 'conf-med' : 'conf-low';
-        const sources = (d.sources || ['dom']).join(' + ');
-        const action = d.confidence >= 0.6 ? 'REDACTED' : 'IGNORED';
-        const actionClass = action === 'REDACTED' ? 'action-redacted' : 'action-ignored';
-        return (
-          <div key={i} className="debug-item">
-            <span className="det-type">{humanLabel(d.category)}</span>
-            <span className="det-sources">Sources: {sources}</span>
-            <span className={'det-conf ' + confClass}>Confidence: {conf}</span>
-            <span className={'det-action ' + actionClass}>{action}</span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}

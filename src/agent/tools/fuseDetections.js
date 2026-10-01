@@ -2,10 +2,11 @@
 //
 // Reuses: DetectionFusion (detectionFusion.js) — merges DOM + OCR detections,
 //         scores confidence, and deduplicates overlapping regions.
-// DetectionFusion and VisionEngine are still classic-loaded and live on window.
 
-import { AgentState } from '../agentState.js';
-import { ScreenshotTool } from './screenshot.js';
+import { AgentState }       from '../agentState.js';
+import { ScreenshotTool }   from './screenshot.js';
+import { DetectionFusion }  from '../../privacy/detectionFusion.js';
+import { VisionEngine }     from '../../vision/visionEngine.js';
 
 async function execute(state) {
   var dom            = state.domDetections   || [];
@@ -14,16 +15,15 @@ async function execute(state) {
   var screenshotSize = state.screenshotSize;
   var vision         = state.visionDetections || [];
 
-  if (vision.length === 0 && window.VisionEngine) {
+  if (vision.length === 0) {
     try {
       if (!state.rawScreenshot) {
         await ScreenshotTool.execute(state);
       }
 
       screenshotSize = state.screenshotSize;
-      if (state.rawScreenshot &&
-          typeof window.VisionEngine.detectScreenshot === "function") {
-        var visionResult = await window.VisionEngine.detectScreenshot(state.rawScreenshot);
+      if (state.rawScreenshot) {
+        var visionResult = await VisionEngine.detectScreenshot(state.rawScreenshot);
         vision = visionResult.detections || [];
         state.visionDetections = vision;
         state.visionSummary = visionResult.visionSummary || null;
@@ -35,9 +35,9 @@ async function execute(state) {
 
   var fused;
 
-  if (window.DetectionFusion && ocr.length > 0 && screenshotSize) {
+  if (ocr.length > 0 && screenshotSize) {
     try {
-      fused = window.DetectionFusion.fuse(
+      fused = DetectionFusion.fuse(
         dom,
         ocr.concat(vision),
         viewport,
@@ -47,9 +47,9 @@ async function execute(state) {
       console.warn("[Agent fuseDetections] DetectionFusion.fuse failed, using DOM-only fallback:", e && e.message);
       fused = domOnlyFallback(dom);
     }
-  } else if (window.DetectionFusion && screenshotSize && vision.length > 0) {
+  } else if (screenshotSize && vision.length > 0) {
     try {
-      fused = window.DetectionFusion.fuse([], vision, viewport, screenshotSize)
+      fused = DetectionFusion.fuse([], vision, viewport, screenshotSize)
         .concat(domOnlyFallback(dom));
     } catch (e) {
       console.warn("[Agent fuseDetections] Vision-only fusion failed:", e && e.message);

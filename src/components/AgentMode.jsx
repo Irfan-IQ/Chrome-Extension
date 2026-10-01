@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { formatDuration } from '../utils.js';
+import { Gemini } from '../gemini.js';
+import { AgentManager } from '../agent/agentManager.js';
 
 const QUICK_TASKS = [
   { label: 'Redact all PII', task: 'Redact all personal information on this page' },
@@ -57,7 +59,7 @@ export default function AgentMode({ setStatus, openZoom, active }) {
     }
 
     const { backendMode = 'direct' } = await chrome.storage.local.get('backendMode');
-    const apiKey = await window.Gemini.getApiKey().catch(() => '');
+    const apiKey = await Gemini.getApiKey().catch(() => '');
     if (backendMode !== 'server' && !apiKey) {
       setResult({
         summary:
@@ -74,7 +76,7 @@ export default function AgentMode({ setStatus, openZoom, active }) {
     setLogStatus({ text: 'Running…', kind: '' });
 
     try {
-      const res = await window.AgentManager.run(task, apiKey, (entry) => {
+      const res = await AgentManager.run(task, apiKey, (entry) => {
         addOrUpdateStep(entry);
       });
       setLogStatus({

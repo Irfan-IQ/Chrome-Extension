@@ -14,13 +14,14 @@ import { PatternAnalyzer }    from './patternAnalyzer.js';
 import { ContextAnalyzer }    from './contextAnalyzer.js';
 import { DetectionFusion }    from './detectionFusion.js';
 import { ScreenshotRedactor } from './screenshotRedactor.js';
+import { VisionEngine }       from '../vision/visionEngine.js';
 
-function PrivacyError(message) {
-  this.name = "PrivacyError";
-  this.message = message;
+class PrivacyError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'PrivacyError';
+  }
 }
-PrivacyError.prototype = Object.create(Error.prototype);
-PrivacyError.prototype.constructor = PrivacyError;
 
 // Modules injected into the PAGE via chrome.scripting.executeScript.
 // These MUST remain classic scripts (executeScript files: mode).
@@ -195,9 +196,7 @@ async function sanitizeCurrentPage(onProgress) {
   var visionEnabled = false;
   var visionDetections = [];
   var visionSummary = null;
-  var visionStatus = window.VisionEngine && typeof window.VisionEngine.getStatus === "function"
-    ? window.VisionEngine.getStatus()
-    : { state: "unavailable", message: "Vision engine is not loaded." };
+  var visionStatus = VisionEngine.getStatus();
 
   try {
     progress("Capturing visible tab…");
@@ -216,15 +215,12 @@ async function sanitizeCurrentPage(onProgress) {
     var shotSize = await getImageDimensions(rawShot);
 
     try {
-      if (window.VisionEngine &&
-          typeof window.VisionEngine.detectScreenshot === "function") {
-        progress("Loading local vision model and running vision detectors…");
-        var visionResult = await window.VisionEngine.detectScreenshot(rawShot);
-        visionDetections = visionResult.detections || [];
-        visionSummary = visionResult.visionSummary || null;
-        visionStatus = window.VisionEngine.getStatus();
-        visionEnabled = true;
-      }
+      progress("Loading local vision model and running vision detectors…");
+      var visionResult = await VisionEngine.detectScreenshot(rawShot);
+      visionDetections = visionResult.detections || [];
+      visionSummary = visionResult.visionSummary || null;
+      visionStatus = VisionEngine.getStatus();
+      visionEnabled = true;
     } catch (visionErr) {
       console.warn(
         "[V4] Vision layer failed (continuing with DOM + OCR):",
@@ -232,9 +228,7 @@ async function sanitizeCurrentPage(onProgress) {
       );
       visionEnabled = false;
       visionDetections = [];
-      visionStatus = window.VisionEngine && typeof window.VisionEngine.getStatus === "function"
-        ? window.VisionEngine.getStatus()
-        : { state: "error", message: (visionErr && visionErr.message) || String(visionErr) };
+      visionStatus = VisionEngine.getStatus();
     }
 
     var ocrDetections = [];

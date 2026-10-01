@@ -1,16 +1,13 @@
 // agent/tools/redact.js — Tool wrapper for screenshot redaction
 //
-// Reuses: ScreenshotRedactor (screenshotRedactor.js — OffscreenCanvas, fully local)
-// ScreenshotRedactor is still classic-loaded and lives on window.
+// Reuses: ScreenshotRedactor (screenshotRedactor.js — OffscreenCanvas, fully local).
 
-import { AgentState } from '../agentState.js';
+import { AgentState }        from '../agentState.js';
+import { ScreenshotRedactor } from '../../privacy/screenshotRedactor.js';
 
 async function execute(state, detectionIds, method) {
   if (!state.rawScreenshot) {
     return err("NO_SCREENSHOT", "No screenshot available. Call take_screenshot first.");
-  }
-  if (!window.ScreenshotRedactor) {
-    return err("REDACTOR_UNAVAILABLE", "ScreenshotRedactor module is not loaded.");
   }
 
   var resolved = AgentState.resolveDetectionIds(detectionIds);
@@ -33,7 +30,7 @@ async function execute(state, detectionIds, method) {
 
   var masked;
   try {
-    masked = await window.ScreenshotRedactor.redact(screenshot, detectionsToRedact, viewport);
+    masked = await ScreenshotRedactor.redact(screenshot, detectionsToRedact, viewport);
   } catch (e) {
     return err("REDACTION_FAILED", "ScreenshotRedactor.redact() failed: " + msg(e));
   }

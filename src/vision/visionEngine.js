@@ -252,7 +252,7 @@ async function detectScreenshot(screenshotDataUrl) {
   };
 }
 
-window.VisionEngine = {
+export const VisionEngine = {
   detectScreenshot,
   getStatus: () => ({ ...status, opencv: { ...opencvStatus } }),
   initialize,

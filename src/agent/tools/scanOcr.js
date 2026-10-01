@@ -3,9 +3,11 @@
 // Reuses: OcrAnalyzer (Tesseract.js — fully local, no external API)
 //         PatternAnalyzer (regex-based PII classifier)
 //         ContextAnalyzer (label→value and NER inference)
-// These privacy analyzers are still loaded as classic scripts and live on window.
 
-import { ScreenshotTool } from './screenshot.js';
+import { ScreenshotTool }   from './screenshot.js';
+import { OcrAnalyzer }      from '../../privacy/ocrAnalyzer.js';
+import { PatternAnalyzer }  from '../../privacy/patternAnalyzer.js';
+import { ContextAnalyzer }  from '../../privacy/contextAnalyzer.js';
 
 async function execute(state, onProgress) {
   var progress = typeof onProgress === "function" ? onProgress : function () {};
@@ -22,13 +24,9 @@ async function execute(state, onProgress) {
     }
   }
 
-  if (!window.OcrAnalyzer) {
-    return err("OCR_UNAVAILABLE", "OcrAnalyzer module is not loaded.");
-  }
-
   var ocrResult;
   try {
-    ocrResult = await window.OcrAnalyzer.analyzeScreenshot(state.rawScreenshot, progress);
+    ocrResult = await OcrAnalyzer.analyzeScreenshot(state.rawScreenshot, progress);
   } catch (e) {
     return err("OCR_FAILED", "OCR processing failed: " + msg(e));
   }
@@ -36,18 +34,18 @@ async function execute(state, onProgress) {
   state.ocrWordCount = ocrResult.words.length;
 
   var patternDets = [];
-  if (window.PatternAnalyzer && ocrResult.words.length > 0) {
+  if (ocrResult.words.length > 0) {
     try {
-      patternDets = window.PatternAnalyzer.classifyWords(ocrResult.words);
+      patternDets = PatternAnalyzer.classifyWords(ocrResult.words);
     } catch (e) {
       console.warn("[Agent scanOcr] Pattern analysis error:", msg(e));
     }
   }
 
   var contextDets = [];
-  if (window.ContextAnalyzer && ocrResult.words.length > 0) {
+  if (ocrResult.words.length > 0) {
     try {
-      contextDets = window.ContextAnalyzer.analyze(ocrResult.words, ocrResult.lines);
+      contextDets = ContextAnalyzer.analyze(ocrResult.words, ocrResult.lines);
     } catch (e) {
       console.warn("[Agent scanOcr] Context analysis error:", msg(e));
     }
