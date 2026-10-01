@@ -6,7 +6,9 @@
 //   • The LLM only sees detection IDs, categories, confidence scores, and count summaries.
 //   • A strong system instruction defines the LLM's role and constraints.
 
-var AGENT_MODEL = "gemini-3.6-flash";
+// Model id must match a model served by Generative Language v1beta.
+// Keep in sync with src/gemini.js (GEMINI_MODEL) and server/config.py.
+var AGENT_MODEL = "gemini-2.0-flash";
 var GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models/";
 
 var SYSTEM_INSTRUCTION = {
@@ -167,6 +169,7 @@ async function generateWithTools(messages, toolDefinitions, apiKey) {
 
 function buildFunctionResponseMessage(toolName, toolResult) {
   var safeResult = sanitizeForLLM(toolResult);
+  safeResult = clampPayload(safeResult);
   return {
     role: "user",
     parts: [{ functionResponse: { name: toolName, response: safeResult } }],
@@ -179,6 +182,16 @@ var STRIP_FIELDS = [
   "_el", "_cssPxRect", "_words", "_lines",
   "selector",
 ];
+
+// Hard upper bound on a single tool-result payload after stripping, in bytes
+// of serialized JSON. Oversized results (e.g. OCR with thousands of words,
+// or a huge DOM scan) are truncated before being handed to the LLM so a
+// single step cannot blow out the context window or run up API cost.
+var MAX_RESULT_JSON_BYTES = 16 * 1024;
+// Arrays longer than this (detection lists, step logs, etc.) are capped and
+// a `truncated` note is appended. Agents only need stable IDs + counts, not
+// every row.
+var MAX_ARRAY_ITEMS = 64;
 
 function sanitizeForLLM(obj) {
   if (!obj || typeof obj !== "object") return obj;
@@ -205,6 +218,44 @@ function stripFields(obj) {
       stripFields(obj[key]);
     }
   }
+}
+
+function byteSize(obj) {
+  try { return JSON.stringify(obj).length; } catch (e) { return Infinity; }
+}
+
+function capArrays(obj) {
+  if (!obj || typeof obj !== "object") return;
+  if (Array.isArray(obj)) {
+    if (obj.length > MAX_ARRAY_ITEMS) {
+      var dropped = obj.length - MAX_ARRAY_ITEMS;
+      obj.length = MAX_ARRAY_ITEMS;
+      obj.push({ _truncated: dropped + " more item(s) dropped to fit payload cap." });
+    }
+    for (var i = 0; i < obj.length; i++) capArrays(obj[i]);
+    return;
+  }
+  for (var k in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, k)) capArrays(obj[k]);
+  }
+}
+
+function clampPayload(obj) {
+  if (!obj || typeof obj !== "object") return obj;
+  if (byteSize(obj) <= MAX_RESULT_JSON_BYTES) return obj;
+
+  capArrays(obj);
+  if (byteSize(obj) <= MAX_RESULT_JSON_BYTES) return obj;
+
+  // Last resort: keep only the structural header so the agent still knows
+  // the tool ran and whether it succeeded.
+  return {
+    success: !!obj.success,
+    tool:    obj.tool,
+    error:   obj.error || null,
+    note:    "Payload exceeded " + MAX_RESULT_JSON_BYTES +
+             " bytes after stripping and truncation; detail omitted.",
+  };
 }
 
 async function generateWithServer(messages, toolDefinitions, serverUrl) {

@@ -12,7 +12,10 @@ export default function ChatMode({ setStatus, openZoom, clearSignal, active }) {
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [privacyEnabled, setPrivacyEnabled] = useState(true);
-  const [privacyStatus, setPrivacyStatus] = useState({ kind: '', text: '', html: null });
+  // `node` holds a React element rendered via normal JSX (safe) instead of
+  // an HTML string injected via dangerouslySetInnerHTML. `text` is still
+  // used for plain-string statuses (working/err).
+  const [privacyStatus, setPrivacyStatus] = useState({ kind: '', text: '', node: null });
   const [privacyDetailOpen, setPrivacyDetailOpen] = useState(false);
   const [debugOpen, setDebugOpen] = useState(false);
   const [debugData, setDebugData] = useState(null);
@@ -106,25 +109,37 @@ export default function ChatMode({ setStatus, openZoom, clearSignal, active }) {
       setPrivacyStatus({
         kind: 'ok',
         text: `No sensitive fields detected (${modeLabel} scan). Page snapshot attached.`,
-        html: null,
+        node: null,
       });
     }
 
-    const counts = countByCategory(dets);
-    const parts = Object.keys(counts).map(
-      (k) => `<span class='det-chip'>${counts[k]} ${humanLabel(k)}</span>`,
-    );
-    let html = 'Detected:&nbsp;' + parts.join(' ');
-    if (ocrEnabled && ocrWC > 0) {
-      html += `<span class='ocr-badge'>+ OCR (${ocrWC} words)</span>`;
-    }
-    if (uninspectable.length) {
-      html += `<div class='uninspectable-note'>${uninspectable.length} uninspectable region(s) — cross-origin iframe, not scanned.</div>`;
+    if (dets.length > 0 || uninspectable.length > 0) {
+      const counts = countByCategory(dets);
+      // Compose with JSX so React escapes every interpolated value.
+      // Previously this used dangerouslySetInnerHTML with a concatenated
+      // string that embedded category keys sourced from page content —
+      // an XSS vector inside the extension's privileged origin.
+      const node = (
+        <>
+          <span>Detected:&nbsp;</span>
+          {Object.keys(counts).map((k) => (
+            <span key={k} className="det-chip">
+              {counts[k]} {humanLabel(k)}
+            </span>
+          ))}
+          {ocrEnabled && ocrWC > 0 && (
+            <span className="ocr-badge">+ OCR ({ocrWC} words)</span>
+          )}
+          {uninspectable.length > 0 && (
+            <div className="uninspectable-note">
+              {uninspectable.length} uninspectable region(s) — cross-origin iframe, not scanned.
+            </div>
+          )}
+        </>
+      );
+      setPrivacyStatus({ kind: 'ok', text: '', node });
     }
 
-    if (dets.length > 0 || uninspectable.length > 0) {
-      setPrivacyStatus({ kind: 'ok', text: '', html });
-    }
     setDebugData({
       dets,
       fusionSummary: result.fusionSummary,
@@ -153,9 +168,9 @@ export default function ChatMode({ setStatus, openZoom, clearSignal, active }) {
     let geminiOptions = {};
     if (privacyEnabled) {
       try {
-        setPrivacyStatus({ kind: 'working', text: 'Scanning page…', html: null });
+        setPrivacyStatus({ kind: 'working', text: 'Scanning page…', node: null });
         const result = await window.PrivacyEngine.sanitizeCurrentPage((m) =>
-          setPrivacyStatus({ kind: 'working', text: m, html: null }),
+          setPrivacyStatus({ kind: 'working', text: m, node: null }),
         );
         renderPrivacySummary(result);
         geminiOptions = {
@@ -167,7 +182,7 @@ export default function ChatMode({ setStatus, openZoom, clearSignal, active }) {
         setPrivacyStatus({
           kind: 'err',
           text: 'Sanitisation failed — request blocked.',
-          html: null,
+          node: null,
         });
         const errMsg =
           'Privacy sanitisation failed. The request was not sent.\n\n' +
@@ -182,7 +197,7 @@ export default function ChatMode({ setStatus, openZoom, clearSignal, active }) {
         return;
       }
     } else {
-      setPrivacyStatus({ kind: '', text: '', html: null });
+      setPrivacyStatus({ kind: '', text: '', node: null });
     }
 
     try {
@@ -208,12 +223,12 @@ export default function ChatMode({ setStatus, openZoom, clearSignal, active }) {
   async function handleScan() {
     if (scanning) return;
     setScanning(true);
-    setPrivacyStatus({ kind: 'working', text: 'Starting scan…', html: null });
+    setPrivacyStatus({ kind: 'working', text: 'Starting scan…', node: null });
     setScanResult(null);
 
     try {
       const result = await window.PrivacyEngine.scanPage((m) =>
-        setPrivacyStatus({ kind: 'working', text: m, html: null }),
+        setPrivacyStatus({ kind: 'working', text: m, node: null }),
       );
 
       const dets = result.detectedElements || [];
@@ -242,7 +257,7 @@ export default function ChatMode({ setStatus, openZoom, clearSignal, active }) {
       setPrivacyStatus({
         kind: 'err',
         text: 'Scan failed: ' + (err?.message || 'Unknown error during scan.'),
-        html: null,
+        node: null,
       });
       console.error('[Scan]', err);
     } finally {
@@ -262,7 +277,7 @@ export default function ChatMode({ setStatus, openZoom, clearSignal, active }) {
               checked={privacyEnabled}
               onChange={(e) => {
                 setPrivacyEnabled(e.target.checked);
-                setPrivacyStatus({ kind: '', text: '', html: null });
+                setPrivacyStatus({ kind: '', text: '', node: null });
               }}
             />
             <span>
@@ -320,11 +335,7 @@ export default function ChatMode({ setStatus, openZoom, clearSignal, active }) {
         )}
 
         <div className={'privacy-status' + (privacyStatus.kind ? ' ' + privacyStatus.kind : '')}>
-          {privacyStatus.html ? (
-            <span dangerouslySetInnerHTML={{ __html: privacyStatus.html }} />
-          ) : (
-            privacyStatus.text
-          )}
+          {privacyStatus.node ?? privacyStatus.text}
         </div>
 
         {debugOpen && (

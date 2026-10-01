@@ -1,7 +1,9 @@
 // gemini.js — all Google Gemini API communication lives here.
 // No UI code. No DOM access. Just: take a message + history, return text.
 
-const GEMINI_MODEL = "gemini-3.6-flash";
+// Model id must match a model served by Generative Language v1beta.
+// Keep in sync with server/config.py (GEMINI_MODEL) and src/agent/llmClient.js.
+const GEMINI_MODEL = "gemini-2.0-flash";
 const GEMINI_ENDPOINT =
   "https://generativelanguage.googleapis.com/v1beta/models/" +
   GEMINI_MODEL +
