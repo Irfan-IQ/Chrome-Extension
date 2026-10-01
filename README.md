@@ -149,38 +149,44 @@ All processing runs **inside the Chrome extension**. No raw data is sent to any 
 
 ```
 ├── manifest.json
-├── background.js
-├── gemini.js                   Gemini REST client (Chat mode)
+├── vite.config.js
 ├── sidepanel.html
-├── sidepanel.css
-├── sidepanel.js                UI + Chat + Agent mode controller
 │
-├── privacy/                    Local privacy pipeline
-│   ├── contentScript.js
-│   ├── detector.js
-│   ├── coordinateUtils.js
-│   ├── ocrAnalyzer.js
-│   ├── patternAnalyzer.js
-│   ├── contextAnalyzer.js
-│   ├── detectionFusion.js
-│   ├── screenshotRedactor.js
-│   └── privacyEngine.js
-│
-├── agent/                      Agent layer (V4)
-│   ├── agentState.js
-│   ├── toolRegistry.js
-│   ├── toolValidator.js
-│   ├── toolExecutor.js
-│   ├── llmClient.js
-│   ├── agentManager.js
-│   └── tools/
-│       ├── scanDom.js
-│       ├── screenshot.js
-│       ├── scanOcr.js
-│       ├── fuseDetections.js
-│       ├── redact.js
-│       ├── verifyRedaction.js
-│       └── getPageContext.js
+├── src/
+│   ├── App.jsx, main.jsx       React side-panel entry
+│   ├── background.js           MV3 service worker
+│   ├── gemini.js               Gemini REST client (Chat mode)
+│   ├── sidepanel.css
+│   ├── utils.js
+│   │
+│   ├── components/             React UI (Header, Chat, Agent, Settings, …)
+│   │
+│   ├── privacy/                SIDE-PANEL realm — bundled with the React app
+│   │   ├── privacyEngine.js    public entry point
+│   │   ├── ocrAnalyzer.js
+│   │   ├── patternAnalyzer.js
+│   │   ├── contextAnalyzer.js
+│   │   ├── detectionFusion.js
+│   │   └── screenshotRedactor.js
+│   │
+│   ├── privacy-page/           PAGE realm — injected via chrome.scripting
+│   │   ├── contentScript.js    (copied verbatim to dist/privacy/ at build time)
+│   │   ├── detector.js
+│   │   └── coordinateUtils.js
+│   │
+│   ├── vision/                 YuNet + OpenCV workers (face / card candidates)
+│   │
+│   └── agent/                  Agent layer (V4)
+│       ├── agentState.js
+│       ├── toolRegistry.js
+│       ├── toolValidator.js
+│       ├── toolExecutor.js
+│       ├── llmClient.js
+│       ├── agentManager.js
+│       └── tools/
+│           ├── scanDom.js, screenshot.js, scanOcr.js, fuseDetections.js,
+│           ├── redact.js, verifyRedaction.js, getPageContext.js,
+│           └── clickElement.js, navigateTo.js, openTab.js
 │
 ├── server/                     FastAPI backend (optional for local LLM)
 │   ├── config.py

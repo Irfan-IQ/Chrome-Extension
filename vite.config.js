@@ -3,10 +3,17 @@ import react from '@vitejs/plugin-react';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import { resolve } from 'path';
 
-// Vite builds the React sidepanel into dist/. Vanilla modules that predate the
-// React rewrite (gemini.js, privacy/*, agent/*) are copied verbatim so they load
-// into `window.*` just like the old build. Static assets under public/ (icons,
-// lib, models) are copied automatically by Vite.
+// Vite builds the React sidepanel into dist/. Static assets under public/
+// (icons, lib, models) are copied automatically by Vite.
+//
+// The extension has TWO privacy trees that intentionally cannot share a
+// bundle, because they execute in different realms:
+//
+//   src/privacy/        → side-panel realm, bundled with the React app.
+//   src/privacy-page/   → PAGE realm, injected via chrome.scripting.executeScript.
+//                         Must stay as classic scripts and be copied verbatim
+//                         to dist/privacy/ so the extension-relative path
+//                         "privacy/detector.js" resolves at runtime.
 //
 // Load the dist/ folder as the unpacked extension in Chrome.
 export default defineConfig({
@@ -14,9 +21,9 @@ export default defineConfig({
     react(),
     viteStaticCopy({
       targets: [
-        { src: 'manifest.json',      dest: '.' },
-        { src: 'src/background.js',  dest: '.' },
-        { src: 'privacy/*.js',       dest: 'privacy' },
+        { src: 'manifest.json',       dest: '.' },
+        { src: 'src/background.js',   dest: '.' },
+        { src: 'src/privacy-page/*.js', dest: 'privacy' },
       ],
     }),
   ],

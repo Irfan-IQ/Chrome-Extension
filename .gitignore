@@ -2,6 +2,32 @@
 node_modules/
 dist/
 
+# Nested project (vision-model) build artefacts — the parent extension does
+# not import these; vision-model/src/ is the source of truth.
+vision-model/node_modules/
+vision-model/dist/
+
+# Python / FastAPI server
+server/.env
+server/__pycache__/
+server/**/__pycache__/
+server/*.pyc
+server/.pytest_cache/
+venv/
+.venv/
+
+# ONNX weights are fetched by the user per README (never commit model binaries)
+public/models/**/*.onnx
+public/models/**/*.pb
+
+# Tool caches
+.cache/
+.parcel-cache/
+.turbo/
+.eslintcache
+*.log
+npm-debug.log*
+
 # OS / editor cruft
 .DS_Store
 Thumbs.db
@@ -13,3 +39,5 @@ Thumbs.db
 # chrome.storage.local, not in any file in this repo — keep it that way.
 *.key
 secrets.*
+.env
+.env.local
