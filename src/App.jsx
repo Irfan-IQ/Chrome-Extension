@@ -1,9 +1,13 @@
-import { useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import Header from './components/Header.jsx';
 import SettingsPanel from './components/SettingsPanel.jsx';
 import ChatMode from './components/ChatMode.jsx';
-import AgentMode from './components/AgentMode.jsx';
 import ZoomLightbox from './components/ZoomLightbox.jsx';
+
+// AgentMode is only reachable from the Agent tab. Code-splitting it keeps
+// the initial side-panel bundle smaller — users who never leave Chat mode
+// never download or parse the agent UI code.
+const AgentMode = lazy(() => import('./components/AgentMode.jsx'));
 
 export default function App() {
   const [mode, setMode] = useState('chat'); // 'chat' | 'agent'
@@ -50,7 +54,11 @@ export default function App() {
       </div>
 
       <div id="agent-mode-panel" className={mode === 'chat' ? 'hidden' : ''}>
-        <AgentMode setStatus={setStatus} openZoom={openZoom} active={mode === 'agent'} />
+        {mode === 'agent' && (
+          <Suspense fallback={<div className="agent-loading">Loading agent…</div>}>
+            <AgentMode setStatus={setStatus} openZoom={openZoom} active={mode === 'agent'} />
+          </Suspense>
+        )}
       </div>
 
       <ZoomLightbox src={zoomSrc} onClose={closeZoom} />

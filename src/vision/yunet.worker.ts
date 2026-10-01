@@ -1,4 +1,11 @@
-import * as ort from "onnxruntime-web";
+// Import the WASM-only sub-entry of onnxruntime-web. The default export
+// bundles the JSEP (WebGPU-fallback) runtime, which ships a 28 MB WASM
+// blob (`ort-wasm-simd-threaded.jsep.wasm`). The side panel is not
+// cross-origin-isolated so JSEP/threads cannot engage anyway — the WASM
+// backend is the only one that runs in practice. Using the `/wasm`
+// sub-entry drops the shipped WASM to ~14 MB and the JS runtime from
+// ~413 KB to ~73 KB with no change in YuNet inference behaviour.
+import * as ort from "onnxruntime-web/wasm";
 
 let MODEL_PATH: string | null = null;
 const INPUT_SIZE = 640;

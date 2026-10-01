@@ -39,6 +39,13 @@ export default defineConfig({
         entryFileNames: 'assets/[name].js',
         chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash][extname]',
+        // Keep the React runtime in its own chunk so the agent-mode and
+        // vision-engine lazy chunks don't duplicate React, and so the
+        // first-paint JS stays small. Everything else (app code, agent,
+        // privacy analyzers) continues to be inlined into sidepanel.js.
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-dom/client'],
+        },
       },
     },
   },
