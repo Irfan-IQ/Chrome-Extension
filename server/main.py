@@ -1,8 +1,10 @@
+import hmac
 import logging
 import time
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from config import settings
 from engine import get_engine
@@ -23,10 +25,29 @@ logging.basicConfig(
 )
 logger = logging.getLogger("server")
 
+# Endpoints that are allowed through without an auth token even when one
+# is configured. Health + root + models are read-only metadata, used by
+# browsers to decide whether the server is reachable before prompting the
+# user for the token.
+UNAUTHENTICATED_PATHS = frozenset({"/", "/health", "/v1/models"})
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info(f"server up on {settings.HOST}:{settings.PORT} ({settings.BACKEND_MODE})")
+    if not settings.DEBUG and settings.CORS_ORIGINS == ["*"]:
+        logger.warning(
+            "CORS_ORIGINS='*' with DEBUG=false — this is almost certainly a "
+            "misconfiguration. Set CORS_ORIGINS=chrome-extension://<your-id> "
+            "in server/.env for production use."
+        )
+    if not settings.AUTH_TOKEN:
+        logger.warning(
+            "AUTH_TOKEN is empty — the /v1/chat/completions endpoint is open "
+            "to any process that can reach this host. For anything other "
+            "than solo-local dev, set AUTH_TOKEN in server/.env (generate "
+            "with: python -c 'import secrets; print(secrets.token_urlsafe(32))')."
+        )
     yield
     logger.info("server stopped")
 
@@ -41,13 +62,30 @@ app.add_middleware(
     # the CORS spec and causes strict browsers to block the response.
     allow_credentials=False,
     allow_methods=["*"],
-    allow_headers=["*"],
+    # Explicitly list the headers the extension sends so a tightened CORS
+    # policy doesn't silently drop them (particularly the auth header).
+    allow_headers=["Content-Type", "X-Redact-Agent-Token"],
 )
 
 
 @app.middleware("http")
-async def log_requests(request: Request, call_next):
+async def auth_and_log(request: Request, call_next):
     t0 = time.time()
+
+    # Shared-secret check. Skipped when AUTH_TOKEN is unset (dev default)
+    # or when the request targets a public metadata endpoint.
+    if settings.AUTH_TOKEN and request.url.path not in UNAUTHENTICATED_PATHS:
+        presented = request.headers.get("x-redact-agent-token", "")
+        if not hmac.compare_digest(presented, settings.AUTH_TOKEN):
+            logger.warning(
+                "rejecting %s %s — missing or wrong X-Redact-Agent-Token",
+                request.method, request.url.path,
+            )
+            return JSONResponse(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                content={"detail": "missing or invalid X-Redact-Agent-Token"},
+            )
+
     response = await call_next(request)
     ms = int((time.time() - t0) * 1000)
     logger.info(f"{request.method} {request.url.path} {response.status_code} ({ms}ms)")

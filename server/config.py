@@ -48,6 +48,12 @@ class Settings:
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 
+    # Shared-secret bearer token. When set, every request must carry a
+    # matching `X-Redact-Agent-Token` header (constant-time compared).
+    # When blank, auth is skipped — the dev-friendly default.
+    # Generate one with: python -c "import secrets; print(secrets.token_urlsafe(32))"
+    AUTH_TOKEN: str = os.getenv("AUTH_TOKEN", "").strip()
+
     LOCAL_VLM_MODEL: str = os.getenv("LOCAL_VLM_MODEL", "Qwen/Qwen2.5-VL-7B-Instruct")
     LOCAL_VLM_ENDPOINT: str = os.getenv("LOCAL_VLM_ENDPOINT", "http://localhost:11434/v1")
     DEVICE: str = get_device()

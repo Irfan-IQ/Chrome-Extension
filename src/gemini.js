@@ -27,6 +27,22 @@ async function setApiKey(key) {
 }
 
 /**
+ * Build the headers for a call to the local FastAPI gateway. Attaches the
+ * shared-secret token (X-Redact-Agent-Token) if the user has set one via
+ * Settings. Server treats a missing token as public access, so this stays
+ * a no-op in the default dev configuration.
+ */
+async function buildServerHeaders() {
+  const headers = { "Content-Type": "application/json" };
+  try {
+    const { serverToken } = await chrome.storage.local.get("serverToken");
+    const t = (serverToken || "").trim();
+    if (t) headers["X-Redact-Agent-Token"] = t;
+  } catch (_) {}
+  return headers;
+}
+
+/**
  * Convert our internal history format into Gemini's "contents" array.
  * Internal: [{ role: "user" | "assistant", content: "..." }]
  * Gemini:   [{ role: "user" | "model", parts: [{ text: "..." }] }]
@@ -214,7 +230,7 @@ async function sendMessageViaServer(message, conversationHistory = [], options =
   try {
     response = await fetch(endpoint, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: await buildServerHeaders(),
       body: JSON.stringify({ messages }),
     });
   } catch (err) {
@@ -245,4 +261,4 @@ async function sendMessageViaServer(message, conversationHistory = [], options =
   return text;
 }
 
-export const Gemini = { sendMessage, sendMessageViaServer, getApiKey, setApiKey, GEMINI_MODEL };
+export const Gemini = { sendMessage, sendMessageViaServer, getApiKey, setApiKey, buildServerHeaders, GEMINI_MODEL };

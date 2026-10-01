@@ -4,6 +4,7 @@ import { Gemini } from '../gemini.js';
 export default function SettingsPanel({ onClose }) {
   const [backendMode, setBackendMode] = useState('direct');
   const [serverUrl, setServerUrl] = useState('http://127.0.0.1:8000');
+  const [serverToken, setServerToken] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [status, setStatus] = useState({ text: '', kind: '' });
 
@@ -12,9 +13,10 @@ export default function SettingsPanel({ onClose }) {
       try {
         const key = await Gemini.getApiKey();
         setApiKey(key || '');
-        const stored = await chrome.storage.local.get(['backendMode', 'serverUrl']);
+        const stored = await chrome.storage.local.get(['backendMode', 'serverUrl', 'serverToken']);
         setBackendMode(stored.backendMode || 'direct');
         setServerUrl(stored.serverUrl || 'http://127.0.0.1:8000');
+        setServerToken(stored.serverToken || '');
       } catch (e) {
         console.error(e);
       }
@@ -29,7 +31,8 @@ export default function SettingsPanel({ onClose }) {
     try {
       await chrome.storage.local.set({
         backendMode,
-        serverUrl: serverUrl.trim() || 'http://127.0.0.1:8000',
+        serverUrl:  serverUrl.trim() || 'http://127.0.0.1:8000',
+        serverToken: serverToken.trim(),
       });
       if (apiKey.trim()) await Gemini.setApiKey(apiKey.trim());
       setStatus({ text: 'Saved.', kind: 'ok' });
@@ -66,6 +69,18 @@ export default function SettingsPanel({ onClose }) {
           value={serverUrl}
           onChange={(e) => setServerUrl(e.target.value)}
           placeholder="http://127.0.0.1:8000"
+          autoComplete="off"
+          spellCheck="false"
+        />
+        <label htmlFor="server-token-input" style={{ marginTop: 8 }}>
+          Server Token (optional)
+        </label>
+        <input
+          id="server-token-input"
+          type="password"
+          value={serverToken}
+          onChange={(e) => setServerToken(e.target.value)}
+          placeholder="Matches AUTH_TOKEN in server/.env"
           autoComplete="off"
           spellCheck="false"
         />

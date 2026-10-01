@@ -11,6 +11,8 @@
 var AGENT_MODEL = "gemini-2.0-flash";
 var GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models/";
 
+import { Gemini } from '../gemini.js';
+
 // System prompt lives in its own .md file so it can be reviewed and A/B'd
 // without touching JS. Vite's `?raw` suffix inlines the file as a plain
 // string at build time.
@@ -269,7 +271,7 @@ async function generateWithServer(messages, toolDefinitions, serverUrl) {
   try {
     response = await fetch(endpoint, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: await Gemini.buildServerHeaders(),
       body: JSON.stringify(body),
     });
   } catch (netErr) {

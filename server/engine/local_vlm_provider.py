@@ -1,6 +1,8 @@
 import json
+import logging
 import httpx
 from fastapi import HTTPException, status
+from pydantic import ValidationError
 
 from config import settings
 from engine.base import BaseEngine
@@ -13,6 +15,8 @@ from schemas import (
     ToolCall,
     UsageInfo,
 )
+
+logger = logging.getLogger("server.local_vlm")
 
 
 class LocalVLMProvider(BaseEngine):
@@ -28,14 +32,37 @@ class LocalVLMProvider(BaseEngine):
         payload = req.model_dump(exclude_none=True)
         payload["model"] = model
 
+        # Error-handling policy:
+        #   * Connection / DNS / timeout error → treat as "no local runner
+        #     attached" and fall through to the deterministic placeholder
+        #     response. This keeps the dev loop ergonomic — people can run
+        #     the server without having Ollama / vLLM up.
+        #   * HTTP response arrived but non-2xx, or 2xx with malformed body
+        #     → the runner is attached but misbehaving. Surface the error
+        #     so bugs don't hide behind the placeholder.
         try:
             async with httpx.AsyncClient(timeout=httpx.Timeout(10.0, connect=1.0)) as client:
                 res = await client.post(url, json=payload)
-                if res.status_code == 200:
-                    data = res.json()
-                    return ChatCompletionResponse.model_validate(data)
-        except Exception:
-            pass
+        except (httpx.ConnectError, httpx.ConnectTimeout, httpx.ReadTimeout) as exc:
+            logger.info("local VLM at %s not reachable (%s); using placeholder response", url, exc)
+        except httpx.HTTPError as exc:
+            # Unexpected transport-layer httpx error. Log at WARNING so it
+            # is visible, but still return the placeholder — the request
+            # must not 500 just because the optional local VLM failed.
+            logger.warning("local VLM transport error: %s", exc)
+        else:
+            if res.status_code == 200:
+                try:
+                    return ChatCompletionResponse.model_validate(res.json())
+                except (ValueError, ValidationError) as exc:
+                    raise HTTPException(
+                        status_code=status.HTTP_502_BAD_GATEWAY,
+                        detail=f"local VLM returned a malformed response: {exc}",
+                    ) from exc
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"local VLM returned HTTP {res.status_code}: {res.text[:500]}",
+            )
 
         content = (
             f"[local vlm placeholder] model: {model}, device: {self.device}. "
