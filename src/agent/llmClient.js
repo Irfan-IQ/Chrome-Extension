@@ -6,12 +6,12 @@
 //   • The LLM only sees detection IDs, categories, confidence scores, and count summaries.
 //   • A strong system instruction defines the LLM's role and constraints.
 
-// Model id must match a model served by Generative Language v1beta.
-// Keep in sync with src/gemini.js (GEMINI_MODEL) and server/config.py.
-var AGENT_MODEL = "gemini-2.0-flash";
-var GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models/";
-
+// Model id lives in src/modelConfig.js — shared with src/gemini.js. Keep
+// server/config.py's GEMINI_MODEL in sync when migrating.
+import { GEMINI_MODEL as AGENT_MODEL } from '../modelConfig.js';
 import { Gemini } from '../gemini.js';
+
+var GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models/";
 
 // System prompt lives in its own .md file so it can be reviewed and A/B'd
 // without touching JS. Vite's `?raw` suffix inlines the file as a plain

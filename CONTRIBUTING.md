@@ -167,8 +167,12 @@ any of them will not be accepted.
 - No new `console.log` outside `debug.js` guards (unless it's a
   `warn`/`error`-level signal that must always fire).
 - `grep -rn 'dangerouslySetInnerHTML' src/` returns nothing.
-- `grep -rn 'gemini-' src/ server/` is consistent — bump everywhere
-  at once if you update the model.
+- The Gemini model id is centralised. To bump it:
+  - **Client**: edit `src/modelConfig.js` only.
+  - **Server**: edit the default in `server/config.py` + `server/.env.example`.
+  Verify current ids at [Google AI Studio](https://aistudio.google.com/),
+  **not** from an API error body (deprecation errors have been observed
+  suggesting fabricated model ids).
 - If you touched the manifest, verify `host_permissions` is still
   scoped to http/https (not `<all_urls>`).
 

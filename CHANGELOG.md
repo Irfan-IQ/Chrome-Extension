@@ -7,6 +7,19 @@ release is tagged.
 
 ## [Unreleased] — Audit & Optimization Pass
 
+### Follow-ups after Phase 7
+- Migrated from the deprecated `gemini-2.0-flash` to `gemini-3-flash-preview`
+  (verified against Google AI Studio, not the API error body — the error
+  suggested a non-existent `gemini-3.8-flash`).
+- **Centralised the client-side model id** in `src/modelConfig.js`. Both
+  `src/gemini.js` and `src/agent/llmClient.js` now import it; the previous
+  8 scattered string literals collapsed to 3 definition sites (client
+  constant, server env default, `.env.example`).
+- `server/main.py`'s `/v1/models` list now derives from `settings.GEMINI_MODEL`
+  rather than a hardcoded string, and de-duplicates when the active model
+  equals a default.
+
+
 Scoped, phased refactor driven by a code audit. No user-visible feature
 changes; the agent and chat flows behave as before.
 

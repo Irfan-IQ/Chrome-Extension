@@ -46,7 +46,9 @@ class Settings:
     ]
 
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+    # Keep in sync with src/modelConfig.js (GEMINI_MODEL) when migrating.
+    # Verify current ids at https://aistudio.google.com/.
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3-flash-preview")
 
     # Shared-secret bearer token. When set, every request must carry a
     # matching `X-Redact-Agent-Token` header (constant-time compared).

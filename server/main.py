@@ -119,13 +119,13 @@ async def list_models():
         if settings.BACKEND_MODE == "gemini_cloud"
         else settings.LOCAL_VLM_MODEL
     )
-    return ModelsListResponse(
-        data=[
-            ModelItem(id=active_model),
-            ModelItem(id="gemini-2.0-flash"),
-            ModelItem(id="Qwen/Qwen2.5-VL-7B-Instruct"),
-        ]
-    )
+    # De-duplicate so the active model isn't listed twice when it already
+    # matches one of the defaults.
+    ids = []
+    for mid in [active_model, settings.GEMINI_MODEL, settings.LOCAL_VLM_MODEL]:
+        if mid and mid not in ids:
+            ids.append(mid)
+    return ModelsListResponse(data=[ModelItem(id=mid) for mid in ids])
 
 
 @app.post("/v1/chat/completions", response_model=ChatCompletionResponse)

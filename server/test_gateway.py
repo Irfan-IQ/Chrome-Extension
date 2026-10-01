@@ -63,7 +63,7 @@ def test_gemini_auth_guard():
     settings.GEMINI_API_KEY = ""
     try:
         payload = {
-            "model": "gemini-2.0-flash",
+            "model": settings.GEMINI_MODEL,
             "messages": [{"role": "user", "content": "hello"}],
         }
         res = client.post("/v1/chat/completions", json=payload)
@@ -103,7 +103,7 @@ def test_gemini_happy_path_mocked():
                 )
             )
             res = client.post("/v1/chat/completions", json={
-                "model": "gemini-2.0-flash",
+                "model": settings.GEMINI_MODEL,
                 "messages": [{"role": "user", "content": "hi"}],
             })
         assert res.status_code == 200, res.text
@@ -129,7 +129,7 @@ def test_gemini_upstream_error_mocked():
                 return_value=httpx.Response(500, json={"error": {"message": "upstream exploded"}})
             )
             res = client.post("/v1/chat/completions", json={
-                "model": "gemini-2.0-flash",
+                "model": settings.GEMINI_MODEL,
                 "messages": [{"role": "user", "content": "hi"}],
             })
         assert res.status_code == 500
