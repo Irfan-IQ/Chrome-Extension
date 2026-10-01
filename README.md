@@ -100,9 +100,11 @@ The agent uses stable detection IDs to reference specific detections without eve
 
 ## Architecture
 
-See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the full system architecture diagram and data flows.
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full system architecture (merged system + agent-layer view, including the security model and how to add new tools).
 
-See [`AGENT_ARCHITECTURE.md`](AGENT_ARCHITECTURE.md) for the agent-specific architecture, security model, and how to add new tools.
+See [`docs/PROBLEM_STATEMENT_AND_AGENT_FLOW.md`](docs/PROBLEM_STATEMENT_AND_AGENT_FLOW.md) for the problem-statement framing and a step-by-step agent-execution flow.
+
+See [`CHANGELOG.md`](CHANGELOG.md) for the version history and [`CONTRIBUTING.md`](CONTRIBUTING.md) for the local-dev loop and the two-realm privacy-tree convention.
 
 ### Agent Tools
 
@@ -200,8 +202,12 @@ All processing runs **inside the Chrome extension**. No raw data is sent to any 
 ├── test/
 │   └── agent-test.html         Unit tests (35+ cases, no API key needed)
 │
-├── ARCHITECTURE.md
-└── AGENT_ARCHITECTURE.md
+├── docs/
+│   ├── ARCHITECTURE.md             Merged system + agent architecture
+│   └── PROBLEM_STATEMENT_AND_AGENT_FLOW.md
+├── Redact-Agent/                   Separate static landing site (Vercel-hosted)
+├── CHANGELOG.md
+└── CONTRIBUTING.md
 ```
 
 ---
