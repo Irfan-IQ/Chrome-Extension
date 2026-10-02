@@ -2,6 +2,10 @@
 node_modules/
 dist/
 
+# `npm run package` output — the Chrome Web Store upload bundle. Built
+# from dist/ on demand; never commit it.
+redact-agent*.zip
+
 # Nested project (vision-model) build artefacts — the parent extension does
 # not import these; vision-model/src/ is the source of truth.
 vision-model/node_modules/

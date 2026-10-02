@@ -58,11 +58,24 @@ The agent uses stable detection IDs to reference specific detections without eve
 ## Installation
 
 1. Clone or download this repository.
-2. Open Chrome and go to `chrome://extensions/`.
-3. Enable **Developer mode** (top right).
-4. Click **Load unpacked** and select this folder.
-5. Click the extension icon → the side panel opens.
-6. Click ⚙ Settings and paste your [Gemini API key](https://aistudio.google.com/app/apikey).
+2. Run `npm install && npm run build` to produce `dist/`.
+3. Open Chrome and go to `chrome://extensions/`.
+4. Enable **Developer mode** (top right).
+5. Click **Load unpacked** and select the **`dist/`** folder (not the project root).
+6. Click the extension icon → the side panel opens.
+7. Click ⚙ Settings and paste your [Gemini API key](https://aistudio.google.com/app/apikey).
+
+### Publishing to the Chrome Web Store
+
+```bash
+npm run package
+```
+
+Writes `redact-agent.zip` containing the contents of `dist/` with
+`manifest.json` at the archive root — the exact shape the Chrome Web Store
+expects. Do **not** zip the project root: it contains a second `manifest.json`
+at `./manifest.json` and the Web Store rejects multi-manifest packages
+(*"More than one manifest found in package"*).
 
 ### Optional: Local Server (Only if hosting a local LLM/VLM)
 1. Create and activate a Python virtual environment (`python -m venv venv`).

@@ -47,6 +47,20 @@ npm run build        # vite build
 Produces an optimised `dist/`. The same folder is what gets loaded as
 the unpacked extension.
 
+### Packaging for the Chrome Web Store
+
+```bash
+npm run package
+```
+
+Builds, then writes `redact-agent.zip` from the **contents** of `dist/`
+(manifest at the archive root). Upload that file at the dashboard.
+
+Do not zip the project root. The repo contains **two** manifests on disk:
+the source `./manifest.json` and the built `./dist/manifest.json`
+(copied by `viteStaticCopy`). The Web Store rejects multi-manifest
+packages with *"More than one manifest found in package"*.
+
 ---
 
 ## Local-dev loop (optional FastAPI gateway)
