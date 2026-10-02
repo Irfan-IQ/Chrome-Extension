@@ -108,7 +108,11 @@ class HealthResponse(BaseModel):
     cache_hits: int = 0
     cache_misses: int = 0
     cache_hit_rate: float = 0.0
+    gpu_name: Optional[str] = None
+    vram_total_gb: float = 0.0
+    cpu_count: int = 1
     timestamp: float = Field(default_factory=time.time)
+
 
 
 

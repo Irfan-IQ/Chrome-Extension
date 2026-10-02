@@ -137,6 +137,7 @@ async def root():
 @app.get("/health", response_model=HealthResponse)
 async def health():
     cache_stats = get_cache_service().stats
+    hw = settings.get_hardware_profile()
     return HealthResponse(
         status="ok",
         version="1.0.0",
@@ -149,6 +150,9 @@ async def health():
         cache_hits=cache_stats.hits,
         cache_misses=cache_stats.misses,
         cache_hit_rate=cache_stats.hit_rate,
+        gpu_name=hw.gpu_name,
+        vram_total_gb=hw.vram_total_gb,
+        cpu_count=hw.cpu_count,
     )
 
 

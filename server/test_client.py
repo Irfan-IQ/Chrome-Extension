@@ -454,6 +454,42 @@ def test_llamacpp_provider():
         reset_engine()
 
 
+def test_hardware_detection_and_auto_backend():
+    from services import detect_hardware, resolve_auto_backend, HardwareProfile
+    from engine import get_engine, reset_engine
+
+    hw = detect_hardware()
+    assert hw.device in ("cuda", "mps", "cpu")
+    assert hw.cpu_count >= 1
+    assert hw.vram_total_gb >= 0.0
+
+    a100_hw = HardwareProfile(device="cuda", vram_total_gb=40.0, cpu_count=8)
+    assert resolve_auto_backend(a100_hw) == "vllm"
+
+    cpu_hw = HardwareProfile(device="cpu", vram_total_gb=0.0, cpu_count=4)
+    assert resolve_auto_backend(cpu_hw, gemini_key="test-key") == "gemini_cloud"
+    assert resolve_auto_backend(cpu_hw, gemini_key="") == "llamacpp"
+
+    prev = settings.BACKEND_MODE
+    settings.BACKEND_MODE = "auto"
+    reset_engine()
+    try:
+        engine = get_engine()
+        assert engine is not None
+        assert engine.name in ("vllm", "gemini_cloud", "llamacpp", "local_vlm")
+    finally:
+        settings.BACKEND_MODE = prev
+        reset_engine()
+
+    res = client.get("/health")
+    assert res.status_code == 200
+    data = res.json()
+    assert "cpu_count" in data
+    assert "vram_total_gb" in data
+    assert data["cpu_count"] >= 1
+    print("[PASS] hardware auto-detection & auto backend resolver verified")
+
+
 if __name__ == "__main__":
     test_privacy_guard()
     test_tool_registry()
@@ -466,7 +502,9 @@ if __name__ == "__main__":
     test_vllm_provider()
     test_quantization_and_vram_budget()
     test_llamacpp_provider()
+    test_hardware_detection_and_auto_backend()
     print("all tests passed successfully")
+
 
 
 

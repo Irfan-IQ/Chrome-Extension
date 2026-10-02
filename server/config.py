@@ -20,11 +20,8 @@ def get_device() -> str:
     if val != "auto":
         return val
 
-    system = platform.system()
-    if system == "Darwin" and platform.machine() in ("arm64", "aarch64"):
-        return "mps"
-
-    return "cuda" if os.name != "nt" and os.path.exists("/proc/driver/nvidia") else "cpu"
+    from services.hardware import detect_hardware
+    return detect_hardware().device
 
 
 def setup_event_loop() -> str:
@@ -69,9 +66,15 @@ class Settings:
 
 
 
-    BACKEND_MODE: Literal["gemini_cloud", "local_vlm", "vllm", "llamacpp"] = os.getenv(
+    BACKEND_MODE: Literal["auto", "gemini_cloud", "local_vlm", "vllm", "llamacpp"] = os.getenv(
         "BACKEND_MODE", "gemini_cloud"
     )
+
+    @classmethod
+    def get_hardware_profile(cls):
+        from services.hardware import detect_hardware
+        return detect_hardware()
+
 
     # vLLM engine configuration (Qwen2.5-14B on A100 40GB)
     VLLM_ENDPOINT: str = os.getenv("VLLM_ENDPOINT", "http://localhost:8000/v1")

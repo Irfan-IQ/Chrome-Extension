@@ -28,6 +28,18 @@ def register_engine(mode: str, provider_cls: Type[BaseEngine]) -> None:
 def get_engine(mode: Optional[str] = None) -> BaseEngine:
     """Retrieve or lazily instantiate singleton engine for the requested or active backend mode."""
     target_mode = mode or settings.BACKEND_MODE
+    if target_mode == "auto":
+        from services.hardware import detect_hardware, resolve_auto_backend
+        hw = detect_hardware()
+        target_mode = resolve_auto_backend(hw, settings.GEMINI_API_KEY)
+        logger.info(
+            "auto hardware detection resolved backend: %s (device=%s, gpu=%s, vram=%.1fGB)",
+            target_mode,
+            hw.device,
+            hw.gpu_name or "none",
+            hw.vram_total_gb,
+        )
+
     if target_mode not in _INSTANCES:
         provider_cls = _REGISTRY.get(target_mode)
         if not provider_cls:
@@ -45,9 +57,20 @@ def reset_engine() -> None:
 
 async def warmup_engine(mode: Optional[str] = None) -> None:
     """Trigger warmup lifecycle on active engine."""
+    from services.hardware import detect_hardware
+    hw = detect_hardware()
+    logger.info(
+        "hardware detected: device=%s, gpus=%d (%s), vram=%.1fGB, cpus=%d",
+        hw.device,
+        hw.gpu_count,
+        hw.gpu_name or "none",
+        hw.vram_total_gb,
+        hw.cpu_count,
+    )
     engine = get_engine(mode)
     logger.info("warming up engine: %s (%s)", engine.name, engine.model_name)
     await engine.warmup()
+
 
 
 async def shutdown_engine(mode: Optional[str] = None) -> None:
