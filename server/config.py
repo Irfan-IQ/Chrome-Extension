@@ -110,6 +110,21 @@ class Settings:
             cmd.append("--enforce-eager")
         return " ".join(cmd)
 
+    # Minimal-resource fallback engine (llama.cpp GGUF)
+    LLAMACPP_ENDPOINT: str = os.getenv("LLAMACPP_ENDPOINT", "http://localhost:8080/v1")
+    LLAMACPP_MODEL: str = os.getenv("LLAMACPP_MODEL", "qwen2.5-14b-instruct-q4_k_m.gguf")
+    LLAMACPP_THREADS: int = int(os.getenv("LLAMACPP_THREADS", "6"))
+    LLAMACPP_N_GPU_LAYERS: int = int(os.getenv("LLAMACPP_N_GPU_LAYERS", "0"))
+
+    @classmethod
+    def get_llamacpp_command(cls) -> str:
+        """Generate recommended llama-server CLI command for minimal hardware."""
+        return (
+            f"llama-server -m {cls.LLAMACPP_MODEL} --port 8080 -t {cls.LLAMACPP_THREADS} "
+            f"-ngl {cls.LLAMACPP_N_GPU_LAYERS} -c 8192 --cont-batching"
+        )
+
+
 
 
     # Comma-separated list of allowed CORS origins.

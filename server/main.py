@@ -157,7 +157,7 @@ async def list_models():
     engine = get_engine()
     active_model = engine.model_name
     ids = []
-    for mid in [active_model, settings.VLLM_MODEL, settings.GEMINI_MODEL, settings.LOCAL_VLM_MODEL]:
+    for mid in [active_model, settings.VLLM_MODEL, settings.LLAMACPP_MODEL, settings.GEMINI_MODEL, settings.LOCAL_VLM_MODEL]:
         if mid and mid not in ids:
             ids.append(mid)
     return ModelsListResponse(data=[ModelItem(id=mid) for mid in ids])

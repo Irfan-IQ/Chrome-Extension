@@ -5,6 +5,7 @@ from engine.base import BaseEngine
 from engine.gemini_provider import GeminiProvider
 from engine.local_vlm_provider import LocalVLMProvider
 from engine.vllm_provider import VLLMProvider
+from engine.llamacpp_provider import LlamaCppProvider
 
 logger = logging.getLogger("server.engine")
 
@@ -12,6 +13,7 @@ _REGISTRY: Dict[str, Type[BaseEngine]] = {
     "gemini_cloud": GeminiProvider,
     "local_vlm": LocalVLMProvider,
     "vllm": VLLMProvider,
+    "llamacpp": LlamaCppProvider,
 }
 
 _INSTANCES: Dict[str, BaseEngine] = {}
