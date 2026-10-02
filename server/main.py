@@ -4,6 +4,7 @@ import time
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 try:
     from fastapi.responses import ORJSONResponse
     FastJSONResponse = ORJSONResponse
@@ -13,7 +14,7 @@ except ImportError:
 
 from config import settings
 from engine import get_engine
-from services import close_http_client
+from services import close_http_client, json_dumps
 from schemas import (
     ChatCompletionRequest,
     ChatCompletionResponse,
@@ -144,6 +145,29 @@ async def chat_completions(req: ChatCompletionRequest):
         )
 
     engine = get_engine()
+
+    if req.stream:
+        async def event_generator():
+            try:
+                async for chunk in engine.generate_stream(req):
+                    payload = json_dumps(chunk.model_dump(exclude_none=True))
+                    yield f"data: {payload}\n\n"
+                yield "data: [DONE]\n\n"
+            except Exception as exc:
+                logger.error(f"streaming error: {exc}", exc_info=True)
+                err_payload = json_dumps({"error": {"message": str(exc), "type": "server_error"}})
+                yield f"data: {err_payload}\n\ndata: [DONE]\n\n"
+
+        return StreamingResponse(
+            event_generator(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",
+            },
+        )
+
     return await engine.generate(req)
 
 

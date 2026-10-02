@@ -75,6 +75,27 @@ class ChatCompletionResponse(BaseModel):
     usage: UsageInfo = Field(default_factory=UsageInfo)
 
 
+class ChatCompletionChunkDelta(BaseModel):
+    role: Optional[Literal["system", "user", "assistant", "tool"]] = None
+    content: Optional[str] = None
+    tool_calls: Optional[List[ToolCall]] = None
+
+
+class ChatCompletionChunkChoice(BaseModel):
+    index: int = 0
+    delta: ChatCompletionChunkDelta
+    finish_reason: Optional[Literal["stop", "tool_calls", "length", "content_filter"]] = None
+
+
+class ChatCompletionChunk(BaseModel):
+    id: str = Field(default_factory=lambda: f"chatcmpl_{int(time.time() * 1000)}")
+    object: Literal["chat.completion.chunk"] = "chat.completion.chunk"
+    created: int = Field(default_factory=lambda: int(time.time()))
+    model: str
+    choices: List[ChatCompletionChunkChoice]
+
+
+
 class HealthResponse(BaseModel):
     status: str = "ok"
     version: str = "1.0.0"

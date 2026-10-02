@@ -123,6 +123,37 @@ def test_agent_tool_calling_flow():
         choice2 = res2.json()["choices"][0]
         assert choice2["message"]["role"] == "assistant"
         print("[PASS] agent step 2: tool response processed")
+    finally:
+        settings.BACKEND_MODE = prev
+
+
+def test_sse_streaming_flow():
+    prev = settings.BACKEND_MODE
+    settings.BACKEND_MODE = "local_vlm"
+
+    try:
+        req = {
+            "model": "Qwen/Qwen2.5-VL-7B-Instruct",
+            "messages": [
+                {"role": "user", "content": "Hello agent"},
+            ],
+            "stream": True,
+        }
+
+        res = client.post("/v1/chat/completions", json=req)
+        assert res.status_code == 200
+        assert "text/event-stream" in res.headers.get("content-type", "")
+
+        lines = [line.strip() for line in res.text.split("\n") if line.strip()]
+        data_lines = [line[5:].strip() for line in lines if line.startswith("data:")]
+
+        assert len(data_lines) > 0
+        assert data_lines[-1] == "[DONE]"
+
+        chunks = [json.loads(d) for d in data_lines[:-1]]
+        assert len(chunks) >= 1
+        assert chunks[0]["object"] == "chat.completion.chunk"
+        print(f"[PASS] SSE streaming verified ({len(chunks)} chunks, terminated with [DONE])")
 
     finally:
         settings.BACKEND_MODE = prev
@@ -132,4 +163,6 @@ if __name__ == "__main__":
     test_privacy_guard()
     test_tool_registry()
     test_agent_tool_calling_flow()
-    print("all part 3 tests passed")
+    test_sse_streaming_flow()
+    print("all tests passed successfully")
+
