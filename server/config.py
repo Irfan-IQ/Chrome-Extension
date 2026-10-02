@@ -1,7 +1,7 @@
 import os
 import platform
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional
 
 try:
     from dotenv import load_dotenv
@@ -27,10 +27,32 @@ def get_device() -> str:
     return "cuda" if os.name != "nt" and os.path.exists("/proc/driver/nvidia") else "cpu"
 
 
+def setup_event_loop() -> str:
+    """Install uvloop if available on non-Windows platforms."""
+    if os.name != "nt":
+        try:
+            import uvloop
+            uvloop.install()
+            return "uvloop"
+        except ImportError:
+            pass
+    return "asyncio"
+
+
 class Settings:
     HOST: str = os.getenv("HOST", "127.0.0.1")
     PORT: int = int(os.getenv("PORT", "8000"))
     DEBUG: bool = os.getenv("DEBUG", "true").lower() in ("true", "1", "yes")
+
+    # Worker & concurrency tuning
+    WORKERS: int = int(os.getenv("WORKERS", "1"))
+    TIMEOUT_KEEP_ALIVE: int = int(os.getenv("TIMEOUT_KEEP_ALIVE", "30"))
+    BACKLOG: int = int(os.getenv("BACKLOG", "2048"))
+    LIMIT_CONCURRENCY: Optional[int] = (
+        int(os.getenv("LIMIT_CONCURRENCY", "1000"))
+        if os.getenv("LIMIT_CONCURRENCY")
+        else None
+    )
 
     BACKEND_MODE: Literal["gemini_cloud", "local_vlm"] = os.getenv(
         "BACKEND_MODE", "gemini_cloud"

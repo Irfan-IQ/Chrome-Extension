@@ -150,10 +150,26 @@ async def chat_completions(req: ChatCompletionRequest):
 
 if __name__ == "__main__":
     import uvicorn
+    from config import setup_event_loop
 
-    uvicorn.run(
-        "main:app",
-        host=settings.HOST,
-        port=settings.PORT,
-        reload=settings.DEBUG,
-    )
+    loop_type = setup_event_loop()
+    logger.info(f"event loop backend: {loop_type}")
+
+    run_kwargs = {
+        "host": settings.HOST,
+        "port": settings.PORT,
+        "loop": "auto",
+        "http": "httptools",
+        "ws": "none",
+        "timeout_keep_alive": settings.TIMEOUT_KEEP_ALIVE,
+        "backlog": settings.BACKLOG,
+    }
+    if settings.LIMIT_CONCURRENCY:
+        run_kwargs["limit_concurrency"] = settings.LIMIT_CONCURRENCY
+
+    if settings.DEBUG:
+        run_kwargs["reload"] = True
+    else:
+        run_kwargs["workers"] = settings.WORKERS
+
+    uvicorn.run("main:app", **run_kwargs)
