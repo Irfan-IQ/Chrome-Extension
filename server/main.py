@@ -14,7 +14,12 @@ except ImportError:
 
 from config import settings
 from engine import get_engine
-from services import close_http_client, json_dumps
+from services import (
+    close_http_client,
+    json_dumps,
+    ConcurrencyLimiter,
+    ConcurrencyLimitExceeded,
+)
 from schemas import (
     ChatCompletionRequest,
     ChatCompletionResponse,
@@ -25,6 +30,12 @@ from schemas import (
     ModelsListResponse,
     UsageInfo,
 )
+
+limiter = ConcurrencyLimiter(
+    max_concurrent=settings.MAX_CONCURRENT_REQUESTS,
+    queue_timeout=settings.REQUEST_QUEUE_TIMEOUT,
+)
+
 
 logging.basicConfig(
     level=logging.INFO if not settings.DEBUG else logging.DEBUG,
@@ -117,6 +128,8 @@ async def health():
         device=settings.DEVICE,
         os=settings.OS_NAME,
         python=settings.PYTHON_VERSION,
+        active_requests=limiter.active_requests,
+        queued_requests=limiter.queued_requests,
     )
 
 
@@ -149,10 +162,14 @@ async def chat_completions(req: ChatCompletionRequest):
     if req.stream:
         async def event_generator():
             try:
-                async for chunk in engine.generate_stream(req):
-                    payload = json_dumps(chunk.model_dump(exclude_none=True))
-                    yield f"data: {payload}\n\n"
-                yield "data: [DONE]\n\n"
+                async with limiter.acquire():
+                    async for chunk in engine.generate_stream(req):
+                        payload = json_dumps(chunk.model_dump(exclude_none=True))
+                        yield f"data: {payload}\n\n"
+                    yield "data: [DONE]\n\n"
+            except ConcurrencyLimitExceeded as exc:
+                err_payload = json_dumps({"error": {"message": str(exc), "type": "rate_limit_error"}})
+                yield f"data: {err_payload}\n\ndata: [DONE]\n\n"
             except Exception as exc:
                 logger.error(f"streaming error: {exc}", exc_info=True)
                 err_payload = json_dumps({"error": {"message": str(exc), "type": "server_error"}})
@@ -168,7 +185,15 @@ async def chat_completions(req: ChatCompletionRequest):
             },
         )
 
-    return await engine.generate(req)
+    try:
+        async with limiter.acquire():
+            return await engine.generate(req)
+    except ConcurrencyLimitExceeded as exc:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=str(exc),
+            headers={"Retry-After": "2"},
+        ) from exc
 
 
 

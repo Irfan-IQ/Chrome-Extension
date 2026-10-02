@@ -103,7 +103,10 @@ class HealthResponse(BaseModel):
     device: str
     os: str
     python: str
+    active_requests: int = 0
+    queued_requests: int = 0
     timestamp: float = Field(default_factory=time.time)
+
 
 
 class ModelItem(BaseModel):

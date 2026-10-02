@@ -53,6 +53,9 @@ class Settings:
         if os.getenv("LIMIT_CONCURRENCY")
         else None
     )
+    MAX_CONCURRENT_REQUESTS: int = int(os.getenv("MAX_CONCURRENT_REQUESTS", "32"))
+    REQUEST_QUEUE_TIMEOUT: float = float(os.getenv("REQUEST_QUEUE_TIMEOUT", "30.0"))
+
 
     BACKEND_MODE: Literal["gemini_cloud", "local_vlm"] = os.getenv(
         "BACKEND_MODE", "gemini_cloud"

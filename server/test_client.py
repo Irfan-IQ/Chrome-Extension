@@ -159,10 +159,49 @@ def test_sse_streaming_flow():
         settings.BACKEND_MODE = prev
 
 
+def test_concurrency_limiter():
+    import asyncio
+    from services import ConcurrencyLimiter, ConcurrencyLimitExceeded
+
+    async def _run():
+        lim = ConcurrencyLimiter(max_concurrent=2, queue_timeout=0.05)
+        assert lim.active_requests == 0
+        assert lim.queued_requests == 0
+
+        async with lim.acquire():
+            assert lim.active_requests == 1
+            async with lim.acquire():
+                assert lim.active_requests == 2
+
+                timed_out = False
+                try:
+                    async with lim.acquire():
+                        pass
+                except ConcurrencyLimitExceeded:
+                    timed_out = True
+
+                assert timed_out, "Expected ConcurrencyLimitExceeded on saturated limiter"
+                assert lim.active_requests == 2
+
+        assert lim.active_requests == 0
+        assert lim.queued_requests == 0
+
+    asyncio.run(_run())
+
+    res = client.get("/health")
+    assert res.status_code == 200
+    data = res.json()
+    assert "active_requests" in data
+    assert "queued_requests" in data
+    print("[PASS] concurrency limiter & backpressure verified")
+
+
 if __name__ == "__main__":
     test_privacy_guard()
     test_tool_registry()
     test_agent_tool_calling_flow()
     test_sse_streaming_flow()
+    test_concurrency_limiter()
     print("all tests passed successfully")
+
 
