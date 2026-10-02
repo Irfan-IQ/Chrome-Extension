@@ -10,6 +10,7 @@ from services.json_utils import json_dumps, json_dumps_bytes, json_loads, HAS_OR
 from services.http_client import get_http_client, close_http_client
 from services.concurrency import ConcurrencyLimiter, ConcurrencyLimitExceeded
 from services.cache_service import PromptPrefixCache, get_cache_service
+from services.queue_coordinator import QueueCoordinator, get_queue_coordinator
 
 __all__ = [
     "sanitize_for_log",
@@ -29,4 +30,6 @@ __all__ = [
     "ConcurrencyLimitExceeded",
     "PromptPrefixCache",
     "get_cache_service",
+    "QueueCoordinator",
+    "get_queue_coordinator",
 ]

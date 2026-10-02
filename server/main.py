@@ -20,6 +20,7 @@ from services import (
     ConcurrencyLimiter,
     ConcurrencyLimitExceeded,
     get_cache_service,
+    get_queue_coordinator,
 )
 from schemas import (
     ChatCompletionRequest,
@@ -36,6 +37,13 @@ limiter = ConcurrencyLimiter(
     max_concurrent=settings.MAX_CONCURRENT_REQUESTS,
     queue_timeout=settings.REQUEST_QUEUE_TIMEOUT,
 )
+
+queue_coordinator = get_queue_coordinator(
+    max_batch_size=settings.BATCH_MAX_SIZE,
+    max_delay_ms=settings.BATCH_MAX_DELAY_MS,
+    enabled=settings.BATCHING_ENABLED,
+)
+
 
 
 logging.basicConfig(
@@ -67,7 +75,11 @@ async def lifespan(app: FastAPI):
             "than solo-local dev, set AUTH_TOKEN in server/.env (generate "
             "with: python -c 'import secrets; print(secrets.token_urlsafe(32))')."
         )
+    if settings.BATCHING_ENABLED:
+        queue_coordinator.start()
     yield
+    if settings.BATCHING_ENABLED:
+        await queue_coordinator.stop()
     await close_http_client()
     logger.info("server stopped")
 
@@ -192,6 +204,8 @@ async def chat_completions(req: ChatCompletionRequest):
 
     try:
         async with limiter.acquire():
+            if settings.BATCHING_ENABLED and queue_coordinator.enabled:
+                return await queue_coordinator.submit(req, fallback_fn=engine.generate)
             return await engine.generate(req)
     except ConcurrencyLimitExceeded as exc:
         raise HTTPException(

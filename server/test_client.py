@@ -235,6 +235,53 @@ def test_prompt_prefix_cache():
     print("[PASS] prompt/prefix cache & LRU eviction verified")
 
 
+def test_queue_coordinator():
+    import asyncio
+    from services import QueueCoordinator
+
+    async def _test():
+        processed_batches = []
+
+        async def mock_batch_engine(items):
+            processed_batches.append(len(items))
+            await asyncio.sleep(0.01)
+            return [f"result_{x}" for x in items]
+
+        coord = QueueCoordinator(
+            batch_processor=mock_batch_engine,
+            max_batch_size=4,
+            max_delay_ms=20.0,
+            enabled=True,
+        )
+        coord.start()
+
+        try:
+            tasks = [coord.submit(i) for i in range(3)]
+            results = await asyncio.gather(*tasks)
+
+            assert results == ["result_0", "result_1", "result_2"]
+            assert len(processed_batches) == 1
+            assert processed_batches[0] == 3
+            assert coord.stats.total_requests == 3
+            assert coord.stats.total_batches == 1
+            assert coord.stats.avg_batch_size == 3.0
+
+            coord_disabled = QueueCoordinator(enabled=False)
+
+            async def mock_fallback(val):
+                return f"fallback_{val}"
+
+            res = await coord_disabled.submit(42, fallback_fn=mock_fallback)
+            assert res == "fallback_42"
+            assert coord_disabled.stats.total_direct_requests == 1
+
+        finally:
+            await coord.stop()
+
+    asyncio.run(_test())
+    print("[PASS] async request queue & micro-batch coordinator verified")
+
+
 if __name__ == "__main__":
     test_privacy_guard()
     test_tool_registry()
@@ -242,7 +289,9 @@ if __name__ == "__main__":
     test_sse_streaming_flow()
     test_concurrency_limiter()
     test_prompt_prefix_cache()
+    test_queue_coordinator()
     print("all tests passed successfully")
+
 
 
 

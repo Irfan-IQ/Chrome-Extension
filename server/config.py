@@ -61,6 +61,12 @@ class Settings:
     PROMPT_CACHE_SIZE: int = int(os.getenv("PROMPT_CACHE_SIZE", "1024"))
     PROMPT_CACHE_TTL: float = float(os.getenv("PROMPT_CACHE_TTL", "3600.0"))
 
+    # Dynamic micro-batching settings
+    BATCHING_ENABLED: bool = os.getenv("BATCHING_ENABLED", "false").lower() in ("true", "1", "yes")
+    BATCH_MAX_SIZE: int = int(os.getenv("BATCH_MAX_SIZE", "8"))
+    BATCH_MAX_DELAY_MS: float = float(os.getenv("BATCH_MAX_DELAY_MS", "15.0"))
+
+
 
 
     BACKEND_MODE: Literal["gemini_cloud", "local_vlm"] = os.getenv(
