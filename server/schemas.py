@@ -116,8 +116,27 @@ class HealthResponse(BaseModel):
     timestamp: float = Field(default_factory=time.time)
 
 
-
-
+class ServerMetricsResponse(BaseModel):
+    uptime_seconds: float
+    total_requests: int
+    total_errors: int
+    avg_latency_ms: float
+    p95_latency_ms: float
+    requests_per_second: float
+    active_requests: int
+    queued_requests: int
+    backend_mode: str
+    active_model: str
+    device: str
+    gpu_name: Optional[str] = None
+    vram_total_gb: float = 0.0
+    cpu_count: int = 1
+    cache_hits: int = 0
+    cache_misses: int = 0
+    cache_hit_rate: float = 0.0
+    privacy_scans: int = 0
+    privacy_fast_path_rate: float = 0.0
+    timestamp: float = Field(default_factory=time.time)
 
 
 class ModelItem(BaseModel):

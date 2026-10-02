@@ -24,6 +24,7 @@ from services import (
     get_cache_service,
     get_queue_coordinator,
     get_privacy_stats,
+    get_metrics_tracker,
 )
 from schemas import (
     ChatCompletionRequest,
@@ -31,6 +32,7 @@ from schemas import (
     ChatCompletionResponseChoice,
     ChatMessage,
     HealthResponse,
+    ServerMetricsResponse,
     ModelItem,
     ModelsListResponse,
     UsageInfo,
@@ -63,10 +65,11 @@ logger = logging.getLogger("server")
 
 
 # Endpoints that are allowed through without an auth token even when one
-# is configured. Health + root + models are read-only metadata, used by
+# is configured. Health + root + models + metrics are read-only metadata, used by
 # browsers to decide whether the server is reachable before prompting the
 # user for the token.
-UNAUTHENTICATED_PATHS = frozenset({"/", "/health", "/v1/models"})
+UNAUTHENTICATED_PATHS = frozenset({"/", "/health", "/v1/models", "/metrics"})
+
 
 
 @asynccontextmanager
@@ -133,6 +136,7 @@ async def auth_and_log(request: Request, call_next):
 
     response = await call_next(request)
     ms = int((time.time() - t0) * 1000)
+    get_metrics_tracker().record_request(float(ms), is_error=(response.status_code >= 400))
     logger.info(f"{request.method} {request.url.path} {response.status_code} ({ms}ms)")
     return response
 
@@ -165,6 +169,37 @@ async def health():
         gpu_name=hw.gpu_name,
         vram_total_gb=hw.vram_total_gb,
         cpu_count=hw.cpu_count,
+        privacy_scans=priv_stats["total_scans"],
+        privacy_fast_path_rate=priv_stats["fast_path_rate"],
+    )
+
+
+@app.get("/metrics", response_model=ServerMetricsResponse)
+async def get_metrics():
+    tracker = get_metrics_tracker()
+    cache_stats = get_cache_service().stats
+    hw = settings.get_hardware_profile()
+    priv_stats = get_privacy_stats()
+    engine = get_engine()
+
+    return ServerMetricsResponse(
+        uptime_seconds=tracker.uptime_seconds,
+        total_requests=tracker.total_requests,
+        total_errors=tracker.total_errors,
+        avg_latency_ms=tracker.avg_latency_ms,
+        p95_latency_ms=tracker.p95_latency_ms,
+        requests_per_second=tracker.requests_per_second,
+        active_requests=limiter.active_requests,
+        queued_requests=limiter.queued_requests,
+        backend_mode=settings.BACKEND_MODE,
+        active_model=engine.model_name,
+        device=settings.DEVICE,
+        gpu_name=hw.gpu_name,
+        vram_total_gb=hw.vram_total_gb,
+        cpu_count=hw.cpu_count,
+        cache_hits=cache_stats.hits,
+        cache_misses=cache_stats.misses,
+        cache_hit_rate=cache_stats.hit_rate,
         privacy_scans=priv_stats["total_scans"],
         privacy_fast_path_rate=priv_stats["fast_path_rate"],
     )

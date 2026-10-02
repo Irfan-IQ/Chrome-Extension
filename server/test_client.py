@@ -523,6 +523,32 @@ def test_privacy_guard_optimizations():
     print("[PASS] privacy guard fast-path optimizations & telemetry verified")
 
 
+def test_metrics_telemetry_endpoint():
+    from services import ServerMetricsTracker
+
+    tracker = ServerMetricsTracker()
+    tracker.record_request(10.0)
+    tracker.record_request(20.0)
+    tracker.record_request(100.0, is_error=True)
+    assert tracker.total_requests == 3
+    assert tracker.total_errors == 1
+    assert tracker.avg_latency_ms > 40.0
+    assert tracker.p95_latency_ms >= 90.0
+
+    res = client.get("/metrics")
+    assert res.status_code == 200
+    data = res.json()
+    assert "uptime_seconds" in data
+    assert "total_requests" in data
+    assert "avg_latency_ms" in data
+    assert "p95_latency_ms" in data
+    assert "requests_per_second" in data
+    assert "active_model" in data
+    assert "backend_mode" in data
+    assert "vram_total_gb" in data
+    print("[PASS] health & server metrics telemetry endpoint verified")
+
+
 if __name__ == "__main__":
     test_privacy_guard()
     test_tool_registry()
@@ -537,7 +563,9 @@ if __name__ == "__main__":
     test_llamacpp_provider()
     test_hardware_detection_and_auto_backend()
     test_privacy_guard_optimizations()
+    test_metrics_telemetry_endpoint()
     print("all tests passed successfully")
+
 
 
 

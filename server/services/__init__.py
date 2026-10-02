@@ -12,6 +12,7 @@ from services.concurrency import ConcurrencyLimiter, ConcurrencyLimitExceeded
 from services.cache_service import PromptPrefixCache, get_cache_service
 from services.queue_coordinator import QueueCoordinator, get_queue_coordinator
 from services.hardware import HardwareProfile, detect_hardware, resolve_auto_backend
+from services.metrics import ServerMetricsTracker, get_metrics_tracker
 
 __all__ = [
     "sanitize_for_log",
@@ -38,4 +39,6 @@ __all__ = [
     "HardwareProfile",
     "detect_hardware",
     "resolve_auto_backend",
+    "ServerMetricsTracker",
+    "get_metrics_tracker",
 ]
