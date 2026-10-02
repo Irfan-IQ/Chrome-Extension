@@ -338,6 +338,55 @@ def test_engine_factory_and_lifecycle():
     print("[PASS] unified engine interface & factory lifecycle verified")
 
 
+def test_vllm_provider():
+    from engine import VLLMProvider, get_engine, reset_engine
+
+    prev = settings.BACKEND_MODE
+    settings.BACKEND_MODE = "vllm"
+    reset_engine()
+
+    try:
+        engine = get_engine()
+        assert isinstance(engine, VLLMProvider)
+        assert engine.name == "vllm"
+        assert engine.model_name == settings.VLLM_MODEL
+
+        res_models = client.get("/v1/models")
+        assert res_models.status_code == 200
+        model_ids = [m["id"] for m in res_models.json()["data"]]
+        assert settings.VLLM_MODEL in model_ids
+
+        req_payload = {
+            "model": settings.VLLM_MODEL,
+            "messages": [{"role": "user", "content": "Redact phone and email"}],
+            "tools": AGENT_TOOLS,
+        }
+        res = client.post("/v1/chat/completions", json=req_payload)
+        assert res.status_code == 200
+        body = res.json()
+        assert len(body["choices"]) > 0
+        assert body["choices"][0]["finish_reason"] in ("tool_calls", "stop")
+
+        stream_payload = {
+            "model": settings.VLLM_MODEL,
+            "messages": [{"role": "user", "content": "ping"}],
+            "stream": True,
+        }
+        res_stream = client.post("/v1/chat/completions", json=stream_payload)
+        assert res_stream.status_code == 200
+        assert "text/event-stream" in res_stream.headers.get("content-type", "")
+        lines = [line.strip() for line in res_stream.text.split("\n") if line.strip()]
+        data_lines = [l[5:].strip() for l in lines if l.startswith("data:")]
+        assert len(data_lines) > 0
+        assert data_lines[-1] == "[DONE]"
+
+        print("[PASS] vLLM native engine provider (Qwen2.5-14B) verified")
+
+    finally:
+        settings.BACKEND_MODE = prev
+        reset_engine()
+
+
 if __name__ == "__main__":
     test_privacy_guard()
     test_tool_registry()
@@ -347,7 +396,9 @@ if __name__ == "__main__":
     test_prompt_prefix_cache()
     test_queue_coordinator()
     test_engine_factory_and_lifecycle()
+    test_vllm_provider()
     print("all tests passed successfully")
+
 
 
 

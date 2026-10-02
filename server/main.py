@@ -154,15 +154,10 @@ async def health():
 
 @app.get("/v1/models", response_model=ModelsListResponse)
 async def list_models():
-    active_model = (
-        settings.GEMINI_MODEL
-        if settings.BACKEND_MODE == "gemini_cloud"
-        else settings.LOCAL_VLM_MODEL
-    )
-    # De-duplicate so the active model isn't listed twice when it already
-    # matches one of the defaults.
+    engine = get_engine()
+    active_model = engine.model_name
     ids = []
-    for mid in [active_model, settings.GEMINI_MODEL, settings.LOCAL_VLM_MODEL]:
+    for mid in [active_model, settings.VLLM_MODEL, settings.GEMINI_MODEL, settings.LOCAL_VLM_MODEL]:
         if mid and mid not in ids:
             ids.append(mid)
     return ModelsListResponse(data=[ModelItem(id=mid) for mid in ids])

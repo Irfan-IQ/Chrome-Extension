@@ -69,9 +69,17 @@ class Settings:
 
 
 
-    BACKEND_MODE: Literal["gemini_cloud", "local_vlm"] = os.getenv(
+    BACKEND_MODE: Literal["gemini_cloud", "local_vlm", "vllm", "llamacpp"] = os.getenv(
         "BACKEND_MODE", "gemini_cloud"
     )
+
+    # vLLM engine configuration (Qwen2.5-14B on A100 40GB)
+    VLLM_ENDPOINT: str = os.getenv("VLLM_ENDPOINT", "http://localhost:8000/v1")
+    VLLM_MODEL: str = os.getenv("VLLM_MODEL", "Qwen/Qwen2.5-14B-Instruct")
+    VLLM_GPU_MEMORY_UTILIZATION: float = float(os.getenv("VLLM_GPU_MEMORY_UTILIZATION", "0.90"))
+    VLLM_MAX_MODEL_LEN: int = int(os.getenv("VLLM_MAX_MODEL_LEN", "8192"))
+    VLLM_API_KEY: str = os.getenv("VLLM_API_KEY", "")
+
 
     # Comma-separated list of allowed CORS origins.
     # Defaults to "*" for local dev; set explicitly in production,
