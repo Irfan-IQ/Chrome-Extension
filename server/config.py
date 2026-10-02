@@ -80,6 +80,37 @@ class Settings:
     VLLM_MAX_MODEL_LEN: int = int(os.getenv("VLLM_MAX_MODEL_LEN", "8192"))
     VLLM_API_KEY: str = os.getenv("VLLM_API_KEY", "")
 
+    # Quantization & VRAM budget configuration (AWQ/GPTQ for Qwen2.5-14B)
+    QUANTIZATION: Optional[str] = (
+        os.getenv("QUANTIZATION").lower() if os.getenv("QUANTIZATION") else "awq"
+    )
+    KV_CACHE_DTYPE: str = os.getenv("KV_CACHE_DTYPE", "auto")
+    MAX_NUM_SEQS: int = int(os.getenv("MAX_NUM_SEQS", "64"))
+    MAX_NUM_BATCHED_TOKENS: int = int(os.getenv("MAX_NUM_BATCHED_TOKENS", "4096"))
+    TENSOR_PARALLEL_SIZE: int = int(os.getenv("TENSOR_PARALLEL_SIZE", "1"))
+    ENFORCE_EAGER: bool = os.getenv("ENFORCE_EAGER", "false").lower() in ("true", "1", "yes")
+
+    @classmethod
+    def get_vllm_command(cls) -> str:
+        """Generate recommended vLLM launch command for Qwen2.5-14B on A100."""
+        cmd = [
+            "python", "-m", "vllm.entrypoints.openai.api_server",
+            "--model", cls.VLLM_MODEL,
+            "--max-model-len", str(cls.VLLM_MAX_MODEL_LEN),
+            "--gpu-memory-utilization", str(cls.VLLM_GPU_MEMORY_UTILIZATION),
+            "--max-num-seqs", str(cls.MAX_NUM_SEQS),
+            "--max-num-batched-tokens", str(cls.MAX_NUM_BATCHED_TOKENS),
+            "--tensor-parallel-size", str(cls.TENSOR_PARALLEL_SIZE),
+            "--kv-cache-dtype", cls.KV_CACHE_DTYPE,
+            "--trust-remote-code",
+        ]
+        if cls.QUANTIZATION and cls.QUANTIZATION.lower() != "none":
+            cmd.extend(["--quantization", cls.QUANTIZATION])
+        if cls.ENFORCE_EAGER:
+            cmd.append("--enforce-eager")
+        return " ".join(cmd)
+
+
 
     # Comma-separated list of allowed CORS origins.
     # Defaults to "*" for local dev; set explicitly in production,

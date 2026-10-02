@@ -387,6 +387,20 @@ def test_vllm_provider():
         reset_engine()
 
 
+def test_quantization_and_vram_budget():
+    assert settings.QUANTIZATION in ("awq", "gptq", "fp8", None)
+    assert settings.MAX_NUM_SEQS >= 1
+    assert settings.MAX_NUM_BATCHED_TOKENS >= 512
+    assert 0.0 < settings.VLLM_GPU_MEMORY_UTILIZATION <= 1.0
+
+    vllm_cmd = settings.get_vllm_command()
+    assert "--model" in vllm_cmd
+    assert "--gpu-memory-utilization" in vllm_cmd
+    assert "--max-num-seqs" in vllm_cmd
+    assert "--quantization" in vllm_cmd
+    print("[PASS] quantization & VRAM budget configuration verified")
+
+
 if __name__ == "__main__":
     test_privacy_guard()
     test_tool_registry()
@@ -397,7 +411,9 @@ if __name__ == "__main__":
     test_queue_coordinator()
     test_engine_factory_and_lifecycle()
     test_vllm_provider()
+    test_quantization_and_vram_budget()
     print("all tests passed successfully")
+
 
 
 
