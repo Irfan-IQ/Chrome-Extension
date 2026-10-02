@@ -154,10 +154,12 @@ async def health():
     cache_stats = get_cache_service().stats
     hw = settings.get_hardware_profile()
     priv_stats = get_privacy_stats()
+    engine = get_engine()
     return HealthResponse(
         status="ok",
         version="1.0.0",
         backend_mode=settings.BACKEND_MODE,
+        active_model=engine.model_name,
         device=settings.DEVICE,
         os=settings.OS_NAME,
         python=settings.PYTHON_VERSION,

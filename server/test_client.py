@@ -549,6 +549,49 @@ def test_metrics_telemetry_endpoint():
     print("[PASS] health & server metrics telemetry endpoint verified")
 
 
+def test_end_to_end_stress_and_contract():
+    import asyncio
+    import httpx
+    from benchmark import verify_extension_contract, run_stress_benchmark, EXTENSION_SAMPLE_PAYLOAD
+
+    prev = settings.BACKEND_MODE
+    settings.BACKEND_MODE = "local_vlm"
+
+    try:
+        async def _run():
+            transport = httpx.ASGITransport(app=app)
+            async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as test_async_client:
+                # 1. Verify extension contract compliance
+                contract_results = await verify_extension_contract(test_async_client, base_url="http://testserver")
+                assert all(contract_results.values()), f"Contract check failed: {contract_results}"
+
+                # 2. Run concurrent stress benchmark
+                stress_results = await run_stress_benchmark(
+                    client=test_async_client,
+                    url="http://testserver/v1/chat/completions",
+                    payload=EXTENSION_SAMPLE_PAYLOAD,
+                    headers={"Content-Type": "application/json"},
+                    concurrency=4,
+                    total_requests=12,
+                )
+                assert stress_results["total_requests"] == 12
+                assert stress_results["success_count"] == 12
+                assert stress_results["failure_count"] == 0
+                assert stress_results["rps"] > 0
+
+                # 3. Verify server metrics telemetry recorded the stress batch
+                m_resp = await test_async_client.get("http://testserver/metrics")
+                assert m_resp.status_code == 200
+                m_data = m_resp.json()
+                assert m_data["total_requests"] >= 12
+                assert m_data["requests_per_second"] >= 0.0
+
+        asyncio.run(_run())
+        print("[PASS] end-to-end stress benchmark & extension contract verified")
+    finally:
+        settings.BACKEND_MODE = prev
+
+
 if __name__ == "__main__":
     test_privacy_guard()
     test_tool_registry()
@@ -564,7 +607,9 @@ if __name__ == "__main__":
     test_hardware_detection_and_auto_backend()
     test_privacy_guard_optimizations()
     test_metrics_telemetry_endpoint()
+    test_end_to_end_stress_and_contract()
     print("all tests passed successfully")
+
 
 
 
