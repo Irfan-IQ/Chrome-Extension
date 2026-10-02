@@ -13,7 +13,7 @@ except ImportError:
     FastJSONResponse = JSONResponse
 
 from config import settings
-from engine import get_engine
+from engine import get_engine, warmup_engine, shutdown_engine
 from services import (
     close_http_client,
     json_dumps,
@@ -77,7 +77,9 @@ async def lifespan(app: FastAPI):
         )
     if settings.BATCHING_ENABLED:
         queue_coordinator.start()
+    await warmup_engine()
     yield
+    await shutdown_engine()
     if settings.BATCHING_ENABLED:
         await queue_coordinator.stop()
     await close_http_client()

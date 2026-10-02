@@ -20,9 +20,19 @@ GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models/"
 
 
 class GeminiProvider(BaseEngine):
+    name: str = "gemini_cloud"
+
     def __init__(self):
         self.api_key = settings.GEMINI_API_KEY.strip()
         self.model = settings.GEMINI_MODEL
+
+    @property
+    def model_name(self) -> str:
+        return self.model
+
+    async def is_healthy(self) -> bool:
+        return bool(self.api_key)
+
 
     def _parse_data_url(self, url: str):
         match = re.match(r"^data:(image/[a-zA-Z0-9.+]+);base64,(.+)$", url)

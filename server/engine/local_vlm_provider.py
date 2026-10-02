@@ -21,10 +21,25 @@ logger = logging.getLogger("server.local_vlm")
 
 
 class LocalVLMProvider(BaseEngine):
+    name: str = "local_vlm"
+
     def __init__(self):
         self.endpoint = settings.LOCAL_VLM_ENDPOINT.rstrip("/")
         self.model = settings.LOCAL_VLM_MODEL
         self.device = settings.DEVICE
+
+    @property
+    def model_name(self) -> str:
+        return self.model
+
+    async def is_healthy(self) -> bool:
+        client = get_http_client()
+        try:
+            res = await client.get(f"{self.endpoint}/models", timeout=httpx.Timeout(1.0))
+            return res.status_code == 200
+        except Exception:
+            return False
+
 
     async def generate(self, req: ChatCompletionRequest) -> ChatCompletionResponse:
         model = req.model or self.model

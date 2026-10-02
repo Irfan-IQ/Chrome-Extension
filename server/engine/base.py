@@ -10,6 +10,26 @@ from schemas import (
 
 
 class BaseEngine(ABC):
+    """Unified interface for all inference engines (Gemini, local VLM, vLLM, llama.cpp)."""
+
+    name: str = "base"
+
+    @property
+    def model_name(self) -> str:
+        return "unknown"
+
+    async def is_healthy(self) -> bool:
+        """Check if engine is operational and ready to serve requests."""
+        return True
+
+    async def warmup(self) -> None:
+        """Pre-warm execution graphs, weights, and memory allocations."""
+        pass
+
+    async def shutdown(self) -> None:
+        """Cleanly terminate runners and free memory/connections."""
+        pass
+
     @abstractmethod
     async def generate(self, req: ChatCompletionRequest) -> ChatCompletionResponse:
         pass

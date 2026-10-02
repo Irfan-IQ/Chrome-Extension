@@ -282,6 +282,62 @@ def test_queue_coordinator():
     print("[PASS] async request queue & micro-batch coordinator verified")
 
 
+def test_engine_factory_and_lifecycle():
+    import asyncio
+    from engine import (
+        BaseEngine,
+        get_engine,
+        register_engine,
+        reset_engine,
+        warmup_engine,
+        shutdown_engine,
+    )
+    from schemas import ChatCompletionRequest, ChatCompletionResponse
+
+    e1 = get_engine("gemini_cloud")
+    assert e1.name == "gemini_cloud"
+    assert e1.model_name == settings.GEMINI_MODEL
+    e1_cached = get_engine("gemini_cloud")
+    assert e1 is e1_cached, "Engine should be cached as a singleton"
+
+    e2 = get_engine("local_vlm")
+    assert e2.name == "local_vlm"
+    assert e2.model_name == settings.LOCAL_VLM_MODEL
+
+    class MockEngine(BaseEngine):
+        name = "mock_test_engine"
+        warmup_called = False
+        shutdown_called = False
+
+        @property
+        def model_name(self):
+            return "mock-model-v1"
+
+        async def warmup(self):
+            self.warmup_called = True
+
+        async def shutdown(self):
+            self.shutdown_called = True
+
+        async def generate(self, req: ChatCompletionRequest) -> ChatCompletionResponse:
+            return ChatCompletionResponse(model=self.model_name, choices=[])
+
+    register_engine("mock_test", MockEngine)
+    mock_eng = get_engine("mock_test")
+    assert mock_eng.name == "mock_test_engine"
+    assert mock_eng.model_name == "mock-model-v1"
+
+    async def _lifecycle():
+        await warmup_engine("mock_test")
+        assert mock_eng.warmup_called
+        await shutdown_engine("mock_test")
+        assert mock_eng.shutdown_called
+
+    asyncio.run(_lifecycle())
+    reset_engine()
+    print("[PASS] unified engine interface & factory lifecycle verified")
+
+
 if __name__ == "__main__":
     test_privacy_guard()
     test_tool_registry()
@@ -290,7 +346,9 @@ if __name__ == "__main__":
     test_concurrency_limiter()
     test_prompt_prefix_cache()
     test_queue_coordinator()
+    test_engine_factory_and_lifecycle()
     print("all tests passed successfully")
+
 
 
 
