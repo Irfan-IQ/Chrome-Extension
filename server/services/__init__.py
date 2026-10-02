@@ -1,4 +1,4 @@
-from services.privacy_guard import sanitize_for_log, sanitize_text
+from services.privacy_guard import sanitize_for_log, sanitize_text, get_privacy_stats, reset_privacy_stats
 from services.tool_translator import (
     KNOWN_TOOLS,
     is_known_tool,
@@ -16,6 +16,8 @@ from services.hardware import HardwareProfile, detect_hardware, resolve_auto_bac
 __all__ = [
     "sanitize_for_log",
     "sanitize_text",
+    "get_privacy_stats",
+    "reset_privacy_stats",
     "KNOWN_TOOLS",
     "is_known_tool",
     "openai_tools_to_gemini",

@@ -111,7 +111,10 @@ class HealthResponse(BaseModel):
     gpu_name: Optional[str] = None
     vram_total_gb: float = 0.0
     cpu_count: int = 1
+    privacy_scans: int = 0
+    privacy_fast_path_rate: float = 0.0
     timestamp: float = Field(default_factory=time.time)
+
 
 
 

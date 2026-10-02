@@ -12,6 +12,8 @@ except ImportError:
     from fastapi.responses import JSONResponse
     FastJSONResponse = JSONResponse
 
+import logging.handlers
+import queue
 from config import settings
 from engine import get_engine, warmup_engine, shutdown_engine
 from services import (
@@ -21,6 +23,7 @@ from services import (
     ConcurrencyLimitExceeded,
     get_cache_service,
     get_queue_coordinator,
+    get_privacy_stats,
 )
 from schemas import (
     ChatCompletionRequest,
@@ -44,13 +47,20 @@ queue_coordinator = get_queue_coordinator(
     enabled=settings.BATCHING_ENABLED,
 )
 
+# Non-blocking async queue logging setup
+_log_queue = queue.SimpleQueue()
+_queue_handler = logging.handlers.QueueHandler(_log_queue)
+_stream_handler = logging.StreamHandler()
+_stream_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+_queue_listener = logging.handlers.QueueListener(_log_queue, _stream_handler)
+_queue_listener.start()
 
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO if not settings.DEBUG else logging.DEBUG)
+root_logger.addHandler(_queue_handler)
 
-logging.basicConfig(
-    level=logging.INFO if not settings.DEBUG else logging.DEBUG,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-)
 logger = logging.getLogger("server")
+
 
 # Endpoints that are allowed through without an auth token even when one
 # is configured. Health + root + models are read-only metadata, used by
@@ -84,6 +94,7 @@ async def lifespan(app: FastAPI):
         await queue_coordinator.stop()
     await close_http_client()
     logger.info("server stopped")
+    _queue_listener.stop()
 
 
 app = FastAPI(title="Redact Agent Server", lifespan=lifespan)
@@ -138,6 +149,7 @@ async def root():
 async def health():
     cache_stats = get_cache_service().stats
     hw = settings.get_hardware_profile()
+    priv_stats = get_privacy_stats()
     return HealthResponse(
         status="ok",
         version="1.0.0",
@@ -153,6 +165,8 @@ async def health():
         gpu_name=hw.gpu_name,
         vram_total_gb=hw.vram_total_gb,
         cpu_count=hw.cpu_count,
+        privacy_scans=priv_stats["total_scans"],
+        privacy_fast_path_rate=priv_stats["fast_path_rate"],
     )
 
 

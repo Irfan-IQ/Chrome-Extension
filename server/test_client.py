@@ -490,6 +490,39 @@ def test_hardware_detection_and_auto_backend():
     print("[PASS] hardware auto-detection & auto backend resolver verified")
 
 
+def test_privacy_guard_optimizations():
+    from services import sanitize_text, get_privacy_stats, reset_privacy_stats
+
+    reset_privacy_stats()
+
+    clean = "This is a completely clean text without any symbols or numbers"
+    res1 = sanitize_text(clean)
+    assert res1 == clean
+    s1 = get_privacy_stats()
+    assert s1["fast_path_hits"] == 1
+    assert s1["total_scans"] == 1
+
+    with_email = "Contact support@example.com for help"
+    res2 = sanitize_text(with_email)
+    assert "[REDACTED_EMAIL]" in res2
+    s2 = get_privacy_stats()
+    assert s2["fast_path_hits"] == 1
+    assert s2["redactions_applied"] == 1
+
+    with_phone = "Call 555-123-4567 immediately"
+    res3 = sanitize_text(with_phone)
+    assert "[REDACTED_PHONE]" in res3
+    s3 = get_privacy_stats()
+    assert s3["redactions_applied"] == 2
+
+    res_h = client.get("/health")
+    assert res_h.status_code == 200
+    h_data = res_h.json()
+    assert "privacy_scans" in h_data
+    assert "privacy_fast_path_rate" in h_data
+    print("[PASS] privacy guard fast-path optimizations & telemetry verified")
+
+
 if __name__ == "__main__":
     test_privacy_guard()
     test_tool_registry()
@@ -503,7 +536,9 @@ if __name__ == "__main__":
     test_quantization_and_vram_budget()
     test_llamacpp_provider()
     test_hardware_detection_and_auto_backend()
+    test_privacy_guard_optimizations()
     print("all tests passed successfully")
+
 
 
 
