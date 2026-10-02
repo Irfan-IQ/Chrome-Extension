@@ -9,6 +9,7 @@ from services.tool_translator import (
 from services.json_utils import json_dumps, json_dumps_bytes, json_loads, HAS_ORJSON
 from services.http_client import get_http_client, close_http_client
 from services.concurrency import ConcurrencyLimiter, ConcurrencyLimitExceeded
+from services.cache_service import PromptPrefixCache, get_cache_service
 
 __all__ = [
     "sanitize_for_log",
@@ -26,4 +27,6 @@ __all__ = [
     "close_http_client",
     "ConcurrencyLimiter",
     "ConcurrencyLimitExceeded",
+    "PromptPrefixCache",
+    "get_cache_service",
 ]

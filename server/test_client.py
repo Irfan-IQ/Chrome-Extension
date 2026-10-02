@@ -196,12 +196,53 @@ def test_concurrency_limiter():
     print("[PASS] concurrency limiter & backpressure verified")
 
 
+def test_prompt_prefix_cache():
+    from services import PromptPrefixCache
+
+    cache = PromptPrefixCache(max_size=3, default_ttl=10.0)
+    assert cache.stats.hits == 0
+    assert cache.stats.misses == 0
+
+    assert cache.get("k1") is None
+    assert cache.stats.misses == 1
+
+    cache.set("k1", "v1")
+    assert cache.get("k1") == "v1"
+    assert cache.stats.hits == 1
+
+    cache.set("k2", "v2")
+    cache.set("k3", "v3")
+    assert cache.stats.size == 3
+
+    _ = cache.get("k1")
+    cache.set("k4", "v4")
+
+    assert cache.get("k2") is None
+    assert cache.get("k1") == "v1"
+    assert cache.stats.evictions == 1
+
+    h1 = cache.compute_prefix_key("system instructions", ["tool1", "tool2"])
+    h2 = cache.compute_prefix_key("system instructions", ["tool1", "tool2"])
+    assert h1 == h2
+    assert len(h1) == 64
+
+    res = client.get("/health")
+    assert res.status_code == 200
+    data = res.json()
+    assert "cache_hits" in data
+    assert "cache_misses" in data
+    assert "cache_hit_rate" in data
+    print("[PASS] prompt/prefix cache & LRU eviction verified")
+
+
 if __name__ == "__main__":
     test_privacy_guard()
     test_tool_registry()
     test_agent_tool_calling_flow()
     test_sse_streaming_flow()
     test_concurrency_limiter()
+    test_prompt_prefix_cache()
     print("all tests passed successfully")
+
 
 

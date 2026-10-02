@@ -105,7 +105,11 @@ class HealthResponse(BaseModel):
     python: str
     active_requests: int = 0
     queued_requests: int = 0
+    cache_hits: int = 0
+    cache_misses: int = 0
+    cache_hit_rate: float = 0.0
     timestamp: float = Field(default_factory=time.time)
+
 
 
 

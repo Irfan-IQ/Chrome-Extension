@@ -19,6 +19,7 @@ from services import (
     json_dumps,
     ConcurrencyLimiter,
     ConcurrencyLimitExceeded,
+    get_cache_service,
 )
 from schemas import (
     ChatCompletionRequest,
@@ -121,6 +122,7 @@ async def root():
 
 @app.get("/health", response_model=HealthResponse)
 async def health():
+    cache_stats = get_cache_service().stats
     return HealthResponse(
         status="ok",
         version="1.0.0",
@@ -130,6 +132,9 @@ async def health():
         python=settings.PYTHON_VERSION,
         active_requests=limiter.active_requests,
         queued_requests=limiter.queued_requests,
+        cache_hits=cache_stats.hits,
+        cache_misses=cache_stats.misses,
+        cache_hit_rate=cache_stats.hit_rate,
     )
 
 

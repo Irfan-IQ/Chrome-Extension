@@ -56,6 +56,12 @@ class Settings:
     MAX_CONCURRENT_REQUESTS: int = int(os.getenv("MAX_CONCURRENT_REQUESTS", "32"))
     REQUEST_QUEUE_TIMEOUT: float = float(os.getenv("REQUEST_QUEUE_TIMEOUT", "30.0"))
 
+    # Prompt and prefix cache settings
+    PROMPT_CACHE_ENABLED: bool = os.getenv("PROMPT_CACHE_ENABLED", "true").lower() in ("true", "1", "yes")
+    PROMPT_CACHE_SIZE: int = int(os.getenv("PROMPT_CACHE_SIZE", "1024"))
+    PROMPT_CACHE_TTL: float = float(os.getenv("PROMPT_CACHE_TTL", "3600.0"))
+
+
 
     BACKEND_MODE: Literal["gemini_cloud", "local_vlm"] = os.getenv(
         "BACKEND_MODE", "gemini_cloud"

@@ -20,18 +20,30 @@ def is_known_tool(name: str) -> bool:
     return name in KNOWN_TOOLS
 
 
+from services.cache_service import get_cache_service
+
+
 def openai_tools_to_gemini(tools: Optional[List[ToolDefinition]]) -> Optional[List[Dict[str, Any]]]:
     if not tools:
         return None
-    decls = []
-    for t in tools:
-        fn = t.function
-        decls.append({
-            "name": fn.name,
-            "description": fn.description or "",
-            "parameters": fn.parameters or {"type": "object", "properties": {}},
-        })
-    return [{"functionDeclarations": decls}]
+
+    cache = get_cache_service()
+    key_str = "|".join(f"{t.function.name}:{t.function.description}:{id(t)}" for t in tools)
+    cache_key = f"gemini_tools:{cache._hash_key(key_str)}"
+
+    def _convert():
+        decls = []
+        for t in tools:
+            fn = t.function
+            decls.append({
+                "name": fn.name,
+                "description": fn.description or "",
+                "parameters": fn.parameters or {"type": "object", "properties": {}},
+            })
+        return [{"functionDeclarations": decls}]
+
+    return cache.get_or_compute(cache_key, _convert)
+
 
 
 def gemini_call_to_openai(fn_call: Dict[str, Any]) -> ToolCall:
