@@ -1,6 +1,6 @@
 /**
  * System Benchmark Report Script
- * Reads synthetic_30_trials dataset with proper bracket property keys
+ * 30-Trial Performance Telemetry Data
  */
 
 const trials = [
@@ -67,7 +67,7 @@ function initCpuChart() {
       labels: trials.map(d => `Trial ${d.Trial}`),
       datasets: [
         {
-          label: 'Peak CPU (%)',
+          label: 'Peak CPU Burst (%)',
           data: trials.map(d => d['During_Peak_CPU_%']),
           borderColor: '#dc2626',
           backgroundColor: 'rgba(220, 38, 38, 0.08)',
@@ -76,21 +76,21 @@ function initCpuChart() {
           pointRadius: 3
         },
         {
-          label: 'Average CPU During Workload (%)',
+          label: 'Average Workload CPU (%)',
           data: trials.map(d => d['During_Avg_CPU_%']),
           borderColor: '#d97706',
           tension: 0.25,
           pointRadius: 3
         },
         {
-          label: 'Post-Run CPU (%)',
+          label: 'After Closing CPU (%)',
           data: trials.map(d => d['After_CPU_%']),
           borderColor: '#059669',
           borderDash: [4, 4],
           pointRadius: 2
         },
         {
-          label: 'Baseline CPU (%)',
+          label: 'Resting Idle CPU (%)',
           data: trials.map(d => d['Before_CPU_%']),
           borderColor: '#94a3b8',
           borderDash: [2, 2],
@@ -110,7 +110,7 @@ function initCpuChart() {
         y: { 
           grid: { color: '#e2e8f0' }, 
           ticks: { color: '#64748b' },
-          title: { display: true, text: 'CPU Utilization (%)', font: { weight: 600 } }
+          title: { display: true, text: 'Processor Usage (%)', font: { weight: 600 } }
         }
       }
     }
@@ -126,13 +126,13 @@ function initRamComparisonChart() {
       labels: trials.map(d => `T${d.Trial}`),
       datasets: [
         {
-          label: 'Peak RAM PSS (MiB)',
+          label: 'Total Memory / PSS (MiB)',
           data: trials.map(d => d['During_Peak_RAM_PSS_MiB']),
           backgroundColor: '#3b82f6',
           borderRadius: 4
         },
         {
-          label: 'Peak Private RAM (MiB)',
+          label: 'Private Exclusive Memory (MiB)',
           data: trials.map(d => d['During_Peak_RAM_Priv_MiB']),
           backgroundColor: '#8b5cf6',
           borderRadius: 4
@@ -150,7 +150,7 @@ function initRamComparisonChart() {
         y: { 
           grid: { color: '#e2e8f0' }, 
           ticks: { color: '#64748b' },
-          title: { display: true, text: 'Megabytes (MiB)', font: { weight: 600 } }
+          title: { display: true, text: 'Memory in Megabytes (MiB)', font: { weight: 600 } }
         }
       }
     }
@@ -165,7 +165,7 @@ function initDeltaPssChart() {
     data: {
       labels: trials.map(d => `Trial ${d.Trial}`),
       datasets: [{
-        label: 'Delta Peak PSS (MiB Surge Above Baseline)',
+        label: 'Extra Working Memory Needed (MiB)',
         data: trials.map(d => d['Delta_Peak_PSS_MiB']),
         backgroundColor: '#6366f1',
         borderRadius: 4
@@ -182,7 +182,7 @@ function initDeltaPssChart() {
         y: { 
           grid: { color: '#e2e8f0' }, 
           ticks: { color: '#64748b' },
-          title: { display: true, text: 'PSS Memory Surge (MiB)', font: { weight: 600 } }
+          title: { display: true, text: 'Extra RAM Needed (MiB)', font: { weight: 600 } }
         }
       }
     }
@@ -199,7 +199,7 @@ function initLeakChart() {
     data: {
       labels: trials.map(d => `Trial ${d.Trial}`),
       datasets: [{
-        label: 'Net Leak (After PSS - Before PSS)',
+        label: 'Memory Left Behind (MiB)',
         data: leakVals,
         backgroundColor: leakVals.map(v => v >= 0 ? 'rgba(220, 38, 38, 0.75)' : 'rgba(5, 150, 105, 0.75)'),
         borderRadius: 4
@@ -216,7 +216,7 @@ function initLeakChart() {
         y: { 
           grid: { color: '#e2e8f0' }, 
           ticks: { color: '#64748b' },
-          title: { display: true, text: 'Residual Memory (MiB)', font: { weight: 600 } }
+          title: { display: true, text: 'Memory Difference (MiB)', font: { weight: 600 } }
         }
       }
     }
@@ -265,7 +265,7 @@ function setupEvents() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'synthetic_30_trials_report.csv';
+    a.download = 'benchmark_30_trials_report.csv';
     a.click();
     URL.revokeObjectURL(url);
   });
