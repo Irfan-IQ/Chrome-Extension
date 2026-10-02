@@ -14,7 +14,7 @@ from schemas import (
     ToolCall,
     UsageInfo,
 )
-from services import gemini_call_to_openai, openai_tools_to_gemini
+from services import gemini_call_to_openai, openai_tools_to_gemini, get_http_client
 
 GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models/"
 
@@ -132,21 +132,21 @@ class GeminiProvider(BaseEngine):
             body["tools"] = gemini_tools
             body["toolConfig"] = {"functionCallingConfig": {"mode": "AUTO"}}
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            try:
-                res = await client.post(
-                    endpoint,
-                    headers={
-                        "Content-Type": "application/json",
-                        "x-goog-api-key": api_key,
-                    },
-                    json=body,
-                )
-            except Exception as e:
-                raise HTTPException(
-                    status_code=status.HTTP_502_BAD_GATEWAY,
-                    detail=f"error reaching gemini: {str(e)}",
-                )
+        client = get_http_client()
+        try:
+            res = await client.post(
+                endpoint,
+                headers={
+                    "Content-Type": "application/json",
+                    "x-goog-api-key": api_key,
+                },
+                json=body,
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"error reaching gemini: {str(e)}",
+            )
 
         if res.status_code != 200:
             err_msg = res.text

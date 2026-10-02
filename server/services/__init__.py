@@ -7,6 +7,7 @@ from services.tool_translator import (
     openai_call_to_gemini,
 )
 from services.json_utils import json_dumps, json_dumps_bytes, json_loads, HAS_ORJSON
+from services.http_client import get_http_client, close_http_client
 
 __all__ = [
     "sanitize_for_log",
@@ -20,4 +21,6 @@ __all__ = [
     "json_dumps_bytes",
     "json_loads",
     "HAS_ORJSON",
+    "get_http_client",
+    "close_http_client",
 ]

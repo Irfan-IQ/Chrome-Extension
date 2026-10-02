@@ -6,6 +6,7 @@ from pydantic import ValidationError
 
 from config import settings
 from engine.base import BaseEngine
+from services import get_http_client
 from schemas import (
     ChatCompletionRequest,
     ChatCompletionResponse,
@@ -40,9 +41,9 @@ class LocalVLMProvider(BaseEngine):
         #   * HTTP response arrived but non-2xx, or 2xx with malformed body
         #     → the runner is attached but misbehaving. Surface the error
         #     so bugs don't hide behind the placeholder.
+        client = get_http_client()
         try:
-            async with httpx.AsyncClient(timeout=httpx.Timeout(10.0, connect=1.0)) as client:
-                res = await client.post(url, json=payload)
+            res = await client.post(url, json=payload, timeout=httpx.Timeout(10.0, connect=1.0))
         except (httpx.ConnectError, httpx.ConnectTimeout, httpx.ReadTimeout) as exc:
             logger.info("local VLM at %s not reachable (%s); using placeholder response", url, exc)
         except httpx.HTTPError as exc:

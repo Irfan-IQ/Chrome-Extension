@@ -13,6 +13,7 @@ except ImportError:
 
 from config import settings
 from engine import get_engine
+from services import close_http_client
 from schemas import (
     ChatCompletionRequest,
     ChatCompletionResponse,
@@ -54,6 +55,7 @@ async def lifespan(app: FastAPI):
             "with: python -c 'import secrets; print(secrets.token_urlsafe(32))')."
         )
     yield
+    await close_http_client()
     logger.info("server stopped")
 
 
