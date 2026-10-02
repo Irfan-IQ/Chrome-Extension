@@ -1,6 +1,6 @@
-import json
 from typing import Any, Dict, List, Optional
 from schemas import FunctionCall, FunctionDefinition, ToolCall, ToolDefinition
+from services.json_utils import json_dumps, json_loads
 
 KNOWN_TOOLS = {
     "scan_dom",
@@ -40,7 +40,7 @@ def gemini_call_to_openai(fn_call: Dict[str, Any]) -> ToolCall:
     return ToolCall(
         function=FunctionCall(
             name=name,
-            arguments=json.dumps(args) if isinstance(args, dict) else str(args),
+            arguments=json_dumps(args) if isinstance(args, dict) else str(args),
         )
     )
 
@@ -51,7 +51,7 @@ def openai_call_to_gemini(tool_call: ToolCall) -> Dict[str, Any]:
     args = {}
     if raw_args:
         try:
-            args = json.loads(raw_args)
+            args = json_loads(raw_args)
         except Exception:
             args = {}
     return {

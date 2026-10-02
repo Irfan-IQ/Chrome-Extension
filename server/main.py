@@ -4,7 +4,12 @@ import time
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+try:
+    from fastapi.responses import ORJSONResponse
+    FastJSONResponse = ORJSONResponse
+except ImportError:
+    from fastapi.responses import JSONResponse
+    FastJSONResponse = JSONResponse
 
 from config import settings
 from engine import get_engine
@@ -81,7 +86,7 @@ async def auth_and_log(request: Request, call_next):
                 "rejecting %s %s — missing or wrong X-Redact-Agent-Token",
                 request.method, request.url.path,
             )
-            return JSONResponse(
+            return FastJSONResponse(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 content={"detail": "missing or invalid X-Redact-Agent-Token"},
             )

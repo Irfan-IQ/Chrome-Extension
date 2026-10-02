@@ -6,6 +6,7 @@ from services.tool_translator import (
     gemini_call_to_openai,
     openai_call_to_gemini,
 )
+from services.json_utils import json_dumps, json_dumps_bytes, json_loads, HAS_ORJSON
 
 __all__ = [
     "sanitize_for_log",
@@ -15,4 +16,8 @@ __all__ = [
     "openai_tools_to_gemini",
     "gemini_call_to_openai",
     "openai_call_to_gemini",
+    "json_dumps",
+    "json_dumps_bytes",
+    "json_loads",
+    "HAS_ORJSON",
 ]
