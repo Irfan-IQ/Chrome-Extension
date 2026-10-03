@@ -1,25 +1,305 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Redact Agent — Fin Data</title>
-  <link rel="stylesheet" href="css/fin-data.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redact Agent - Financial Analysis & Scaling Report</title>
+    <link rel="stylesheet" href="css/fin-data.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js for interactive financial charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <nav class="navbar">
-    <a href="/" class="brand">Redact Agent</a>
-    <ul class="nav-links">
-      <li><a href="/">Home</a></li>
-      <li><a href="/fin-data" class="active">Fin Data</a></li>
-      <li><a href="/tech-data">Tech Data</a></li>
-    </ul>
-  </nav>
 
-  <main>
-    <h1>Hello World</h1>
-  </main>
+    <!-- Top Navigation Bar -->
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <svg class="brand-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <span>Redact Agent Financials</span>
+            </div>
+        </div>
+    </header>
 
-  <script src="js/fin-data.js"></script>
+    <!-- Main Content Container -->
+    <main class="main-container">
+
+        <!-- Home Section / 1,000 Users Baseline -->
+        <section id="home" class="content-section">
+            <div class="hero-banner">
+                <div class="badge">Baseline Scenario: 1,000 Users</div>
+                <h1>Financial & Scaling Analysis</h1>
+                <p class="subtitle">A self-hosted open-source Qwen backend providing agentic PII-redaction for Chrome Manifest V3[cite: 1].</p>
+            </div>
+
+            <!-- Key Metric Highlights -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <span class="metric-label">Launch Outlay (One-Time)</span>
+                    <span class="metric-value">~$145</span>
+                    <span class="metric-note">Valid for both 1K and 10K scenarios[cite: 1, 2]</span>
+                </div>
+                <div class="metric-card highlight">
+                    <span class="metric-label">1K Users Yearly Spend</span>
+                    <span class="metric-value">~$2.8K - $4.2K</span>
+                    <span class="metric-note">$0.23 to $0.35 per user / month[cite: 3, 4]</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">10K Users Yearly Spend</span>
+                    <span class="metric-value">~$5.7K - $8.7K</span>
+                    <span class="metric-note">Only ~2x cost for a 10x user increase[cite: 4, 5]</span>
+                </div>
+            </div>
+
+            <!-- One-Time Investment Table -->
+            <div class="card">
+                <h2>1. One-Time Investment (Launch Outlay)</h2>
+                <p class="section-desc">Paid once at launch; covers Chrome Web Store registration, setup, models, and docs[cite: 1, 2].</p>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Item</th>
+                                <th>Cost (USD)</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>Chrome Web Store developer registration</td>
+                                <td>$5[cite: 1]</td>
+                                <td>One-time per Google account[cite: 1]</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Domain name (first year)</td>
+                                <td>$10[cite: 1]</td>
+                                <td>.com via Cloudflare / Namecheap[cite: 1]</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>Store creative assets (icon, 5 screenshots, promo tile)</td>
+                                <td>$50[cite: 1]</td>
+                                <td>Canva / Fiverr; $0 if in-house[cite: 1]</td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>Privacy policy + Terms of Service templates</td>
+                                <td>$30[cite: 2]</td>
+                                <td>Required by Web Store (Termly / iubenda)[cite: 2]</td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>Model prep (download, AWQ quantise, benchmark)</td>
+                                <td>$30[cite: 2]</td>
+                                <td>~40 spot GPU-hrs on RunPod[cite: 2]</td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td>Load / stress testing (k6 or Locust against vLLM)</td>
+                                <td>$20[cite: 2]</td>
+                                <td>Short-lived GPU + CPU VMs[cite: 2]</td>
+                            </tr>
+                            <tr>
+                                <td>7</td>
+                                <td>SSL, CDN, CI setup</td>
+                                <td>$0[cite: 2]</td>
+                                <td>Let's Encrypt, Cloudflare, GitHub Actions free tiers[cite: 2]</td>
+                            </tr>
+                            <tr class="table-total">
+                                <td colspan="2"><strong>Total One-Time Outlay</strong></td>
+                                <td colspan="2"><strong>≈ $145</strong> (₹12,000)[cite: 2]</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Recurring Yearly Expenses (1,000 users) -->
+            <div class="card">
+                <h2>2. Recurring Yearly Expenses (1,000 Users)</h2>
+                <p class="section-desc">GPU inference backend dominates ~80-85% of total recurring expenses[cite: 2, 5].</p>
+                
+                <div class="sub-heading">GPU Hosting Options</div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Option</th>
+                                <th>Spec</th>
+                                <th>Monthly</th>
+                                <th>Yearly</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="highlight-row">
+                                <td><strong>Hetzner GEX44 dedicated (Recommended)</strong>[cite: 2]</td>
+                                <td>RTX 4000 SFF Ada 20 GB[cite: 2]</td>
+                                <td>$200[cite: 2]</td>
+                                <td>$2,400[cite: 2]</td>
+                            </tr>
+                            <tr>
+                                <td>RunPod reserved[cite: 2]</td>
+                                <td>1x L4 24 GB[cite: 2]</td>
+                                <td>$280[cite: 2]</td>
+                                <td>$3,360[cite: 2]</td>
+                            </tr>
+                            <tr>
+                                <td>RunPod Serverless[cite: 2]</td>
+                                <td>A10 24 GB, scale-to-zero[cite: 2]</td>
+                                <td>$150 - $400[cite: 2]</td>
+                                <td>$1,800 - $4,800[cite: 2]</td>
+                            </tr>
+                            <tr>
+                                <td>GCP/AWS 1-yr reserved[cite: 2]</td>
+                                <td>1x L4/g5.xlarge[cite: 2]</td>
+                                <td>$300[cite: 2]</td>
+                                <td>$3,600[cite: 2]</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="sub-heading" style="margin-top: 2rem;">Yearly Software Spend Scenarios (1,000 Users)[cite: 3]</div>
+                <div class="scenarios-grid">
+                    <div class="scenario-box">
+                        <h4>Lean Hetzner GPU</h4>
+                        <span class="scenario-price">~ $2,800 / yr</span>
+                        <p>Hetzner dedicated + free tiers[cite: 3]</p>
+                    </div>
+                    <div class="scenario-box featured">
+                        <h4>Comfortable Setup</h4>
+                        <span class="scenario-price">~ $4,200 / yr</span>
+                        <p>RunPod reserved + Sentry Team + managed Postgres[cite: 3]</p>
+                    </div>
+                    <div class="scenario-box">
+                        <h4>Hyperscaler On-Demand</h4>
+                        <span class="scenario-price">~ $6,500 / yr</span>
+                        <p>GCP / AWS standard on-demand deployment[cite: 3]</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tech Page Section -->
+        <section id="tech" class="content-section">
+            <div class="hero-banner">
+                <div class="badge">Architecture & Infrastructure</div>
+                <h1>Tech Stack & Scaling Comparison</h1>
+                <p class="subtitle">Detailed breakdown of how the architecture scales from 1,000 to 10,000 active users[cite: 4].</p>
+            </div>
+
+            <div class="card">
+                <h2>3. Scaling Comparison: 1,000 vs. 10,000 Users</h2>
+                <p class="section-desc">Only three lines move materially: GPU count, Postgres tier, and Sentry plan[cite: 5].</p>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Line Item</th>
+                                <th>1,000 Users</th>
+                                <th>10,000 Users</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Peak concurrent sessions[cite: 4]</td>
+                                <td>10 - 20[cite: 4]</td>
+                                <td>100 - 200[cite: 4]</td>
+                            </tr>
+                            <tr>
+                                <td>GPUs needed (24 GB class)[cite: 4]</td>
+                                <td>1[cite: 4]</td>
+                                <td>2 - 3[cite: 4]</td>
+                            </tr>
+                            <tr>
+                                <td>GPU Hosting - Lean (Hetzner)[cite: 4]</td>
+                                <td>$2,400[cite: 4]</td>
+                                <td>$4,800 (2x)[cite: 4]</td>
+                            </tr>
+                            <tr>
+                                <td>Managed Postgres[cite: 4]</td>
+                                <td>$0 (free tier)[cite: 4]</td>
+                                <td>$180 (paid tier)[cite: 4]</td>
+                            </tr>
+                            <tr>
+                                <td>Sentry Error Monitoring[cite: 4]</td>
+                                <td>$0 (dev free)[cite: 4]</td>
+                                <td>$312 (Team plan)[cite: 4]</td>
+                            </tr>
+                            <tr class="table-total">
+                                <td><strong>Lean Yearly Total</strong>[cite: 4]</td>
+                                <td><strong>~ $2,800</strong>[cite: 4]</td>
+                                <td><strong>~ $5,700</strong>[cite: 4]</td>
+                            </tr>
+                            <tr class="table-total">
+                                <td><strong>Comfortable Yearly Total</strong>[cite: 4]</td>
+                                <td><strong>~ $4,200</strong>[cite: 4]</td>
+                                <td><strong>~ $8,700</strong>[cite: 4]</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Cost per user / month (Comfortable)</strong>[cite: 4]</td>
+                                <td><strong>$0.35</strong>[cite: 4]</td>
+                                <td><strong>$0.073</strong>[cite: 4]</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Interactive Chart Section -->
+            <div class="card chart-card">
+                <h2>Visualizing Cost Growth Efficiency</h2>
+                <p class="section-desc">Demonstrating economies of scale: 10x user growth results in only ~2x cost expansion[cite: 5].</p>
+                <div class="chart-container">
+                    <canvas id="scalingChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Final Verdict / Summary Section -->
+        <section id="verdict" class="content-section">
+            <div class="hero-banner">
+                <div class="badge verdict-badge">Executive Summary</div>
+                <h1>Final Verdict & Key Takeaways</h1>
+                <p class="subtitle">High-level financial conclusions for stakeholders and founders.</p>
+            </div>
+
+            <div class="card verdict-card-box">
+                <h2>Executive Bottom Line</h2>
+                <blockquote class="verdict-quote">
+                    "Launch outlay is <strong>~$145</strong>[cite: 5]. Steady-state software spend is <strong>~$2,800–$4,200/yr</strong> at 1,000 users and <strong>~$5,700–$8,700/yr</strong> at 10,000 users on a self-hosted Qwen backend—representing a highly efficient ~2x cost increase for a 10x user increase[cite: 5]."
+                </blockquote>
+
+                <div class="highlights-grid">
+                    <div class="highlight-item">
+                        <h3>Per-User Economics</h3>
+                        <p>Costs range from $0.23–$0.35/user/mo at 1K users, dropping sharply to $0.05–$0.07 at 10K users. Monetising at even $1/user/mo yields >90% gross margin[cite: 5].</p>
+                    </div>
+                    <div class="highlight-item">
+                        <h3>Software Multipliers</h3>
+                        <p>AWQ-INT4 quantisation shrinks Qwen2.5-7B to ~6 GB and doubles throughput. vLLM continuous batching keeps GPU utilization near ~90% at peak[cite: 5].</p>
+                    </div>
+                    <div class="highlight-item">
+                        <h3>Economies of Scale</h3>
+                        <p>GPU hardware is near-fully utilized at 10K users (vs ~15% at 1K), and non-GPU line items scale sub-linearly, maximizing financial efficiency[cite: 5].</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2026 Redact Agent Project. Financial Analysis Report. All figures in USD[cite: 1].</p>
+    </footer>
+
+    <script src="js/fin-data.js"></script>
 </body>
 </html>
