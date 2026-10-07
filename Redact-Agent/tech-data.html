@@ -38,12 +38,10 @@
     </div>
   </header>
 
-  <section class="page-header">
-    <div class="page-header-inner">
-      <span class="report-tag">Performance Report</span>
-      <h1>System Resource & Performance Benchmark</h1>
-      <p class="meta">CPU and memory measurements from 30 back-to-back runs of the extension.</p>
-    </div>
+  <section class="page-hero">
+    <div class="badge">Performance Report</div>
+    <h1>Performance</h1>
+    <p>CPU, memory, detection quality and latency from 30 back-to-back runs.</p>
   </section>
 
   <main class="page-container">
@@ -79,7 +77,7 @@
     <!-- SECTION 0: Methodology -->
     <section class="content-block">
       <div class="section-title">
-        <h2>0. Methodology</h2>
+        <h2>Methodology</h2>
         <p>Setup and tools used to collect these numbers.</p>
       </div>
       <div class="methodology-grid">
@@ -105,7 +103,7 @@
     <!-- SECTION 0b: Baseline Delta -->
     <section class="content-block">
       <div class="section-title">
-        <h2>0b. Baseline Comparison</h2>
+        <h2>Baseline Comparison</h2>
         <p>Extra load the extension adds on top of a plain Chrome tab.</p>
       </div>
       <div class="table-responsive">
@@ -152,7 +150,7 @@
     <!-- SECTION 0c: Detection Quality -->
     <section class="content-block">
       <div class="section-title">
-        <h2>0c. Detection Quality</h2>
+        <h2>Detection Quality</h2>
         <p>How accurately the agent finds PII, measured on a held-out set of 2,400 sentences (7,180 tagged entities).</p>
       </div>
       <div class="kpi-row">
@@ -206,7 +204,7 @@
     <!-- SECTION 0d: Latency & Throughput -->
     <section class="content-block">
       <div class="section-title">
-        <h2>0d. Latency &amp; Throughput</h2>
+        <h2>Latency &amp; Throughput</h2>
         <p>Response times measured on the production GPU (RTX 4000 Ada 20 GB, vLLM 0.6, Qwen2.5-7B-Instruct AWQ-INT4).</p>
       </div>
       <div class="kpi-row">
@@ -241,7 +239,7 @@
     <!-- SECTION 1: Summary -->
     <section class="content-block summary-section">
       <div class="section-title">
-        <h2>1. Summary</h2>
+        <h2>Summary</h2>
         <p>Key findings from the benchmark run.</p>
       </div>
 
@@ -266,7 +264,7 @@
     <!-- SECTION 2: Technical Glossary -->
     <section class="content-block">
       <div class="section-title">
-        <h2>2. Metric Definitions</h2>
+        <h2>Metric Definitions</h2>
         <p>Short definitions for the metrics used on this page.</p>
       </div>
       <div class="glossary-grid">
@@ -300,7 +298,7 @@
     <!-- SECTION 3: Graph 1 - CPU Load Dynamics -->
     <section class="content-block">
       <div class="section-title">
-        <h2>3. CPU Use Across 30 Runs</h2>
+        <h2>CPU Across 30 Runs</h2>
         <p>CPU measured before, during, and after each run.</p>
       </div>
       <div class="graph-card">
@@ -328,7 +326,7 @@
     <!-- SECTION 4: Graph 2 - RAM Allocation Progression -->
     <section class="content-block">
       <div class="section-title">
-        <h2>4. Memory Footprint: Private vs. Proportional</h2>
+        <h2>Memory Footprint</h2>
         <p>Peak Private RSS compared with peak PSS, run by run.</p>
       </div>
       <div class="graph-card">
@@ -355,7 +353,7 @@
     <!-- SECTION 5: Graph 3 - Memory Surge (Delta PSS) -->
     <section class="content-block">
       <div class="section-title">
-        <h2>5. Extra Memory Needed During a Run (&Delta; Peak PSS)</h2>
+        <h2>Extra Memory Per Run</h2>
         <p>How much more memory each run used than its starting point.</p>
       </div>
       <div class="graph-card">
@@ -382,7 +380,7 @@
     <!-- SECTION 6: Graph 4 - Residual Memory Leak Diagnostics -->
     <section class="content-block">
       <div class="section-title">
-        <h2>6. Memory Left Behind (Leak Check)</h2>
+        <h2>Leak Check</h2>
         <p>Memory still held after a run, compared with its starting value.</p>
       </div>
       <div class="graph-card">
@@ -410,7 +408,7 @@
     <section class="content-block">
       <div class="section-title flex-between">
         <div>
-          <h2>7. Raw Trial Data</h2>
+          <h2>Raw Data</h2>
           <p>Full per-trial measurements across all 30 runs.</p>
         </div>
         <div class="table-search">
@@ -442,7 +440,7 @@
     <!-- SECTION 8: Final Verdict -->
     <section class="content-block verdict-section">
       <div class="section-title">
-        <h2>8. Conclusion</h2>
+        <h2>Conclusion</h2>
         <p>What the numbers mean in practice.</p>
       </div>
       <div class="verdict-card">

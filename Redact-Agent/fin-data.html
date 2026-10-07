@@ -40,10 +40,10 @@
 
         <!-- Home Section / 1,000 Users Baseline -->
         <section id="home" class="content-section">
-            <div class="hero-banner">
-                <div class="badge">Baseline Scenario: 1,000 Users</div>
-                <h1>Financial & Scaling Analysis</h1>
-                <p class="subtitle">Self-hosted Qwen backend for PII redaction, built as a Chrome MV3 extension.</p>
+            <div class="page-hero">
+                <div class="badge">Baseline: 1,000 Users</div>
+                <h1>Financials</h1>
+                <p>Running costs, scaling, and a three-year projection for a self-hosted Qwen backend.</p>
             </div>
 
             <!-- Key Metric Highlights -->
@@ -76,7 +76,7 @@
 
             <!-- Assumptions Table -->
             <div class="card">
-                <h2>0. Workload Assumptions</h2>
+                <h2>Workload Assumptions</h2>
                 <p class="section-desc">Every number in this report comes from these parameters.</p>
                 <div class="table-responsive">
                     <table>
@@ -138,7 +138,7 @@
 
             <!-- One-Time Investment Table -->
             <div class="card">
-                <h2>1. One-Time Investment (Launch Outlay)</h2>
+                <h2>Launch Outlay</h2>
                 <p class="section-desc">Paid once at launch; covers Chrome Web Store registration, setup, models, and docs.</p>
                 <div class="table-responsive">
                     <table>
@@ -204,7 +204,7 @@
 
             <!-- Recurring Yearly Expenses (1,000 users) -->
             <div class="card">
-                <h2>2. Recurring Yearly Expenses (1,000 Users)</h2>
+                <h2>Yearly Running Costs (1,000 Users)</h2>
                 <p class="section-desc">GPU inference backend dominates ~80-85% of total recurring expenses.</p>
 
                 <div class="sub-heading">GPU Hosting Options <span class="date-stamp">(prices sourced Jan 2026)</span></div>
@@ -273,13 +273,9 @@
 
         <!-- Managed-API Comparison -->
         <section id="api-compare" class="content-section">
-            <div class="hero-banner">
-                <div class="badge">Cost Comparison</div>
-                <h1>Self-Hosted vs. Managed APIs</h1>
-                <p class="subtitle">Yearly cost at 1,000 users (~6.4M redactions, 300 tokens in and 100 tokens out per call).</p>
-            </div>
-
             <div class="card">
+                <h2>Self-Hosted vs. Managed APIs</h2>
+                <p class="section-desc">Yearly cost at 1,000 users (~6.4M redactions; 300 tokens in and 100 tokens out per call).</p>
                 <div class="table-responsive">
                     <table>
                         <thead>
@@ -328,17 +324,11 @@
             </div>
         </section>
 
-        <!-- Tech Page Section -->
+        <!-- Scaling Comparison -->
         <section id="tech" class="content-section">
-            <div class="hero-banner">
-                <div class="badge">Architecture & Infrastructure</div>
-                <h1>Tech Stack & Scaling Comparison</h1>
-                <p class="subtitle">What changes when the user base grows from 1,000 to 10,000.</p>
-            </div>
-
             <div class="card">
-                <h2>3. Scaling Comparison: 1,000 vs. 10,000 Users</h2>
-                <p class="section-desc">Only three lines move materially: GPU count, Postgres tier, and Sentry plan.</p>
+                <h2>Scaling: 1,000 vs. 10,000 Users</h2>
+                <p class="section-desc">Only three lines move much: GPU count, Postgres tier, and Sentry plan.</p>
                 <div class="table-responsive">
                     <table>
                         <thead>
@@ -396,7 +386,7 @@
 
             <!-- Interactive Chart Section -->
             <div class="card chart-card">
-                <h2>Visualizing Cost Growth Efficiency</h2>
+                <h2>Cost vs. User Growth</h2>
                 <p class="section-desc">10&times; users costs only about 2&times; more.</p>
                 <div class="chart-container">
                     <canvas id="scalingChart"></canvas>
@@ -406,13 +396,9 @@
 
         <!-- 3-Year Projection + Sensitivity -->
         <section id="projection" class="content-section">
-            <div class="hero-banner">
-                <div class="badge">Projection</div>
-                <h1>Three-Year Operating Projection</h1>
-                <p class="subtitle">P&amp;L at a <strong>$1 / user / month</strong> paid tier (freemium conversion ~25%). Figures in USD; INR shown below.</p>
-            </div>
-
             <div class="card">
+                <h2>Three-Year Projection</h2>
+                <p class="section-desc">P&amp;L at a <strong>$1 / user / month</strong> paid tier (freemium conversion ~25%).</p>
                 <div class="table-responsive">
                     <table>
                         <thead>
@@ -508,14 +494,8 @@
 
         <!-- Final Verdict / Summary Section -->
         <section id="verdict" class="content-section">
-            <div class="hero-banner">
-                <div class="badge verdict-badge">Summary</div>
-                <h1>Final Verdict</h1>
-                <p class="subtitle">What the numbers add up to.</p>
-            </div>
-
             <div class="card verdict-card-box">
-                <h2>Bottom Line</h2>
+                <h2>Final Verdict</h2>
                 <blockquote class="verdict-quote">
                     Launch costs about <strong>$145</strong>. Running costs are <strong>$2,800–$4,200/yr</strong> at 1,000 users and <strong>$5,700–$8,700/yr</strong> at 10,000 users on a self-hosted Qwen backend. 10&times; the users costs only about 2&times; more.
                 </blockquote>
