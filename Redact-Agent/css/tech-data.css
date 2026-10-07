@@ -1,30 +1,31 @@
-/* Clean Professional Light Theme */
+/* Unified Theme (matches home + fin-data) */
 :root {
   --bg-app: #f8fafc;
   --bg-surface: #ffffff;
   --bg-subtle: #f1f5f9;
   --border-light: #e2e8f0;
   --border-medium: #cbd5e1;
-  
+
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-muted: #64748b;
-  
-  --brand-blue: #2563eb;
-  --brand-blue-hover: #1d4ed8;
-  --brand-purple: #7c3aed;
+
+  --brand-blue: #0284c7;
+  --brand-blue-hover: #0369a1;
+  --brand-blue-light: #e0f2fe;
+  --brand-purple: #38bdf8;
   --status-green: #059669;
   --status-red: #dc2626;
   --status-amber: #d97706;
-  
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  
+
   --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  
-  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 }
 
@@ -44,13 +45,14 @@ body {
 
 /* Navbar */
 .navbar {
-  background-color: var(--bg-surface);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border-light);
-  padding: 1.5rem 0;
+  padding: 1rem 0;
   box-shadow: var(--shadow-sm);
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
 }
 
 .nav-content {
@@ -66,7 +68,7 @@ body {
 
 .report-tag {
   display: inline-block;
-  background: #eff6ff;
+  background: var(--brand-blue-light);
   color: var(--brand-blue);
   font-size: 0.75rem;
   font-weight: 700;
@@ -92,10 +94,6 @@ body {
 .nav-actions {
   display: flex;
   gap: 0.75rem;
-}
-
-.navbar {
-  padding: 1rem 0;
 }
 
 .site-brand {
@@ -133,7 +131,7 @@ body {
 .nav-links a:hover,
 .nav-links a.active {
   color: var(--brand-blue);
-  background: #eff6ff;
+  background: var(--brand-blue-light);
 }
 
 .page-header {

@@ -8,7 +8,7 @@
   <!-- Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -81,7 +81,7 @@
 
         <div class="summary-card">
           <h3>Runtime Behaviour</h3>
-          <p>During active workload, CPU utilisation rose from a baseline of <strong>~3%</strong> to a mean peak of <strong>~16%</strong>, with a maximum observed value of <strong>33.22%</strong>. Transient memory allocation averaged <strong>352 MiB</strong> above baseline. Utilisation returned to baseline immediately on completion.</p>
+          <p>During active workload, CPU utilisation rose from a baseline of <strong>~3%</strong> to a mean peak of <strong>~15.86%</strong>, with a maximum observed value of <strong>32.92%</strong>. Transient memory allocation averaged <strong>352 MiB</strong> above baseline. Utilisation returned to baseline immediately on completion.</p>
         </div>
 
         <div class="summary-card">
@@ -141,13 +141,13 @@
             <ul class="guide-list">
               <li><strong>Grey dashed:</strong> Idle baseline (~2.98%).</li>
               <li><strong>Orange:</strong> Mean utilisation during workload (~12.04%).</li>
-              <li><strong>Red:</strong> Peak per-trial utilisation (max observed 33.22% at Trial 14).</li>
+              <li><strong>Red:</strong> Peak per-trial utilisation (max observed 32.92% at Trial 14).</li>
               <li><strong>Green:</strong> Post-run utilisation (~4.80%).</li>
             </ul>
           </div>
           <div class="guide-col">
             <span class="guide-label">Observations</span>
-            <p class="guide-text">CPU behaviour is bounded and well-conditioned. Peaks remain below 35% across all trials, and utilisation returns to baseline immediately after each run completes.</p>
+            <p class="guide-text">CPU behaviour is bounded and well-conditioned. Peaks remain below 33% across all trials, and utilisation returns to baseline immediately after each run completes.</p>
           </div>
         </div>
       </div>
@@ -277,7 +277,7 @@
         <div class="verdict-badge">Result: Within Operating Envelope</div>
         <p>Across 30 trials, the process demonstrates stable and bounded resource usage:</p>
         <ul class="verdict-points">
-          <li><strong>CPU:</strong> Peak utilisation stays below 35%, with a 16% mean under active workload.</li>
+          <li><strong>CPU:</strong> Peak utilisation stays below 33%, with a 15.86% mean under active workload.</li>
           <li><strong>Memory:</strong> Baseline footprint sits around 670 MiB PSS. A <strong>1,200 MiB</strong> total allocation (approximately 500 MiB headroom) comfortably accommodates the observed peak.</li>
           <li><strong>Reclamation:</strong> Residual PSS averages +0.39 MiB across trials with no monotonic drift &mdash; no leak signature.</li>
         </ul>
