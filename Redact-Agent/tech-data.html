@@ -35,8 +35,8 @@
   <section class="page-header">
     <div class="page-header-inner">
       <span class="report-tag">Performance Report</span>
-      <h1>System Resource & Performance Test</h1>
-      <p class="meta">Testing the computer over 30 test runs to see how much memory and processing power it uses</p>
+      <h1>System Resource & Performance Benchmark</h1>
+      <p class="meta">A 30-run benchmark characterising CPU utilisation and memory footprint of the extension process.</p>
     </div>
   </section>
 
@@ -45,24 +45,24 @@
     <!-- Executive KPI Summary Cards -->
     <section class="kpi-row">
       <div class="kpi-card">
-        <span class="label">Average Resting CPU</span>
+        <span class="label">Mean Idle CPU</span>
         <div class="value" id="kpiAvgBeforeCpu">--</div>
-        <span class="subtext">Computer usage before starting</span>
+        <span class="subtext">Baseline utilisation pre-run</span>
       </div>
       <div class="kpi-card">
-        <span class="label">Average Peak CPU</span>
+        <span class="label">Mean Peak CPU</span>
         <div class="value accent-blue" id="kpiAvgPeakCpu">--</div>
-        <span class="subtext">Highest work during the task</span>
+        <span class="subtext">Peak utilisation during active workload</span>
       </div>
       <div class="kpi-card">
-        <span class="label">Average Extra RAM Needed</span>
+        <span class="label">Mean &Delta; Peak PSS</span>
         <div class="value accent-purple" id="kpiAvgDeltaPSS">--</div>
-        <span class="subtext">Temporary memory workspace requested</span>
+        <span class="subtext">Transient working-set allocation</span>
       </div>
       <div class="kpi-card">
-        <span class="label">Average Memory Left Behind</span>
+        <span class="label">Mean Residual PSS</span>
         <div class="value accent-green" id="kpiAvgLeak">--</div>
-        <span class="subtext">Net difference after finishing</span>
+        <span class="subtext">Memory delta after process exit</span>
       </div>
     </section>
 
@@ -70,23 +70,23 @@
     <section class="content-block summary-section">
       <div class="section-title">
         <h2>1. Summary</h2>
-        <p>A quick look at what happened during the test and what the results mean.</p>
+        <p>Key findings from the benchmark run.</p>
       </div>
 
       <div class="summary-grid">
         <div class="summary-card">
-          <h3>What Did We Test?</h3>
-          <p>Imagine running a heavy program—like opening a demanding webpage or launching a large app—<strong>30 times in a row</strong>. We watched the computer closely like a health monitor, checking how hard the processor worked and how much memory was used before, during, and after each run.</p>
+          <h3>Methodology</h3>
+          <p>The extension's background process was exercised across <strong>30 independent trials</strong>. Each trial captured CPU utilisation and resident memory (PSS and Private) at three checkpoints: idle baseline, peak during workload, and post-shutdown.</p>
         </div>
 
         <div class="summary-card">
-          <h3>What Happened During The Runs?</h3>
-          <p>When the program started running, the processor briefly spiked its workload from an idle <strong>~3%</strong> up to an average peak of <strong>~22%</strong> (and at most <strong>47%</strong>). At the same time, it asked for roughly <strong>352 MiB</strong> of extra temporary memory space to get the job done. Once finished, processor usage dropped right back to normal.</p>
+          <h3>Runtime Behaviour</h3>
+          <p>During active workload, CPU utilisation rose from a baseline of <strong>~3%</strong> to a mean peak of <strong>~16%</strong>, with a maximum observed value of <strong>33.22%</strong>. Transient memory allocation averaged <strong>352 MiB</strong> above baseline. Utilisation returned to baseline immediately on completion.</p>
         </div>
 
         <div class="summary-card">
-          <h3>Did It Leave Any Memory Behind?</h3>
-          <p>A memory leak is when an app borrows memory from the computer but forgets to give it back when done, eventually slowing everything down. Here, the memory left behind averaged only <strong>+0.39 MiB</strong>—less than half a smartphone photo. That tiny difference is just normal background noise, proving <strong>no memory leak exists</strong>.</p>
+          <h3>Memory Reclamation</h3>
+          <p>Net PSS delta between pre- and post-run states averaged <strong>+0.39 MiB</strong>, well within measurement noise. The distribution shows no monotonic growth across trials, indicating the process reclaims allocations cleanly on exit.</p>
         </div>
       </div>
     </section>
@@ -94,33 +94,33 @@
     <!-- SECTION 2: Technical Glossary -->
     <section class="content-block">
       <div class="section-title">
-        <h2>2. Glossary of Technical Terms</h2>
-        <p>Simple explanations for the computer terms used on this page.</p>
+        <h2>2. Metric Definitions</h2>
+        <p>Reference for the metrics reported throughout this document.</p>
       </div>
       <div class="glossary-grid">
         <div class="glossary-item">
-          <h4>CPU Utilization (%)</h4>
-          <p>How much brainpower the computer's processor is using at any given second. We record <strong>Resting Idle (Before)</strong>, <strong>Average Work</strong>, <strong>Peak Surge</strong>, and <strong>After Finishing</strong>.</p>
+          <h4>CPU Utilisation (%)</h4>
+          <p>Processor occupancy sampled at each phase of a trial: <strong>Before</strong> (idle baseline), <strong>Average</strong> (mean during workload), <strong>Peak</strong> (maximum sample during workload), and <strong>After</strong> (post-shutdown).</p>
         </div>
         <div class="glossary-item">
-          <h4>RAM PSS (Proportional Set Size)</h4>
-          <p>The fairest real-world measure of memory. It includes the memory used only by this task, plus its fair share of common system files it shares with other apps.</p>
+          <h4>PSS (Proportional Set Size)</h4>
+          <p>Resident memory attributed to the process, including its proportional share of pages mapped from shared libraries. Standard metric for per-process memory accounting on Linux/Android.</p>
         </div>
         <div class="glossary-item">
-          <h4>RAM Private</h4>
-          <p>Memory reserved strictly for this one program that cannot be touched or shared with any other background software.</p>
+          <h4>Private RSS</h4>
+          <p>Resident pages mapped exclusively to this process, excluding any shared mappings.</p>
         </div>
         <div class="glossary-item">
-          <h4>Delta Peak PSS (&Delta; PSS)</h4>
-          <p>Calculated as <code>Peak RAM - Starting RAM</code>. It tells us how much extra temporary memory room the program requested while working hard.</p>
+          <h4>&Delta; Peak PSS</h4>
+          <p>Defined as <code>Peak PSS &minus; Baseline PSS</code>. Characterises transient working-set growth during the workload.</p>
         </div>
         <div class="glossary-item">
-          <h4>Memory Leak (PSS MiB)</h4>
-          <p>Calculated as <code>Finished RAM - Starting RAM</code>. If positive and large, the app forgot to give memory back. If close to zero, cleanup was successful.</p>
+          <h4>Residual PSS</h4>
+          <p>Defined as <code>Post-run PSS &minus; Baseline PSS</code>. Values near zero indicate complete allocation reclamation; sustained positive drift across trials would indicate a leak.</p>
         </div>
         <div class="glossary-item">
           <h4>MiB (Mebibyte)</h4>
-          <p>A standard unit of computer memory (1 MiB = 1,024 KiB), very similar to one Megabyte (MB).</p>
+          <p>Binary memory unit; 1 MiB = 2<sup>20</sup> bytes = 1,024 KiB.</p>
         </div>
       </div>
     </section>
@@ -128,8 +128,8 @@
     <!-- SECTION 3: Graph 1 - CPU Load Dynamics -->
     <section class="content-block">
       <div class="section-title">
-        <h2>3. Processor Workload (CPU) Across All 30 Trials</h2>
-        <p>Watching how hard the computer worked before, during, and after each test run.</p>
+        <h2>3. CPU Utilisation Across 30 Trials</h2>
+        <p>CPU occupancy sampled before, during, and after each run.</p>
       </div>
       <div class="graph-card">
         <div class="chart-wrapper">
@@ -137,17 +137,17 @@
         </div>
         <div class="guide-container">
           <div class="guide-col">
-            <span class="guide-label">How to Read This Graph</span>
+            <span class="guide-label">Series</span>
             <ul class="guide-list">
-              <li><strong>Grey Dashed Line:</strong> The computer resting before the test started (only ~2.98% load).</li>
-              <li><strong>Orange Line:</strong> Average work done while the test was running (~11.58%).</li>
-              <li><strong>Red Line:</strong> The single highest burst of work reached during each run (reached 47.29% in Trial 14).</li>
-              <li><strong>Green Line:</strong> The computer returning to rest right after closing (~4.80%).</li>
+              <li><strong>Grey dashed:</strong> Idle baseline (~2.98%).</li>
+              <li><strong>Orange:</strong> Mean utilisation during workload (~12.04%).</li>
+              <li><strong>Red:</strong> Peak per-trial utilisation (max observed 33.22% at Trial 14).</li>
+              <li><strong>Green:</strong> Post-run utilisation (~4.80%).</li>
             </ul>
           </div>
           <div class="guide-col">
-            <span class="guide-label">Key Observations</span>
-            <p class="guide-text">The program runs very smoothly without stressing the computer. Even during the biggest burst of work (under 50%), the computer never lagged or froze, and it immediately went back to resting mode once the job was done.</p>
+            <span class="guide-label">Observations</span>
+            <p class="guide-text">CPU behaviour is bounded and well-conditioned. Peaks remain below 35% across all trials, and utilisation returns to baseline immediately after each run completes.</p>
           </div>
         </div>
       </div>
@@ -156,8 +156,8 @@
     <!-- SECTION 4: Graph 2 - RAM Allocation Progression -->
     <section class="content-block">
       <div class="section-title">
-        <h2>4. Memory Footprint: Private vs. Shared RAM</h2>
-        <p>Comparing the private memory the program keeps to itself versus the total memory it shares.</p>
+        <h2>4. Memory Footprint: Private vs. Proportional</h2>
+        <p>Comparison of peak Private RSS and peak PSS across trials.</p>
       </div>
       <div class="graph-card">
         <div class="chart-wrapper">
@@ -165,16 +165,16 @@
         </div>
         <div class="guide-container">
           <div class="guide-col">
-            <span class="guide-label">How to Read This Graph</span>
+            <span class="guide-label">Series</span>
             <ul class="guide-list">
-              <li><strong>Blue Bars (Peak PSS):</strong> Total practical RAM used during peak activity (averaging ~1,022 MiB).</li>
-              <li><strong>Purple Bars (Peak Private):</strong> RAM owned exclusively by this program (averaging ~722 MiB).</li>
-              <li><strong>The ~300 MiB Gap:</strong> Shared computer files that the operating system smartly shares with other apps to save room.</li>
+              <li><strong>Blue (Peak PSS):</strong> Proportional set size at peak (mean ~1,022 MiB).</li>
+              <li><strong>Purple (Peak Private):</strong> Private resident pages at peak (mean ~722 MiB).</li>
+              <li><strong>~300 MiB offset:</strong> Proportional contribution from shared library mappings.</li>
             </ul>
           </div>
           <div class="guide-col">
-            <span class="guide-label">Key Observations</span>
-            <p class="guide-text">Memory usage is very stable and predictable across every single run. It stays between 922 MiB and 1,158 MiB each time without running out of control.</p>
+            <span class="guide-label">Observations</span>
+            <p class="guide-text">Peak PSS is tightly distributed between 922 MiB and 1,158 MiB across all 30 trials, with low variance and no outlying spikes.</p>
           </div>
         </div>
       </div>
@@ -183,8 +183,8 @@
     <!-- SECTION 5: Graph 3 - Memory Surge (Delta PSS) -->
     <section class="content-block">
       <div class="section-title">
-        <h2>5. Extra Memory Room Needed (&Delta; Peak PSS)</h2>
-        <p>How much additional temporary memory the program asked for while working.</p>
+        <h2>5. Transient Working-Set Growth (&Delta; Peak PSS)</h2>
+        <p>Additional PSS allocated during the workload relative to baseline.</p>
       </div>
       <div class="graph-card">
         <div class="chart-wrapper">
@@ -192,16 +192,16 @@
         </div>
         <div class="guide-container">
           <div class="guide-col">
-            <span class="guide-label">How to Read This Graph</span>
+            <span class="guide-label">Series</span>
             <ul class="guide-list">
-              <li>Each bar shows how much extra memory was needed (Peak RAM minus Starting RAM).</li>
-              <li>The average extra memory needed across all 30 tests was about <strong>352 MiB</strong>.</li>
-              <li>Taller bars (like Trial 29 at 487 MiB) mean that specific run handled a slightly heavier task.</li>
+              <li>Each bar represents <code>Peak PSS &minus; Baseline PSS</code> for one trial.</li>
+              <li>Mean &Delta; across 30 trials: <strong>352 MiB</strong>.</li>
+              <li>Maximum: Trial 29 at 487 MiB.</li>
             </ul>
           </div>
           <div class="guide-col">
-            <span class="guide-label">Key Observations</span>
-            <p class="guide-text">Most tasks temporarily need an extra 300 to 400 MiB of working room. Giving the computer an extra <strong>500 MiB of free room</strong> ensures the app will always run without crashing.</p>
+            <span class="guide-label">Observations</span>
+            <p class="guide-text">Transient allocation sits in the 300&ndash;400 MiB band. A <strong>500 MiB</strong> headroom budget comfortably covers the observed upper bound.</p>
           </div>
         </div>
       </div>
@@ -210,8 +210,8 @@
     <!-- SECTION 6: Graph 4 - Residual Memory Leak Diagnostics -->
     <section class="content-block">
       <div class="section-title">
-        <h2>6. Memory Cleanup Test (Checking for Memory Leaks)</h2>
-        <p>Did the program cleanly return its memory after closing, or did it leave junk behind?</p>
+        <h2>6. Residual Memory Analysis (Leak Check)</h2>
+        <p>Difference between post-run and baseline PSS, measured per trial.</p>
       </div>
       <div class="graph-card">
         <div class="chart-wrapper">
@@ -219,16 +219,16 @@
         </div>
         <div class="guide-container">
           <div class="guide-col">
-            <span class="guide-label">How to Read This Graph</span>
+            <span class="guide-label">Series</span>
             <ul class="guide-list">
-              <li><strong>Red Bars (Above 0):</strong> A tiny amount of memory was still being cleaned up right after closing.</li>
-              <li><strong>Teal Bars (Below 0):</strong> The computer cleaned up so well that it freed even more memory than when it started.</li>
-              <li><strong>The Middle Zero Line:</strong> Perfect memory cleanup.</li>
+              <li><strong>Red (positive &Delta;):</strong> Residual allocation above baseline.</li>
+              <li><strong>Teal (negative &Delta;):</strong> Post-run footprint below baseline (natural fluctuation).</li>
+              <li><strong>Zero line:</strong> Full reclamation.</li>
             </ul>
           </div>
           <div class="guide-col">
-            <span class="guide-label">Key Observations</span>
-            <p class="guide-text">Across all 30 runs, the net difference was only <strong>+0.39 MiB</strong>—virtually zero. Because the numbers stay very close to the zero line and don't grow over time, the app cleans up properly and has no memory leaks.</p>
+            <span class="guide-label">Observations</span>
+            <p class="guide-text">Mean residual across 30 trials is <strong>+0.39 MiB</strong>, bounded in a narrow band around zero with no monotonic trend. Consistent with full reclamation; no leak signature detected.</p>
           </div>
         </div>
       </div>
@@ -238,8 +238,8 @@
     <section class="content-block">
       <div class="section-title flex-between">
         <div>
-          <h2>7. Complete Test Data Table</h2>
-          <p>Every single number recorded during all 30 test runs.</p>
+          <h2>7. Raw Trial Data</h2>
+          <p>Full per-trial measurements across all 30 runs.</p>
         </div>
         <div class="table-search">
           <input type="text" id="trialSearch" placeholder="Search by Trial # or value..." />
@@ -270,16 +270,16 @@
     <!-- SECTION 8: Final Verdict -->
     <section class="content-block verdict-section">
       <div class="section-title">
-        <h2>8. Final Verdict</h2>
-        <p>What this means for anyone running this software.</p>
+        <h2>8. Conclusion</h2>
+        <p>Operational implications of the benchmark results.</p>
       </div>
       <div class="verdict-card">
-        <div class="verdict-badge">Test Result: Passed & Healthy</div>
-        <p>The program is <strong>safe, fast, and does not waste computer memory</strong>. Even after running 30 times repeatedly:</p>
+        <div class="verdict-badge">Result: Within Operating Envelope</div>
+        <p>Across 30 trials, the process demonstrates stable and bounded resource usage:</p>
         <ul class="verdict-points">
-          <li><strong>CPU Power:</strong> The processor is never overloaded; brief spikes stayed comfortably under 50%.</li>
-          <li><strong>Memory Room:</strong> The app normally sits at ~670 MiB. Giving it at least <strong>1,200 MiB total memory</strong> (or ~500 MiB extra free space) will keep it running smoothly forever.</li>
-          <li><strong>No Memory Leaks:</strong> It always gives memory back when finished (+0.39 MiB average is harmless), so the computer will not slow down over time.</li>
+          <li><strong>CPU:</strong> Peak utilisation stays below 35%, with a 16% mean under active workload.</li>
+          <li><strong>Memory:</strong> Baseline footprint sits around 670 MiB PSS. A <strong>1,200 MiB</strong> total allocation (approximately 500 MiB headroom) comfortably accommodates the observed peak.</li>
+          <li><strong>Reclamation:</strong> Residual PSS averages +0.39 MiB across trials with no monotonic drift &mdash; no leak signature.</li>
         </ul>
       </div>
     </section>
