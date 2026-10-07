@@ -43,7 +43,7 @@
             <div class="hero-banner">
                 <div class="badge">Baseline Scenario: 1,000 Users</div>
                 <h1>Financial & Scaling Analysis</h1>
-                <p class="subtitle">A self-hosted open-source Qwen backend providing agentic PII-redaction for Chrome Manifest V3.</p>
+                <p class="subtitle">Self-hosted Qwen backend for PII redaction, built as a Chrome MV3 extension.</p>
             </div>
 
             <!-- Key Metric Highlights -->
@@ -51,33 +51,33 @@
                 <div class="metric-card">
                     <span class="metric-label">Launch Outlay (One-Time)</span>
                     <span class="metric-value">~$145</span>
-                    <span class="metric-inr">≈ ₹12,000</span>
+                    <span class="metric-inr">≈ ₹13,920</span>
                     <span class="metric-note">Valid for both 1K and 10K scenarios</span>
                 </div>
                 <div class="metric-card highlight">
                     <span class="metric-label">1K Users Yearly Spend</span>
                     <span class="metric-value">~$2.8K&ndash;$4.2K</span>
-                    <span class="metric-inr">≈ ₹2.32L&ndash;₹3.49L</span>
+                    <span class="metric-inr">≈ ₹2.69L&ndash;₹4.03L</span>
                     <span class="metric-note">$0.23 to $0.35 per user / month</span>
                 </div>
                 <div class="metric-card">
                     <span class="metric-label">10K Users Yearly Spend</span>
                     <span class="metric-value">~$5.7K&ndash;$8.7K</span>
-                    <span class="metric-inr">≈ ₹4.73L&ndash;₹7.22L</span>
+                    <span class="metric-inr">≈ ₹5.47L&ndash;₹8.35L</span>
                     <span class="metric-note">Only ~2x cost for a 10x user increase</span>
                 </div>
             </div>
-            <p class="fx-note">All USD figures converted at <strong>1 USD = ₹83</strong> (reference rate, Jan 2026). L = lakh (1,00,000).</p>
+            <p class="fx-note">USD figures converted at <strong>1 USD = ₹96</strong>. L = lakh (1,00,000); Cr = crore (100 lakh).</p>
 
             <!-- Scope Note -->
             <div class="scope-note">
-                <strong>Scope:</strong> steady-state infrastructure spend only. Founder/engineering effort, marketing, legal counsel, and in-house hardware depreciation are out of scope. All vendor prices sourced Jan 2026 from each vendor's published rate card.
+                <strong>Scope:</strong> infrastructure costs only. Engineering time, marketing, legal fees and in-house hardware are not included. Vendor prices are from published rate cards (Jan 2026).
             </div>
 
             <!-- Assumptions Table -->
             <div class="card">
                 <h2>0. Workload Assumptions</h2>
-                <p class="section-desc">Every downstream figure derives from these parameters; shown explicitly for reproducibility.</p>
+                <p class="section-desc">Every number in this report comes from these parameters.</p>
                 <div class="table-responsive">
                     <table>
                         <thead>
@@ -195,7 +195,7 @@
                             </tr>
                             <tr class="table-total">
                                 <td colspan="2"><strong>Total One-Time Outlay</strong></td>
-                                <td colspan="2"><strong>≈ $145</strong> &nbsp;·&nbsp; ≈ ₹12,000</td>
+                                <td colspan="2"><strong>≈ $145</strong> &nbsp;·&nbsp; ≈ ₹13,920</td>
                             </tr>
                         </tbody>
                     </table>
@@ -252,19 +252,19 @@
                     <div class="scenario-box">
                         <h4>Lean Hetzner GPU</h4>
                         <span class="scenario-price">~ $2,800 / yr</span>
-                        <span class="scenario-inr">≈ ₹2.32L / yr</span>
+                        <span class="scenario-inr">≈ ₹2.69L / yr</span>
                         <p>Hetzner dedicated + free tiers</p>
                     </div>
                     <div class="scenario-box featured">
                         <h4>Comfortable Setup</h4>
                         <span class="scenario-price">~ $4,200 / yr</span>
-                        <span class="scenario-inr">≈ ₹3.49L / yr</span>
+                        <span class="scenario-inr">≈ ₹4.03L / yr</span>
                         <p>RunPod reserved + Sentry Team + managed Postgres</p>
                     </div>
                     <div class="scenario-box">
                         <h4>Hyperscaler On-Demand</h4>
                         <span class="scenario-price">~ $6,500 / yr</span>
-                        <span class="scenario-inr">≈ ₹5.40L / yr</span>
+                        <span class="scenario-inr">≈ ₹6.24L / yr</span>
                         <p>GCP / AWS standard on-demand deployment</p>
                     </div>
                 </div>
@@ -274,9 +274,9 @@
         <!-- Managed-API Comparison -->
         <section id="api-compare" class="content-section">
             <div class="hero-banner">
-                <div class="badge">Alternative Cost Baseline</div>
+                <div class="badge">Cost Comparison</div>
                 <h1>Self-Hosted vs. Managed APIs</h1>
-                <p class="subtitle">Why not simply call a managed LLM / PII-detection API? Here is the yearly cost at a 1,000-user workload (~6.4M redactions / year, 300 tok in · 100 tok out).</p>
+                <p class="subtitle">Yearly cost at 1,000 users (~6.4M redactions, 300 tokens in and 100 tokens out per call).</p>
             </div>
 
             <div class="card">
@@ -294,37 +294,37 @@
                             <tr class="highlight-row">
                                 <td><strong>Self-hosted Qwen2.5-7B AWQ (Hetzner GEX44)</strong></td>
                                 <td>Flat $200 / mo GPU</td>
-                                <td><strong>~ $2,400</strong> · ₹1.99L</td>
+                                <td><strong>~ $2,400</strong> · ₹2.30L</td>
                                 <td>Marginal cost per call → $0</td>
                             </tr>
                             <tr>
                                 <td>OpenAI gpt-4o-mini</td>
                                 <td>$0.60 in / $2.40 out per 1M tok</td>
-                                <td>~ $2,700 · ₹2.24L</td>
+                                <td>~ $2,700 · ₹2.59L</td>
                                 <td>Cost scales linearly with volume; data leaves country</td>
                             </tr>
                             <tr>
                                 <td>Anthropic Claude Haiku 4.5</td>
                                 <td>$1.00 in / $5.00 out per 1M tok</td>
-                                <td>~ $5,100 · ₹4.23L</td>
+                                <td>~ $5,100 · ₹4.90L</td>
                                 <td>Highest quality; cross-border data transfer</td>
                             </tr>
                             <tr>
                                 <td>Azure AI PII Detection</td>
                                 <td>~ $1 per 1,000 records</td>
-                                <td>~ $6,400 · ₹5.31L</td>
+                                <td>~ $6,400 · ₹6.14L</td>
                                 <td>Managed, but narrow (classification only, no agentic rewrite)</td>
                             </tr>
                             <tr>
                                 <td>Gemini 2.0 Flash</td>
                                 <td>$0.10 in / $0.40 out per 1M tok</td>
-                                <td>~ $450 · ₹37K</td>
+                                <td>~ $450 · ₹43K</td>
                                 <td>Cheapest API, but third-party processing of PII</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-                <p class="section-desc" style="margin-top: 1rem;"><strong>Why self-host anyway:</strong> at 10K users the self-hosted line stays near $4,800/yr while every API line scales linearly &mdash; API costs would roughly 10&times; while ours ~2&times;. Equally important: PII never leaves the organisation&rsquo;s infrastructure, satisfying DPDP-Act and GDPR data-residency requirements that managed APIs cannot cleanly meet.</p>
+                <p class="section-desc" style="margin-top: 1rem;">At 10K users the self-hosted line stays near $4,800/yr; API lines grow with volume, so they rise roughly 10&times; while ours rises about 2&times;. Self-hosting also keeps PII inside the organisation&rsquo;s own network, which matters for DPDP-Act and GDPR compliance.</p>
             </div>
         </section>
 
@@ -333,7 +333,7 @@
             <div class="hero-banner">
                 <div class="badge">Architecture & Infrastructure</div>
                 <h1>Tech Stack & Scaling Comparison</h1>
-                <p class="subtitle">Detailed breakdown of how the architecture scales from 1,000 to 10,000 active users.</p>
+                <p class="subtitle">What changes when the user base grows from 1,000 to 10,000.</p>
             </div>
 
             <div class="card">
@@ -376,13 +376,13 @@
                             </tr>
                             <tr class="table-total">
                                 <td><strong>Lean Yearly Total</strong></td>
-                                <td><strong>~ $2,800</strong><br><span class="inr-sub">₹2.32L</span></td>
-                                <td><strong>~ $5,700</strong><br><span class="inr-sub">₹4.73L</span></td>
+                                <td><strong>~ $2,800</strong><br><span class="inr-sub">₹2.69L</span></td>
+                                <td><strong>~ $5,700</strong><br><span class="inr-sub">₹5.47L</span></td>
                             </tr>
                             <tr class="table-total">
                                 <td><strong>Comfortable Yearly Total</strong></td>
-                                <td><strong>~ $4,200</strong><br><span class="inr-sub">₹3.49L</span></td>
-                                <td><strong>~ $8,700</strong><br><span class="inr-sub">₹7.22L</span></td>
+                                <td><strong>~ $4,200</strong><br><span class="inr-sub">₹4.03L</span></td>
+                                <td><strong>~ $8,700</strong><br><span class="inr-sub">₹8.35L</span></td>
                             </tr>
                             <tr>
                                 <td><strong>Cost per user / month (Comfortable)</strong></td>
@@ -397,7 +397,7 @@
             <!-- Interactive Chart Section -->
             <div class="card chart-card">
                 <h2>Visualizing Cost Growth Efficiency</h2>
-                <p class="section-desc">Demonstrating economies of scale: 10x user growth results in only ~2x cost expansion.</p>
+                <p class="section-desc">10&times; users costs only about 2&times; more.</p>
                 <div class="chart-container">
                     <canvas id="scalingChart"></canvas>
                 </div>
@@ -407,9 +407,9 @@
         <!-- 3-Year Projection + Sensitivity -->
         <section id="projection" class="content-section">
             <div class="hero-banner">
-                <div class="badge">Business Projection</div>
+                <div class="badge">Projection</div>
                 <h1>Three-Year Operating Projection</h1>
-                <p class="subtitle">Illustrative P&amp;L at a <strong>$1 / user / month</strong> paid tier (freemium conversion ~25%). All figures USD; INR shown below.</p>
+                <p class="subtitle">P&amp;L at a <strong>$1 / user / month</strong> paid tier (freemium conversion ~25%). Figures in USD; INR shown below.</p>
             </div>
 
             <div class="card">
@@ -432,15 +432,15 @@
                             </tr>
                             <tr>
                                 <td>ARR (gross)</td>
-                                <td>$4,800<br><span class="inr-sub">₹3.98L</span></td>
-                                <td>$30,000<br><span class="inr-sub">₹24.9L</span></td>
-                                <td>$120,000<br><span class="inr-sub">₹99.6L</span></td>
+                                <td>$4,800<br><span class="inr-sub">₹4.61L</span></td>
+                                <td>$30,000<br><span class="inr-sub">₹28.8L</span></td>
+                                <td>$120,000<br><span class="inr-sub">₹1.15 Cr</span></td>
                             </tr>
                             <tr>
                                 <td>Infra spend (comfortable tier)</td>
-                                <td>$4,200 + $145<br><span class="inr-sub">₹3.60L</span></td>
-                                <td>$5,000<br><span class="inr-sub">₹4.15L</span></td>
-                                <td>$8,700<br><span class="inr-sub">₹7.22L</span></td>
+                                <td>$4,200 + $145<br><span class="inr-sub">₹4.17L</span></td>
+                                <td>$5,000<br><span class="inr-sub">₹4.80L</span></td>
+                                <td>$8,700<br><span class="inr-sub">₹8.35L</span></td>
                             </tr>
                             <tr class="table-total">
                                 <td><strong>Operating margin</strong></td>
@@ -457,7 +457,7 @@
                         </tbody>
                     </table>
                 </div>
-                <p class="section-desc" style="margin-top: 0.75rem;">Break-even reached inside <strong>Year 1</strong> (month 11 at current conversion assumptions). The marginal GPU-second cost of serving one more user is effectively zero until the next 24 GB GPU is required.</p>
+                <p class="section-desc" style="margin-top: 0.75rem;">Break-even hits in <strong>Year 1</strong> (around month 11 under these conversion assumptions). Serving one more user costs almost nothing until the current GPU runs out of headroom.</p>
             </div>
 
             <!-- Sensitivity -->
@@ -476,62 +476,62 @@
                         <tbody>
                             <tr>
                                 <td>Base case (lean Hetzner)</td>
-                                <td>$5,700 · ₹4.73L</td>
+                                <td>$5,700 · ₹5.47L</td>
                                 <td>$0.048</td>
                             </tr>
                             <tr>
                                 <td>GPU unit price &uarr; 25%</td>
-                                <td>$6,900 · ₹5.73L</td>
+                                <td>$6,900 · ₹6.62L</td>
                                 <td>$0.058</td>
                             </tr>
                             <tr>
                                 <td>Peak concurrency &uarr; 2&times; (needs +1 GPU)</td>
-                                <td>$8,100 · ₹6.72L</td>
+                                <td>$8,100 · ₹7.78L</td>
                                 <td>$0.068</td>
                             </tr>
                             <tr>
-                                <td>INR / USD = ₹90 (depreciation)</td>
-                                <td>$5,700 · ₹5.13L</td>
+                                <td>INR / USD = ₹102 (depreciation)</td>
+                                <td>$5,700 · ₹5.81L</td>
                                 <td>$0.048</td>
                             </tr>
                             <tr>
-                                <td>Combined worst-case (GPU&nbsp;+25%, concurrency&nbsp;2&times;, ₹90)</td>
-                                <td>$9,700 · ₹8.73L</td>
+                                <td>Combined worst-case (GPU&nbsp;+25%, concurrency&nbsp;2&times;, ₹102)</td>
+                                <td>$9,700 · ₹9.89L</td>
                                 <td>$0.081</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-                <p class="section-desc" style="margin-top: 0.75rem;">Even in the combined worst-case, cost per user stays below <strong>$0.09 / month</strong> &mdash; well under any realistic $1 price point.</p>
+                <p class="section-desc" style="margin-top: 0.75rem;">In the combined worst case, cost per user still sits below <strong>$0.09 / month</strong>, far below a $1 price point.</p>
             </div>
         </section>
 
         <!-- Final Verdict / Summary Section -->
         <section id="verdict" class="content-section">
             <div class="hero-banner">
-                <div class="badge verdict-badge">Executive Summary</div>
-                <h1>Final Verdict & Key Takeaways</h1>
-                <p class="subtitle">High-level financial conclusions for stakeholders and founders.</p>
+                <div class="badge verdict-badge">Summary</div>
+                <h1>Final Verdict</h1>
+                <p class="subtitle">What the numbers add up to.</p>
             </div>
 
             <div class="card verdict-card-box">
-                <h2>Executive Bottom Line</h2>
+                <h2>Bottom Line</h2>
                 <blockquote class="verdict-quote">
-                    "Launch outlay is <strong>~$145</strong>. Steady-state software spend is <strong>~$2,800–$4,200/yr</strong> at 1,000 users and <strong>~$5,700–$8,700/yr</strong> at 10,000 users on a self-hosted Qwen backend—representing a highly efficient ~2x cost increase for a 10x user increase."
+                    Launch costs about <strong>$145</strong>. Running costs are <strong>$2,800–$4,200/yr</strong> at 1,000 users and <strong>$5,700–$8,700/yr</strong> at 10,000 users on a self-hosted Qwen backend. 10&times; the users costs only about 2&times; more.
                 </blockquote>
 
                 <div class="highlights-grid">
                     <div class="highlight-item">
-                        <h3>Per-User Economics</h3>
-                        <p>Costs range from $0.23–$0.35/user/mo at 1K users, dropping sharply to $0.05–$0.07 at 10K users. Monetising at even $1/user/mo yields >90% gross margin.</p>
+                        <h3>Per-User Cost</h3>
+                        <p>$0.23–$0.35/user/mo at 1K users, falling to $0.05–$0.07 at 10K users. A $1/user/mo price keeps gross margin above 90%.</p>
                     </div>
                     <div class="highlight-item">
-                        <h3>Software Multipliers</h3>
-                        <p>AWQ-INT4 quantisation shrinks Qwen2.5-7B to ~6 GB and doubles throughput. vLLM continuous batching keeps GPU utilization near ~90% at peak.</p>
+                        <h3>Software Choices</h3>
+                        <p>AWQ-INT4 quantisation shrinks Qwen2.5-7B to ~6 GB and roughly doubles throughput. vLLM continuous batching holds GPU use near 90% at peak.</p>
                     </div>
                     <div class="highlight-item">
-                        <h3>Economies of Scale</h3>
-                        <p>GPU hardware is near-fully utilized at 10K users (vs ~15% at 1K), and non-GPU line items scale sub-linearly, maximizing financial efficiency.</p>
+                        <h3>Scale Behaviour</h3>
+                        <p>At 10K users the GPU runs close to full; at 1K users it sits around 15%. Non-GPU items grow slower than user count.</p>
                     </div>
                 </div>
             </div>

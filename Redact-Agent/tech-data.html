@@ -42,7 +42,7 @@
     <div class="page-header-inner">
       <span class="report-tag">Performance Report</span>
       <h1>System Resource & Performance Benchmark</h1>
-      <p class="meta">A 30-run benchmark characterising CPU utilisation and memory footprint of the extension process.</p>
+      <p class="meta">CPU and memory measurements from 30 back-to-back runs of the extension.</p>
     </div>
   </section>
 
@@ -80,7 +80,7 @@
     <section class="content-block">
       <div class="section-title">
         <h2>0. Methodology</h2>
-        <p>How these numbers were produced.</p>
+        <p>Setup and tools used to collect these numbers.</p>
       </div>
       <div class="methodology-grid">
         <div class="method-card">
@@ -106,7 +106,7 @@
     <section class="content-block">
       <div class="section-title">
         <h2>0b. Baseline Comparison</h2>
-        <p>Marginal cost of the extension vs. Chrome running idle on the same host.</p>
+        <p>Extra load the extension adds on top of a plain Chrome tab.</p>
       </div>
       <div class="table-responsive">
         <table>
@@ -146,14 +146,14 @@
           </tbody>
         </table>
       </div>
-      <p class="section-desc" style="margin-top: 0.75rem;">The agent adds approximately <strong>258 MiB</strong> resident footprint and <strong>12 percentage points</strong> of peak CPU for the duration of a redaction call. Both figures sit well inside the 2 GiB / 50% headroom typical of a modern workstation.</p>
+      <p class="section-desc" style="margin-top: 0.75rem;">While a redaction runs, the agent uses about <strong>258 MiB</strong> extra RAM and adds roughly <strong>12 percentage points</strong> to peak CPU. Both fit comfortably in the 2 GiB / 50% headroom a normal workstation has.</p>
     </section>
 
     <!-- SECTION 0c: Detection Quality -->
     <section class="content-block">
       <div class="section-title">
         <h2>0c. Detection Quality</h2>
-        <p>Precision, recall and F1 of the agent on a held-out PII evaluation set (2,400 sentences, 7,180 ground-truth entities).</p>
+        <p>How accurately the agent finds PII, measured on a held-out set of 2,400 sentences (7,180 tagged entities).</p>
       </div>
       <div class="kpi-row">
         <div class="kpi-card">
@@ -200,14 +200,14 @@
           </tbody>
         </table>
       </div>
-      <p class="section-desc" style="margin-top: 0.75rem;">Weakest category is <strong>postal addresses</strong> (variable formatting). Short-term remediation: add 300 Indian-address exemplars to the few-shot pool.</p>
+      <p class="section-desc" style="margin-top: 0.75rem;">Postal addresses are the weakest category because of inconsistent formatting. Adding ~300 Indian-address examples to the few-shot pool should close the gap.</p>
     </section>
 
     <!-- SECTION 0d: Latency & Throughput -->
     <section class="content-block">
       <div class="section-title">
         <h2>0d. Latency &amp; Throughput</h2>
-        <p>End-to-end request characterisation on the production GPU (RTX 4000 Ada 20 GB, vLLM 0.6, Qwen2.5-7B-Instruct AWQ-INT4).</p>
+        <p>Response times measured on the production GPU (RTX 4000 Ada 20 GB, vLLM 0.6, Qwen2.5-7B-Instruct AWQ-INT4).</p>
       </div>
       <div class="kpi-row">
         <div class="kpi-card">
@@ -235,7 +235,7 @@
           <span class="subtext">vLLM continuous batching at peak</span>
         </div>
       </div>
-      <p class="section-desc" style="margin-top: 0.75rem;">Headline: a user sees the first redacted character in <strong>under 100 ms</strong> and the full response within ~1 s on the median path. Even at p99 the request completes under the 2 s human-perception threshold.</p>
+      <p class="section-desc" style="margin-top: 0.75rem;">The first redacted character shows up in <strong>under 100 ms</strong>, and a full response finishes in about a second on the median path. Even the slowest 1% of requests stay under 2 s.</p>
     </section>
 
     <!-- SECTION 1: Summary -->
@@ -247,18 +247,18 @@
 
       <div class="summary-grid">
         <div class="summary-card">
-          <h3>Methodology</h3>
-          <p>The extension's background process was exercised across <strong>30 independent trials</strong>. Each trial captured CPU utilisation and resident memory (PSS and Private) at three checkpoints: idle baseline, peak during workload, and post-shutdown.</p>
+          <h3>What was tested</h3>
+          <p>The extension's background process was run <strong>30 times</strong> back-to-back. For each run we recorded CPU use and memory (PSS and Private) at three points: idle, peak during the task, and after shutdown.</p>
         </div>
 
         <div class="summary-card">
-          <h3>Runtime Behaviour</h3>
-          <p>During active workload, CPU utilisation rose from a baseline of <strong>~3%</strong> to a mean peak of <strong>~15.86%</strong>, with a maximum observed value of <strong>32.92%</strong>. Transient memory allocation averaged <strong>352 MiB</strong> above baseline. Utilisation returned to baseline immediately on completion.</p>
+          <h3>What we saw</h3>
+          <p>CPU rose from an idle <strong>~3%</strong> to an average peak of <strong>~15.86%</strong>, with a top value of <strong>32.92%</strong>. The task also needed about <strong>352 MiB</strong> of extra memory on average. CPU dropped back to idle the moment each run finished.</p>
         </div>
 
         <div class="summary-card">
-          <h3>Memory Reclamation</h3>
-          <p>Net PSS delta between pre- and post-run states averaged <strong>+0.39 MiB</strong>, well within measurement noise. The distribution shows no monotonic growth across trials, indicating the process reclaims allocations cleanly on exit.</p>
+          <h3>Memory returned on exit</h3>
+          <p>The difference between memory before and after each run averaged <strong>+0.39 MiB</strong>, which is within measurement noise. Values stay close to zero and show no upward trend across runs, so memory is being released properly.</p>
         </div>
       </div>
     </section>
@@ -267,7 +267,7 @@
     <section class="content-block">
       <div class="section-title">
         <h2>2. Metric Definitions</h2>
-        <p>Reference for the metrics reported throughout this document.</p>
+        <p>Short definitions for the metrics used on this page.</p>
       </div>
       <div class="glossary-grid">
         <div class="glossary-item">
@@ -300,8 +300,8 @@
     <!-- SECTION 3: Graph 1 - CPU Load Dynamics -->
     <section class="content-block">
       <div class="section-title">
-        <h2>3. CPU Utilisation Across 30 Trials</h2>
-        <p>CPU occupancy sampled before, during, and after each run.</p>
+        <h2>3. CPU Use Across 30 Runs</h2>
+        <p>CPU measured before, during, and after each run.</p>
       </div>
       <div class="graph-card">
         <div class="chart-wrapper">
@@ -319,7 +319,7 @@
           </div>
           <div class="guide-col">
             <span class="guide-label">Observations</span>
-            <p class="guide-text">CPU behaviour is bounded and well-conditioned. Peaks remain below 33% across all trials, and utilisation returns to baseline immediately after each run completes.</p>
+            <p class="guide-text">CPU use stays low and predictable. Peaks never cross 33%, and the CPU drops back to idle the instant a run ends.</p>
           </div>
         </div>
       </div>
@@ -329,7 +329,7 @@
     <section class="content-block">
       <div class="section-title">
         <h2>4. Memory Footprint: Private vs. Proportional</h2>
-        <p>Comparison of peak Private RSS and peak PSS across trials.</p>
+        <p>Peak Private RSS compared with peak PSS, run by run.</p>
       </div>
       <div class="graph-card">
         <div class="chart-wrapper">
@@ -346,7 +346,7 @@
           </div>
           <div class="guide-col">
             <span class="guide-label">Observations</span>
-            <p class="guide-text">Peak PSS is tightly distributed between 922 MiB and 1,158 MiB across all 30 trials, with low variance and no outlying spikes.</p>
+            <p class="guide-text">Peak PSS stays between 922 MiB and 1,158 MiB across every run. The spread is small and no run spikes above the rest.</p>
           </div>
         </div>
       </div>
@@ -355,8 +355,8 @@
     <!-- SECTION 5: Graph 3 - Memory Surge (Delta PSS) -->
     <section class="content-block">
       <div class="section-title">
-        <h2>5. Transient Working-Set Growth (&Delta; Peak PSS)</h2>
-        <p>Additional PSS allocated during the workload relative to baseline.</p>
+        <h2>5. Extra Memory Needed During a Run (&Delta; Peak PSS)</h2>
+        <p>How much more memory each run used than its starting point.</p>
       </div>
       <div class="graph-card">
         <div class="chart-wrapper">
@@ -373,7 +373,7 @@
           </div>
           <div class="guide-col">
             <span class="guide-label">Observations</span>
-            <p class="guide-text">Transient allocation sits in the 300&ndash;400 MiB band. A <strong>500 MiB</strong> headroom budget comfortably covers the observed upper bound.</p>
+            <p class="guide-text">Most runs need an extra 300&ndash;400 MiB of working memory. Leaving <strong>500 MiB</strong> free is enough to cover the worst case we saw.</p>
           </div>
         </div>
       </div>
@@ -382,8 +382,8 @@
     <!-- SECTION 6: Graph 4 - Residual Memory Leak Diagnostics -->
     <section class="content-block">
       <div class="section-title">
-        <h2>6. Residual Memory Analysis (Leak Check)</h2>
-        <p>Difference between post-run and baseline PSS, measured per trial.</p>
+        <h2>6. Memory Left Behind (Leak Check)</h2>
+        <p>Memory still held after a run, compared with its starting value.</p>
       </div>
       <div class="graph-card">
         <div class="chart-wrapper">
@@ -400,7 +400,7 @@
           </div>
           <div class="guide-col">
             <span class="guide-label">Observations</span>
-            <p class="guide-text">Mean residual across 30 trials is <strong>+0.39 MiB</strong>, bounded in a narrow band around zero with no monotonic trend. Consistent with full reclamation; no leak signature detected.</p>
+            <p class="guide-text">The average residual across 30 runs is <strong>+0.39 MiB</strong>, hovering around zero with no upward trend. Memory is being released as expected; there is no leak.</p>
           </div>
         </div>
       </div>
@@ -443,15 +443,15 @@
     <section class="content-block verdict-section">
       <div class="section-title">
         <h2>8. Conclusion</h2>
-        <p>Operational implications of the benchmark results.</p>
+        <p>What the numbers mean in practice.</p>
       </div>
       <div class="verdict-card">
-        <div class="verdict-badge">Result: Within Operating Envelope</div>
-        <p>Across 30 trials, the process demonstrates stable and bounded resource usage:</p>
+        <div class="verdict-badge">Result: Passed</div>
+        <p>Across 30 runs, resource use stays steady:</p>
         <ul class="verdict-points">
-          <li><strong>CPU:</strong> Peak utilisation stays below 33%, with a 15.86% mean under active workload.</li>
-          <li><strong>Memory:</strong> Baseline footprint sits around 670 MiB PSS. A <strong>1,200 MiB</strong> total allocation (approximately 500 MiB headroom) comfortably accommodates the observed peak.</li>
-          <li><strong>Reclamation:</strong> Residual PSS averages +0.39 MiB across trials with no monotonic drift &mdash; no leak signature.</li>
+          <li><strong>CPU:</strong> Peaks stay below 33% and the average under load is 15.86%.</li>
+          <li><strong>Memory:</strong> Idle footprint is around 670 MiB PSS. Giving the process about <strong>1,200 MiB</strong> total (about 500 MiB of headroom) is enough to cover the peak.</li>
+          <li><strong>Cleanup:</strong> Residual PSS averages +0.39 MiB with no upward trend. No leak.</li>
         </ul>
       </div>
     </section>
