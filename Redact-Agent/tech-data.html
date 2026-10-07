@@ -17,16 +17,28 @@
   <!-- Top Navigation Header -->
   <header class="navbar">
     <div class="nav-content">
-      <div class="brand">
-        <span class="report-tag">Performance Report</span>
-        <h1>System Resource & Performance Test</h1>
-        <p class="meta">Testing the computer over 30 test runs to see how much memory and processing power it uses</p>
-      </div>
+      <a href="/" class="site-brand">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        <span>Redact Agent</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/fin-data">Fin Data</a></li>
+        <li><a href="/tech-data" class="active">Tech Data</a></li>
+      </ul>
       <div class="nav-actions">
         <button id="btnExportCSV" class="btn btn-outline">Export Raw CSV</button>
       </div>
     </div>
   </header>
+
+  <section class="page-header">
+    <div class="page-header-inner">
+      <span class="report-tag">Performance Report</span>
+      <h1>System Resource & Performance Test</h1>
+      <p class="meta">Testing the computer over 30 test runs to see how much memory and processing power it uses</p>
+    </div>
+  </section>
 
   <main class="page-container">
 

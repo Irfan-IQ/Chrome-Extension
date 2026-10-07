@@ -56,10 +56,34 @@ body {
     font-weight: 700;
     font-size: 1.1rem;
     color: var(--primary-blue-dark);
+    text-decoration: none;
 }
 
 .brand-icon {
     color: var(--primary-blue);
+}
+
+.nav-links {
+    display: flex;
+    gap: 0.4rem;
+    list-style: none;
+    align-items: center;
+}
+
+.nav-links a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 0.5rem 0.9rem;
+    border-radius: var(--radius-md);
+    transition: var(--transition);
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+    color: var(--primary-blue-dark);
+    background: var(--primary-blue-light);
 }
 
 /* Main Container */

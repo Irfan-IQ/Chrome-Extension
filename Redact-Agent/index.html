@@ -5,20 +5,66 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Redact Agent — Home</title>
   <link rel="stylesheet" href="css/home.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <nav class="navbar">
-    <a href="/" class="brand">Redact Agent</a>
-    <ul class="nav-links">
-      <li><a href="/" class="active">Home</a></li>
-      <li><a href="/fin-data">Fin Data</a></li>
-      <li><a href="/tech-data">Tech Data</a></li>
-    </ul>
-  </nav>
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="/" class="nav-brand">
+        <svg class="brand-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        <span>Redact Agent</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="/" class="active">Home</a></li>
+        <li><a href="/fin-data">Fin Data</a></li>
+        <li><a href="/tech-data">Tech Data</a></li>
+      </ul>
+    </div>
+  </header>
 
-  <main>
-    <h1>Hello World</h1>
-  </main>
+  <section class="hero">
+    <div class="badge">Agentic PII Redaction</div>
+    <h1>Welcome to Redact Agent</h1>
+    <p>A self-hosted, open-source Chrome extension that redacts sensitive data on the fly using an agentic Qwen backend.</p>
+    <div class="hero-actions">
+      <a href="/fin-data" class="btn btn-primary">View Financials</a>
+      <a href="/tech-data" class="btn btn-outline">See Performance</a>
+    </div>
+  </section>
+
+  <section class="features">
+    <a href="/fin-data" class="feature-card">
+      <div class="icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      </div>
+      <h3>Financial Analysis</h3>
+      <p>Launch outlay, yearly spend, and scaling economics from 1K to 10K users.</p>
+      <span class="link">Open report &rarr;</span>
+    </a>
+
+    <a href="/tech-data" class="feature-card">
+      <div class="icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 4 4 5-6"/></svg>
+      </div>
+      <h3>Performance Report</h3>
+      <p>CPU, memory, and leak diagnostics measured across 30 benchmark trials.</p>
+      <span class="link">Open report &rarr;</span>
+    </a>
+
+    <div class="feature-card">
+      <div class="icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <h3>Privacy First</h3>
+      <p>Runs on your own infrastructure. No third-party data pipelines, no telemetry resale.</p>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>&copy; 2026 Redact Agent Project.</p>
+  </footer>
 
   <script src="js/home.js"></script>
 </body>
