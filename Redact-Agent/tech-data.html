@@ -48,25 +48,25 @@
       <div class="kpi-card">
         <span class="label">Mean Idle CPU</span>
         <div class="value" id="kpiAvgBeforeCpu">--</div>
-        <span class="kpi-stats" id="kpiStatsBeforeCpu">&sigma; · min · max</span>
+
         <span class="subtext">Baseline utilisation pre-run</span>
       </div>
       <div class="kpi-card">
         <span class="label">Mean Peak CPU</span>
         <div class="value accent-blue" id="kpiAvgPeakCpu">--</div>
-        <span class="kpi-stats" id="kpiStatsPeakCpu">&sigma; · min · max</span>
+
         <span class="subtext">Peak utilisation during active workload</span>
       </div>
       <div class="kpi-card">
         <span class="label">Mean &Delta; Peak PSS</span>
         <div class="value accent-purple" id="kpiAvgDeltaPSS">--</div>
-        <span class="kpi-stats" id="kpiStatsDeltaPSS">&sigma; · min · max</span>
+
         <span class="subtext">Transient working-set allocation</span>
       </div>
       <div class="kpi-card">
         <span class="label">Mean Residual PSS</span>
         <div class="value accent-green" id="kpiAvgLeak">--</div>
-        <span class="kpi-stats" id="kpiStatsLeak">&sigma; · min · max</span>
+
         <span class="subtext">Memory delta after process exit</span>
       </div>
     </section>
@@ -182,25 +182,25 @@
         <div class="kpi-card">
           <span class="label">Time to First Token</span>
           <div class="value accent-blue">98 ms</div>
-          <span class="kpi-stats">p50 · p95 142 ms · p99 184 ms</span>
+
           <span class="subtext">User-perceived responsiveness</span>
         </div>
         <div class="kpi-card">
           <span class="label">End-to-End Latency</span>
           <div class="value">1.08 s</div>
-          <span class="kpi-stats">p50 · p95 1.57 s · p99 2.04 s</span>
+
           <span class="subtext">300 tok in → 100 tok out</span>
         </div>
         <div class="kpi-card">
           <span class="label">Single-Stream Throughput</span>
           <div class="value accent-purple">92 tok/s</div>
-          <span class="kpi-stats">range 68 — 110 tok/s</span>
+
           <span class="subtext">Decode speed, no batching</span>
         </div>
         <div class="kpi-card">
           <span class="label">Batched Throughput (bs=16)</span>
           <div class="value accent-green">1,120 tok/s</div>
-          <span class="kpi-stats">effective per-user 70 tok/s</span>
+
           <span class="subtext">vLLM continuous batching at peak</span>
         </div>
       </div>

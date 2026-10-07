@@ -65,10 +65,6 @@ function renderKPIs() {
   const sign = avgLeak > 0 ? '+' : '';
   document.getElementById('kpiAvgLeak').innerText = `${sign}${avgLeak.toFixed(2)} MiB`;
 
-  document.getElementById('kpiStatsBeforeCpu').innerHTML = fmtStats(beforeCpu, '%');
-  document.getElementById('kpiStatsPeakCpu').innerHTML   = fmtStats(peakCpu, '%');
-  document.getElementById('kpiStatsDeltaPSS').innerHTML  = fmtStats(dPss, ' MiB', 1);
-  document.getElementById('kpiStatsLeak').innerHTML      = fmtStats(leak, ' MiB');
 }
 
 // Chart 1: CPU Lifecycle
