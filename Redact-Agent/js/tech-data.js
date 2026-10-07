@@ -49,6 +49,18 @@ const fmtStats = (arr, unit, dp = 2) =>
 document.addEventListener('DOMContentLoaded', () => {
   renderKPIs();
   initCpuChart();
+  initLeakChart();
+  document.getElementById('btnExportCSV').addEventListener('click', () => {
+    const headers = Object.keys(trials[0]).join(',');
+    const rows = trials.map(r => Object.values(r).join(','));
+    const blob = new Blob([[headers, ...rows].join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'redact-agent-benchmark-30-trials.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
 });
 
 function renderKPIs() {

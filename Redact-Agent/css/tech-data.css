@@ -128,7 +128,7 @@ body {
   gap: 0.4rem;
   list-style: none;
   align-items: center;
-  margin: 0 auto 0 0.5rem;
+  margin-left: auto;
 }
 
 .nav-links a {
@@ -640,4 +640,30 @@ td {
   .content-block { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
   .page-header h1 { font-size: 1.3rem; }
   table { font-size: 0.72rem; }
+}
+
+/* Download CSV link */
+.download-row {
+  text-align: right;
+  margin: -0.5rem 0 0;
+}
+
+.download-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: none;
+  color: var(--brand-blue);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.4rem 0.2rem;
+  transition: color 0.15s;
+}
+
+.download-link:hover {
+  color: var(--brand-blue-hover);
+  text-decoration: underline;
 }

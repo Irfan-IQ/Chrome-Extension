@@ -71,6 +71,13 @@
       </div>
     </section>
 
+    <p class="download-row">
+      <button id="btnExportCSV" class="download-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download raw data (CSV)
+      </button>
+    </p>
+
     <!-- Baseline Delta -->
     <section class="content-block">
       <div class="section-title">
@@ -230,6 +237,33 @@
           <div class="guide-col">
             <span class="guide-label">Observations</span>
             <p class="guide-text">CPU use stays low and predictable. Peaks never cross 33%, and the CPU drops back to idle the instant a run ends.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Leak check chart -->
+    <section class="content-block">
+      <div class="section-title">
+        <h2>Leak Check</h2>
+        <p>Memory left over after each run compared with its starting value. Values near zero mean memory was released.</p>
+      </div>
+      <div class="graph-card">
+        <div class="chart-wrapper">
+          <canvas id="leakChart"></canvas>
+        </div>
+        <div class="guide-container">
+          <div class="guide-col">
+            <span class="guide-label">Series</span>
+            <ul class="guide-list">
+              <li><strong>Red (above 0):</strong> A small amount of memory still held after the run.</li>
+              <li><strong>Teal (below 0):</strong> Post-run footprint ended below the starting value.</li>
+              <li><strong>Zero line:</strong> Full cleanup.</li>
+            </ul>
+          </div>
+          <div class="guide-col">
+            <span class="guide-label">Observations</span>
+            <p class="guide-text">The 30-run average is <strong>+0.36 MiB</strong>, hovering around zero with no upward trend. Memory is being released as expected. No leak.</p>
           </div>
         </div>
       </div>
