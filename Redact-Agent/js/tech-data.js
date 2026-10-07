@@ -49,11 +49,6 @@ const fmtStats = (arr, unit, dp = 2) =>
 document.addEventListener('DOMContentLoaded', () => {
   renderKPIs();
   initCpuChart();
-  initRamComparisonChart();
-  initDeltaPssChart();
-  initLeakChart();
-  renderTable(trials);
-  setupEvents();
 });
 
 function renderKPIs() {

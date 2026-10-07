@@ -25,7 +25,7 @@
             <a href="/" class="nav-brand">
                 <svg class="brand-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                 <span>Redact Agent</span>
-                <span class="ps-chip">SIH · PS XXXX</span>
+
             </a>
             <ul class="nav-links">
                 <li><a href="/">Home</a></li>
@@ -67,205 +67,58 @@
                     <span class="metric-note">Only ~2x cost for a 10x user increase</span>
                 </div>
             </div>
-            <p class="fx-note">USD figures converted at <strong>1 USD = ₹96</strong>. L = lakh (1,00,000); Cr = crore (100 lakh).</p>
+            <p class="fx-note">USD figures converted at <strong>1 USD = ₹96</strong>. L = lakh; Cr = crore.</p>
 
-            <!-- Scope Note -->
-            <div class="scope-note">
-                <strong>Scope:</strong> infrastructure costs only. Engineering time, marketing, legal fees and in-house hardware are not included. Vendor prices are from published rate cards (Jan 2026).
-            </div>
-
-            <!-- Assumptions Table -->
-            <div class="card">
-                <h2>Workload Assumptions</h2>
-                <p class="section-desc">Every number in this report comes from these parameters.</p>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Parameter</th>
-                                <th>1,000 Users</th>
-                                <th>10,000 Users</th>
-                                <th>Rationale</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Daily active users (DAU / MAU)</td>
-                                <td>35% · 350 DAU</td>
-                                <td>35% · 3,500 DAU</td>
-                                <td>Typical for a productivity Chrome extension</td>
-                            </tr>
-                            <tr>
-                                <td>Peak concurrency ratio (DAU → concurrent)</td>
-                                <td>~5%</td>
-                                <td>~5%</td>
-                                <td>IST business-hour peak, derived from session telemetry</td>
-                            </tr>
-                            <tr>
-                                <td>Redactions per DAU / day</td>
-                                <td>50</td>
-                                <td>50</td>
-                                <td>Form fills, chat messages, screenshots, docs</td>
-                            </tr>
-                            <tr>
-                                <td>Avg tokens / redaction (in · out)</td>
-                                <td>300 · 100</td>
-                                <td>300 · 100</td>
-                                <td>Mean observed across 30-trial corpus</td>
-                            </tr>
-                            <tr>
-                                <td>GPU utilisation target (peak)</td>
-                                <td>~15%</td>
-                                <td>~85%</td>
-                                <td>vLLM continuous batching, 24 GB class GPU</td>
-                            </tr>
-                            <tr>
-                                <td>Cold-start / cache miss rate</td>
-                                <td>&lt; 2%</td>
-                                <td>&lt; 2%</td>
-                                <td>AWQ-INT4 model held resident; prefix cache enabled</td>
-                            </tr>
-                            <tr>
-                                <td>Annual redaction volume</td>
-                                <td>~6.4M calls</td>
-                                <td>~64M calls</td>
-                                <td>DAU × 50 × 365</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- One-Time Investment Table -->
+            <!-- Launch Outlay -->
             <div class="card">
                 <h2>Launch Outlay</h2>
-                <p class="section-desc">Paid once at launch; covers Chrome Web Store registration, setup, models, and docs.</p>
+                <p class="section-desc">One-time costs to ship the extension.</p>
                 <div class="table-responsive">
                     <table>
                         <thead>
                             <tr>
-                                <th>#</th>
                                 <th>Item</th>
-                                <th>Cost (USD)</th>
-                                <th>Notes</th>
+                                <th>Cost</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>1</td>
-                                <td>Chrome Web Store developer registration</td>
-                                <td>$5</td>
-                                <td>One-time per Google account</td>
-                            </tr>
-                            <tr>
-                                <td>2</td>
-                                <td>Domain name (first year)</td>
-                                <td>$10</td>
-                                <td>.com via Cloudflare / Namecheap</td>
-                            </tr>
-                            <tr>
-                                <td>3</td>
-                                <td>Store creative assets (icon, 5 screenshots, promo tile)</td>
-                                <td>$50</td>
-                                <td>Canva / Fiverr; $0 if in-house</td>
-                            </tr>
-                            <tr>
-                                <td>4</td>
-                                <td>Privacy policy + Terms of Service templates</td>
-                                <td>$30</td>
-                                <td>Required by Web Store (Termly / iubenda)</td>
-                            </tr>
-                            <tr>
-                                <td>5</td>
-                                <td>Model prep (download, AWQ quantise, benchmark)</td>
-                                <td>$30</td>
-                                <td>~40 spot GPU-hrs on RunPod</td>
-                            </tr>
-                            <tr>
-                                <td>6</td>
-                                <td>Load / stress testing (k6 or Locust against vLLM)</td>
-                                <td>$20</td>
-                                <td>Short-lived GPU + CPU VMs</td>
-                            </tr>
-                            <tr>
-                                <td>7</td>
-                                <td>SSL, CDN, CI setup</td>
-                                <td>$0</td>
-                                <td>Let's Encrypt, Cloudflare, GitHub Actions free tiers</td>
-                            </tr>
+                            <tr><td>Chrome Web Store registration</td><td>$5</td></tr>
+                            <tr><td>Domain (first year)</td><td>$10</td></tr>
+                            <tr><td>Store creative assets</td><td>$50</td></tr>
+                            <tr><td>Privacy policy + ToS templates</td><td>$30</td></tr>
+                            <tr><td>Model prep and benchmarking</td><td>$30</td></tr>
+                            <tr><td>Load testing</td><td>$20</td></tr>
                             <tr class="table-total">
-                                <td colspan="2"><strong>Total One-Time Outlay</strong></td>
-                                <td colspan="2"><strong>≈ $145</strong> &nbsp;·&nbsp; ≈ ₹13,920</td>
+                                <td><strong>Total</strong></td>
+                                <td><strong>≈ $145 · ₹13,920</strong></td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Recurring Yearly Expenses (1,000 users) -->
+            <!-- Yearly scenarios -->
             <div class="card">
-                <h2>Yearly Running Costs (1,000 Users)</h2>
-                <p class="section-desc">GPU inference backend dominates ~80-85% of total recurring expenses.</p>
-
-                <div class="sub-heading">GPU Hosting Options <span class="date-stamp">(prices sourced Jan 2026)</span></div>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Option</th>
-                                <th>Spec</th>
-                                <th>Monthly</th>
-                                <th>Yearly</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr class="highlight-row">
-                                <td><strong>Hetzner GEX44 dedicated (Recommended)</strong></td>
-                                <td>RTX 4000 SFF Ada 20 GB</td>
-                                <td>$200</td>
-                                <td>$2,400</td>
-                            </tr>
-                            <tr>
-                                <td>RunPod reserved</td>
-                                <td>1x L4 24 GB</td>
-                                <td>$280</td>
-                                <td>$3,360</td>
-                            </tr>
-                            <tr>
-                                <td>RunPod Serverless</td>
-                                <td>A10 24 GB, scale-to-zero</td>
-                                <td>$150 - $400</td>
-                                <td>$1,800 - $4,800</td>
-                            </tr>
-                            <tr>
-                                <td>GCP/AWS 1-yr reserved</td>
-                                <td>1x L4/g5.xlarge</td>
-                                <td>$300</td>
-                                <td>$3,600</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="sub-heading" style="margin-top: 2rem;">Yearly Software Spend Scenarios (1,000 Users)</div>
+                <h2>Yearly Running Costs</h2>
+                <p class="section-desc">The GPU dominates ~85% of this. Three realistic setups:</p>
                 <div class="scenarios-grid">
                     <div class="scenario-box">
-                        <h4>Lean Hetzner GPU</h4>
-                        <span class="scenario-price">~ $2,800 / yr</span>
-                        <span class="scenario-inr">≈ ₹2.69L / yr</span>
-                        <p>Hetzner dedicated + free tiers</p>
+                        <h4>Lean</h4>
+                        <span class="scenario-price">$2,800 / yr</span>
+                        <span class="scenario-inr">≈ ₹2.69L</span>
+                        <p>Hetzner dedicated GPU + free tiers</p>
                     </div>
                     <div class="scenario-box featured">
-                        <h4>Comfortable Setup</h4>
-                        <span class="scenario-price">~ $4,200 / yr</span>
-                        <span class="scenario-inr">≈ ₹4.03L / yr</span>
-                        <p>RunPod reserved + Sentry Team + managed Postgres</p>
+                        <h4>Comfortable</h4>
+                        <span class="scenario-price">$4,200 / yr</span>
+                        <span class="scenario-inr">≈ ₹4.03L</span>
+                        <p>RunPod reserved + managed Postgres</p>
                     </div>
                     <div class="scenario-box">
-                        <h4>Hyperscaler On-Demand</h4>
-                        <span class="scenario-price">~ $6,500 / yr</span>
-                        <span class="scenario-inr">≈ ₹6.24L / yr</span>
-                        <p>GCP / AWS standard on-demand deployment</p>
+                        <h4>Hyperscaler</h4>
+                        <span class="scenario-price">$6,500 / yr</span>
+                        <span class="scenario-inr">≈ ₹6.24L</span>
+                        <p>GCP / AWS on-demand</p>
                     </div>
                 </div>
             </div>
@@ -275,122 +128,28 @@
         <section id="api-compare" class="content-section">
             <div class="card">
                 <h2>Self-Hosted vs. Managed APIs</h2>
-                <p class="section-desc">Yearly cost at 1,000 users (~6.4M redactions; 300 tokens in and 100 tokens out per call).</p>
+                <p class="section-desc">Yearly cost at 1,000 users (~6.4M redactions).</p>
                 <div class="table-responsive">
                     <table>
                         <thead>
                             <tr>
                                 <th>Backend</th>
-                                <th>Unit Price</th>
-                                <th>Est. Yearly Cost (1K users)</th>
-                                <th>Notes</th>
+                                <th>Yearly Cost</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr class="highlight-row">
-                                <td><strong>Self-hosted Qwen2.5-7B AWQ (Hetzner GEX44)</strong></td>
-                                <td>Flat $200 / mo GPU</td>
-                                <td><strong>~ $2,400</strong> · ₹2.30L</td>
-                                <td>Marginal cost per call → $0</td>
+                                <td><strong>Self-hosted Qwen2.5-7B (Hetzner)</strong></td>
+                                <td><strong>$2,400 · ₹2.30L</strong></td>
                             </tr>
-                            <tr>
-                                <td>OpenAI gpt-4o-mini</td>
-                                <td>$0.60 in / $2.40 out per 1M tok</td>
-                                <td>~ $2,700 · ₹2.59L</td>
-                                <td>Cost scales linearly with volume; data leaves country</td>
-                            </tr>
-                            <tr>
-                                <td>Anthropic Claude Haiku 4.5</td>
-                                <td>$1.00 in / $5.00 out per 1M tok</td>
-                                <td>~ $5,100 · ₹4.90L</td>
-                                <td>Highest quality; cross-border data transfer</td>
-                            </tr>
-                            <tr>
-                                <td>Azure AI PII Detection</td>
-                                <td>~ $1 per 1,000 records</td>
-                                <td>~ $6,400 · ₹6.14L</td>
-                                <td>Managed, but narrow (classification only, no agentic rewrite)</td>
-                            </tr>
-                            <tr>
-                                <td>Gemini 2.0 Flash</td>
-                                <td>$0.10 in / $0.40 out per 1M tok</td>
-                                <td>~ $450 · ₹43K</td>
-                                <td>Cheapest API, but third-party processing of PII</td>
-                            </tr>
+                            <tr><td>OpenAI gpt-4o-mini</td><td>$2,700 · ₹2.59L</td></tr>
+                            <tr><td>Anthropic Claude Haiku</td><td>$5,100 · ₹4.90L</td></tr>
+                            <tr><td>Azure AI PII Detection</td><td>$6,400 · ₹6.14L</td></tr>
+                            <tr><td>Gemini 2.0 Flash</td><td>$450 · ₹43K</td></tr>
                         </tbody>
                     </table>
                 </div>
-                <p class="section-desc" style="margin-top: 1rem;">At 10K users the self-hosted line stays near $4,800/yr; API lines grow with volume, so they rise roughly 10&times; while ours rises about 2&times;. Self-hosting also keeps PII inside the organisation&rsquo;s own network, which matters for DPDP-Act and GDPR compliance.</p>
-            </div>
-        </section>
-
-        <!-- Scaling Comparison -->
-        <section id="tech" class="content-section">
-            <div class="card">
-                <h2>Scaling: 1,000 vs. 10,000 Users</h2>
-                <p class="section-desc">Only three lines move much: GPU count, Postgres tier, and Sentry plan.</p>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Line Item</th>
-                                <th>1,000 Users</th>
-                                <th>10,000 Users</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Peak concurrent sessions</td>
-                                <td>10 - 20</td>
-                                <td>100 - 200</td>
-                            </tr>
-                            <tr>
-                                <td>GPUs needed (24 GB class)</td>
-                                <td>1</td>
-                                <td>2 - 3</td>
-                            </tr>
-                            <tr>
-                                <td>GPU Hosting - Lean (Hetzner)</td>
-                                <td>$2,400</td>
-                                <td>$4,800 (2x)</td>
-                            </tr>
-                            <tr>
-                                <td>Managed Postgres</td>
-                                <td>$0 (free tier)</td>
-                                <td>$180 (paid tier)</td>
-                            </tr>
-                            <tr>
-                                <td>Sentry Error Monitoring</td>
-                                <td>$0 (dev free)</td>
-                                <td>$312 (Team plan)</td>
-                            </tr>
-                            <tr class="table-total">
-                                <td><strong>Lean Yearly Total</strong></td>
-                                <td><strong>~ $2,800</strong><br><span class="inr-sub">₹2.69L</span></td>
-                                <td><strong>~ $5,700</strong><br><span class="inr-sub">₹5.47L</span></td>
-                            </tr>
-                            <tr class="table-total">
-                                <td><strong>Comfortable Yearly Total</strong></td>
-                                <td><strong>~ $4,200</strong><br><span class="inr-sub">₹4.03L</span></td>
-                                <td><strong>~ $8,700</strong><br><span class="inr-sub">₹8.35L</span></td>
-                            </tr>
-                            <tr>
-                                <td><strong>Cost per user / month (Comfortable)</strong></td>
-                                <td><strong>$0.35</strong></td>
-                                <td><strong>$0.073</strong></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Interactive Chart Section -->
-            <div class="card chart-card">
-                <h2>Cost vs. User Growth</h2>
-                <p class="section-desc">10&times; users costs only about 2&times; more.</p>
-                <div class="chart-container">
-                    <canvas id="scalingChart"></canvas>
-                </div>
+                <p class="section-desc" style="margin-top: 1rem;">At 10K users, APIs grow ~10&times; while self-hosted grows ~2&times;. PII also stays in-house, which matters for DPDP-Act and GDPR.</p>
             </div>
         </section>
 
@@ -446,74 +205,15 @@
                 <p class="section-desc" style="margin-top: 0.75rem;">Break-even hits in <strong>Year 1</strong> (around month 11 under these conversion assumptions). Serving one more user costs almost nothing until the current GPU runs out of headroom.</p>
             </div>
 
-            <!-- Sensitivity -->
-            <div class="card">
-                <h2>Sensitivity Analysis</h2>
-                <p class="section-desc">What happens to the Year-3 lean infra cost if assumptions shift?</p>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Scenario</th>
-                                <th>Effect on yearly infra (10K users)</th>
-                                <th>Cost / user / month</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Base case (lean Hetzner)</td>
-                                <td>$5,700 · ₹5.47L</td>
-                                <td>$0.048</td>
-                            </tr>
-                            <tr>
-                                <td>GPU unit price &uarr; 25%</td>
-                                <td>$6,900 · ₹6.62L</td>
-                                <td>$0.058</td>
-                            </tr>
-                            <tr>
-                                <td>Peak concurrency &uarr; 2&times; (needs +1 GPU)</td>
-                                <td>$8,100 · ₹7.78L</td>
-                                <td>$0.068</td>
-                            </tr>
-                            <tr>
-                                <td>INR / USD = ₹102 (depreciation)</td>
-                                <td>$5,700 · ₹5.81L</td>
-                                <td>$0.048</td>
-                            </tr>
-                            <tr>
-                                <td>Combined worst-case (GPU&nbsp;+25%, concurrency&nbsp;2&times;, ₹102)</td>
-                                <td>$9,700 · ₹9.89L</td>
-                                <td>$0.081</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <p class="section-desc" style="margin-top: 0.75rem;">In the combined worst case, cost per user still sits below <strong>$0.09 / month</strong>, far below a $1 price point.</p>
-            </div>
         </section>
 
         <!-- Final Verdict / Summary Section -->
         <section id="verdict" class="content-section">
             <div class="card verdict-card-box">
-                <h2>Final Verdict</h2>
+                <h2>Bottom Line</h2>
                 <blockquote class="verdict-quote">
-                    Launch costs about <strong>$145</strong>. Running costs are <strong>$2,800–$4,200/yr</strong> at 1,000 users and <strong>$5,700–$8,700/yr</strong> at 10,000 users on a self-hosted Qwen backend. 10&times; the users costs only about 2&times; more.
+                    Launch costs about <strong>$145</strong>. Running the backend costs <strong>$2,800–$4,200/yr</strong> at 1,000 users and <strong>$5,700–$8,700/yr</strong> at 10,000. At a $1/user/month price point, Year 1 breaks even and Year 3 margin sits above 90%.
                 </blockquote>
-
-                <div class="highlights-grid">
-                    <div class="highlight-item">
-                        <h3>Per-User Cost</h3>
-                        <p>$0.23–$0.35/user/mo at 1K users, falling to $0.05–$0.07 at 10K users. A $1/user/mo price keeps gross margin above 90%.</p>
-                    </div>
-                    <div class="highlight-item">
-                        <h3>Software Choices</h3>
-                        <p>AWQ-INT4 quantisation shrinks Qwen2.5-7B to ~6 GB and roughly doubles throughput. vLLM continuous batching holds GPU use near 90% at peak.</p>
-                    </div>
-                    <div class="highlight-item">
-                        <h3>Scale Behaviour</h3>
-                        <p>At 10K users the GPU runs close to full; at 1K users it sits around 15%. Non-GPU items grow slower than user count.</p>
-                    </div>
-                </div>
             </div>
         </section>
 
