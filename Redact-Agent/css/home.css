@@ -63,6 +63,19 @@ body {
   color: var(--primary-blue);
 }
 
+.ps-chip {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.15rem 0.55rem;
+  background: var(--primary-blue-light);
+  color: var(--primary-blue-dark);
+  border: 1px solid rgba(2, 132, 199, 0.2);
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
 .nav-links {
   display: flex;
   gap: 0.4rem;

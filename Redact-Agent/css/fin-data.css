@@ -63,6 +63,19 @@ body {
     color: var(--primary-blue);
 }
 
+.ps-chip {
+    display: inline-block;
+    margin-left: 0.4rem;
+    padding: 0.15rem 0.55rem;
+    background: var(--primary-blue-light);
+    color: var(--primary-blue-dark);
+    border: 1px solid rgba(2, 132, 199, 0.2);
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
 .nav-links {
     display: flex;
     gap: 0.4rem;
@@ -182,6 +195,52 @@ body {
 .metric-note {
     font-size: 0.825rem;
     color: var(--text-muted);
+}
+
+.metric-inr {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-top: -0.1rem;
+}
+
+.scenario-inr {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-top: 0.15rem;
+}
+
+.inr-sub {
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.fx-note {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 0.5rem;
+}
+
+.scope-note {
+    background: var(--primary-blue-light);
+    border-left: 3px solid var(--primary-blue);
+    border-radius: var(--radius-md);
+    padding: 0.9rem 1.1rem;
+    font-size: 0.9rem;
+    color: var(--text-main);
+    line-height: 1.5;
+}
+
+.date-stamp {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
 }
 
 /* Card Styling */
@@ -356,4 +415,29 @@ tbody tr:hover {
     color: var(--text-muted);
     font-size: 0.875rem;
     margin-top: 2rem;
+}
+/* Mobile breakpoints */
+@media (max-width: 768px) {
+    .nav-container { padding: 0.65rem 1rem; }
+    .nav-brand span:not(.ps-chip) { font-size: 1rem; }
+    .ps-chip { font-size: 0.6rem; padding: 0.1rem 0.4rem; }
+    .nav-links { gap: 0.1rem; }
+    .nav-links a { padding: 0.4rem 0.55rem; font-size: 0.85rem; }
+    .main-container { padding: 0 1rem; gap: 2rem; }
+    .card { padding: 1.25rem; }
+    .hero-banner h1 { font-size: 1.75rem; }
+    .metrics-grid, .scenarios-grid { grid-template-columns: 1fr; }
+    table { font-size: 0.82rem; }
+    th, td { padding: 0.5rem 0.6rem; }
+}
+
+/* Print styles */
+@media print {
+    .navbar, .footer { display: none; }
+    body { background: #fff; }
+    .card { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+    .hero-banner h1 { font-size: 1.4rem; }
+    .scope-note { background: #f3f4f6 !important; }
+    table { font-size: 0.78rem; }
+    a { color: inherit; text-decoration: none; }
 }

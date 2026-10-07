@@ -110,6 +110,19 @@ body {
   color: var(--brand-blue);
 }
 
+.ps-chip {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.15rem 0.55rem;
+  background: var(--brand-blue-light);
+  color: var(--brand-blue-hover);
+  border: 1px solid rgba(2, 132, 199, 0.2);
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
 .nav-links {
   display: flex;
   gap: 0.4rem;
@@ -230,6 +243,52 @@ body {
 .kpi-card .subtext {
   font-size: 0.8rem;
   color: var(--text-secondary);
+}
+
+.kpi-card .kpi-stats {
+  display: block;
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  margin: -0.1rem 0 0.4rem;
+  letter-spacing: 0.01em;
+}
+
+/* Methodology grid */
+.methodology-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.method-card {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.1rem;
+}
+
+.method-card h4 {
+  font-size: 0.9rem;
+  color: var(--brand-blue-hover);
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.method-card p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.method-card code {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  background: var(--bg-surface);
+  padding: 0.05rem 0.3rem;
+  border-radius: 4px;
+  border: 1px solid var(--border-light);
 }
 
 .accent-blue { color: var(--brand-blue) !important; }
@@ -525,4 +584,33 @@ td {
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
+}
+/* Mobile breakpoints */
+@media (max-width: 768px) {
+  .nav-content { padding: 0 1rem; gap: 0.5rem; }
+  .site-brand span:not(.ps-chip) { font-size: 0.95rem; }
+  .ps-chip { font-size: 0.6rem; padding: 0.1rem 0.4rem; }
+  .nav-links { gap: 0.1rem; margin: 0; }
+  .nav-links a { padding: 0.35rem 0.5rem; font-size: 0.82rem; }
+  .nav-actions .btn { padding: 0.4rem 0.65rem; font-size: 0.75rem; }
+  .page-header-inner { padding: 1.25rem 1rem; }
+  .page-header h1 { font-size: 1.3rem; }
+  .page-container { padding: 1rem; }
+  .content-block { padding: 1rem; }
+  .kpi-row { grid-template-columns: 1fr 1fr; }
+  .kpi-card .value { font-size: 1.5rem; }
+  .methodology-grid, .summary-grid, .glossary-grid { grid-template-columns: 1fr; }
+  .chart-wrapper { height: 260px; }
+  table { font-size: 0.78rem; }
+  th, td { padding: 0.45rem 0.5rem; }
+  .guide-container { flex-direction: column; gap: 0.75rem; }
+}
+
+/* Print styles */
+@media print {
+  .navbar, .footer, .nav-actions, .table-search { display: none; }
+  body { background: #fff; }
+  .content-block { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+  .page-header h1 { font-size: 1.3rem; }
+  table { font-size: 0.72rem; }
 }

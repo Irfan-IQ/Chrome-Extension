@@ -37,6 +37,14 @@ const trials = [
 ];
 
 const mean = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
+const stdev = arr => {
+  const m = mean(arr);
+  return Math.sqrt(arr.reduce((s, v) => s + (v - m) ** 2, 0) / (arr.length - 1));
+};
+const minv = arr => Math.min(...arr);
+const maxv = arr => Math.max(...arr);
+const fmtStats = (arr, unit, dp = 2) =>
+  `&sigma; ${stdev(arr).toFixed(dp)}${unit} · min ${minv(arr).toFixed(dp)}${unit} · max ${maxv(arr).toFixed(dp)}${unit}`;
 
 document.addEventListener('DOMContentLoaded', () => {
   renderKPIs();
@@ -49,13 +57,23 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function renderKPIs() {
-  document.getElementById('kpiAvgBeforeCpu').innerText = `${mean(trials.map(d => d['Before_CPU_%'])).toFixed(2)}%`;
-  document.getElementById('kpiAvgPeakCpu').innerText = `${mean(trials.map(d => d['During_Peak_CPU_%'])).toFixed(2)}%`;
-  document.getElementById('kpiAvgDeltaPSS').innerText = `${mean(trials.map(d => d['Delta_Peak_PSS_MiB'])).toFixed(1)} MiB`;
+  const beforeCpu = trials.map(d => d['Before_CPU_%']);
+  const peakCpu   = trials.map(d => d['During_Peak_CPU_%']);
+  const dPss      = trials.map(d => d['Delta_Peak_PSS_MiB']);
+  const leak      = trials.map(d => d['Memory_Leak_PSS_MiB']);
 
-  const avgLeak = mean(trials.map(d => d['Memory_Leak_PSS_MiB']));
+  document.getElementById('kpiAvgBeforeCpu').innerText = `${mean(beforeCpu).toFixed(2)}%`;
+  document.getElementById('kpiAvgPeakCpu').innerText   = `${mean(peakCpu).toFixed(2)}%`;
+  document.getElementById('kpiAvgDeltaPSS').innerText  = `${mean(dPss).toFixed(1)} MiB`;
+
+  const avgLeak = mean(leak);
   const sign = avgLeak > 0 ? '+' : '';
   document.getElementById('kpiAvgLeak').innerText = `${sign}${avgLeak.toFixed(2)} MiB`;
+
+  document.getElementById('kpiStatsBeforeCpu').innerHTML = fmtStats(beforeCpu, '%');
+  document.getElementById('kpiStatsPeakCpu').innerHTML   = fmtStats(peakCpu, '%');
+  document.getElementById('kpiStatsDeltaPSS').innerHTML  = fmtStats(dPss, ' MiB', 1);
+  document.getElementById('kpiStatsLeak').innerHTML      = fmtStats(leak, ' MiB');
 }
 
 // Chart 1: CPU Lifecycle
