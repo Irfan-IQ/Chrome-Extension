@@ -140,11 +140,17 @@ async def auth_and_log(request: Request, call_next):
                 content={"detail": "missing or invalid authorization token"},
             )
 
-    response = await call_next(request)
-    ms = int((time.time() - t0) * 1000)
-    get_metrics_tracker().record_request(float(ms), is_error=(response.status_code >= 400))
-    logger.info(f"{request.method} {request.url.path} {response.status_code} ({ms}ms)")
-    return response
+    try:
+        response = await call_next(request)
+        ms = int((time.time() - t0) * 1000)
+        get_metrics_tracker().record_request(float(ms), is_error=(response.status_code >= 400))
+        logger.info(f"{request.method} {request.url.path} {response.status_code} ({ms}ms)")
+        return response
+    except Exception as exc:
+        ms = int((time.time() - t0) * 1000)
+        get_metrics_tracker().record_request(float(ms), is_error=True)
+        logger.error(f"{request.method} {request.url.path} 500 ({ms}ms): {exc}")
+        raise
 
 
 @app.get("/")

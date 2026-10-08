@@ -47,7 +47,8 @@ class ServerMetricsTracker:
         while self._recent_request_timestamps and self._recent_request_timestamps[0] < cutoff:
             self._recent_request_timestamps.popleft()
         count = len(self._recent_request_timestamps)
-        return round(count / 10.0, 2) if count > 0 else 0.0
+        window = min(10.0, max(0.1, now - self.start_time))
+        return round(count / window, 2) if count > 0 else 0.0
 
     def get_summary(self) -> Dict[str, Any]:
         return {
