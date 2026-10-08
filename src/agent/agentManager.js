@@ -72,6 +72,7 @@ async function run(userRequest, apiKey, onStep) {
         parts: [{
           functionResponse: {
             name: toolName,
+            id: toolCall.id || null,
             response: { success: false,
               error: { code: "VALIDATION_FAILED", message: validation.error } },
           },
@@ -141,7 +142,7 @@ async function run(userRequest, apiKey, onStep) {
     );
     notify(stepEntry);
 
-    var funcResp = AgentLLMClient.buildFunctionResponseMessage(toolName, toolResult);
+    var funcResp = AgentLLMClient.buildFunctionResponseMessage(toolName, toolResult, toolCall.id || null);
     messages.push(funcResp);
   }
 

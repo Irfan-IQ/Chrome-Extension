@@ -91,11 +91,13 @@ async function generateWithTools(messages, toolDefinitions, apiKey) {
   for (var i = 0; i < parts.length; i++) {
     var part = parts[i];
     if (part && part.functionCall) {
+      var callId = part.functionCall.id || ("call_" + Math.random().toString(36).slice(2, 9));
       return {
         type: "tool_call",
         toolCall: {
           name: part.functionCall.name,
           args: part.functionCall.args || {},
+          id: callId,
         },
         rawContent: candidate.content,
       };
@@ -108,12 +110,12 @@ async function generateWithTools(messages, toolDefinitions, apiKey) {
   return { type: "text", text: text, rawContent: candidate.content };
 }
 
-function buildFunctionResponseMessage(toolName, toolResult) {
+function buildFunctionResponseMessage(toolName, toolResult, callId) {
   var safeResult = sanitizeForLLM(toolResult);
   safeResult = clampPayload(safeResult);
   return {
     role: "user",
-    parts: [{ functionResponse: { name: toolName, response: safeResult } }],
+    parts: [{ functionResponse: { name: toolName, response: safeResult, id: callId || null } }],
   };
 }
 
@@ -221,6 +223,7 @@ async function generateWithServer(messages, toolDefinitions, serverUrl) {
     });
   }
 
+  var activeCallId = null;
   for (var i = 0; i < messages.length; i++) {
     var m = messages[i];
     if (!m || !m.parts) continue;
@@ -236,21 +239,27 @@ async function generateWithServer(messages, toolDefinitions, serverUrl) {
             ? part.functionResponse.response
             : JSON.stringify(part.functionResponse.response || {});
         } catch (e) {}
+        var respCallId = part.functionResponse.id || activeCallId || ("call_" + Math.random().toString(36).slice(2, 9));
         openaiMessages.push({
           role: "tool",
+          tool_call_id: respCallId,
           name: part.functionResponse.name,
           content: respStr,
         });
       } else if (part.functionCall) {
+        var cid = part.functionCall.id || activeCallId || ("call_" + Math.random().toString(36).slice(2, 9));
+        activeCallId = cid;
         openaiMessages.push({
           role: "assistant",
           content: null,
           tool_calls: [{
-            id: "call_" + Math.random().toString(36).slice(2, 9),
+            id: cid,
             type: "function",
             function: {
               name: part.functionCall.name,
-              arguments: JSON.stringify(part.functionCall.args || {}),
+              arguments: typeof part.functionCall.args === "string"
+                ? part.functionCall.args
+                : JSON.stringify(part.functionCall.args || {}),
             },
           }],
         });
@@ -306,6 +315,7 @@ async function generateWithServer(messages, toolDefinitions, serverUrl) {
     var tc = msg.tool_calls[0];
     var fnName = (tc.function && tc.function.name) || "";
     var rawArgs = (tc.function && tc.function.arguments) || "{}";
+    var callId = tc.id || ("call_" + Math.random().toString(36).slice(2, 9));
     var parsedArgs = {};
     if (typeof rawArgs === "object" && rawArgs !== null) {
       parsedArgs = rawArgs;
@@ -316,10 +326,10 @@ async function generateWithServer(messages, toolDefinitions, serverUrl) {
 
     return {
       type: "tool_call",
-      toolCall: { name: fnName, args: parsedArgs },
+      toolCall: { name: fnName, args: parsedArgs, id: callId },
       rawContent: {
         role: "model",
-        parts: [{ functionCall: { name: fnName, args: parsedArgs } }],
+        parts: [{ functionCall: { name: fnName, args: parsedArgs, id: callId } }],
       },
     };
   }
