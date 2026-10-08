@@ -1,18 +1,58 @@
 :root {
-  --bg: #f7f7f8;
-  --panel-bg: #ffffff;
-  --border: #e3e3e8;
-  --text: #1f2023;
-  --text-muted: #6b6f76;
-  --user-bubble: #2563eb;
+  /* Brand colors matching redact-agent.vercel.app */
+  --primary-blue: #0284c7;
+  --primary-blue-dark: #0369a1;
+  --primary-blue-light: #e0f2fe;
+  --accent-blue: #38bdf8;
+
+  /* Surfaces & Canvas */
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-subtle: #f1f5f9;
+
+  /* Text hierarchy */
+  --text-main: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+
+  /* Borders & Dividers */
+  --border-color: #e2e8f0;
+  --border-medium: #cbd5e1;
+
+  /* Status */
+  --status-green: #059669;
+  --status-amber: #d97706;
+  --status-red: #dc2626;
+
+  /* Elevation & Shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 999px;
+
+  /* Motion */
+  --transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Legacy variable mappings mapped to website tokens */
+  --bg: var(--bg-main);
+  --panel-bg: var(--bg-card);
+  --border: var(--border-color);
+  --text: var(--text-main);
+  --user-bubble: var(--primary-blue);
   --user-text: #ffffff;
-  --ai-bubble: #ffffff;
-  --ai-border: #e3e3e8;
-  --accent: #2563eb;
-  --danger: #c0362c;
-  --radius: 14px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
-    Arial, sans-serif;
+  --ai-bubble: var(--bg-card);
+  --ai-border: var(--border-color);
+  --accent: var(--primary-blue);
+  --danger: var(--status-red);
+  --radius: var(--radius-lg);
+
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 * {
