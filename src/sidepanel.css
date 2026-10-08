@@ -966,16 +966,17 @@ body {
 
 /* Agent task composer */
 .agent-composer-section {
-  background: var(--panel-bg);
-  border-bottom: 1px solid var(--border);
-  padding: 12px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+  padding: 14px;
   flex-shrink: 0;
+  box-shadow: var(--shadow-xs);
 }
 .agent-composer-hint {
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-bottom: 8px;
-  line-height: 1.4;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  margin-bottom: 9px;
+  line-height: 1.45;
 }
 .agent-composer-row {
   display: flex;
@@ -985,43 +986,65 @@ body {
 .agent-input {
   flex: 1;
   resize: none;
-  padding: 9px 11px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  padding: 9px 12px;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
   font-family: inherit;
   font-size: 13px;
-  line-height: 1.4;
+  line-height: 1.45;
+  color: var(--text-main);
   max-height: 100px;
+  transition: var(--transition);
 }
 .agent-input:focus {
-  outline: 2px solid rgba(37,99,235,0.35);
-  border-color: var(--accent);
+  outline: none;
+  background: var(--bg-card);
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
 }
 .agent-run-btn {
   white-space: nowrap;
   flex-shrink: 0;
-  padding: 9px 14px;
+  padding: 9px 15px;
   font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  background: var(--primary-blue);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+  transition: var(--transition);
+}
+.agent-run-btn:hover:not(:disabled) {
+  background: var(--primary-blue-dark);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Quick-task shortcut buttons */
 .agent-quick-tasks {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 8px;
+  gap: 6px;
+  margin-top: 10px;
 }
 .quick-task-btn {
   font-size: 11px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #1d4ed8;
-  border-radius: 999px;
-  padding: 3px 10px;
+  font-weight: 550;
+  background: var(--primary-blue-light);
+  border: 1px solid rgba(2, 132, 199, 0.22);
+  color: var(--primary-blue-dark);
+  border-radius: var(--radius-full);
+  padding: 3.5px 11px;
   cursor: pointer;
-  transition: background 0.1s;
+  transition: var(--transition);
 }
-.quick-task-btn:hover { background: #dbeafe; }
+.quick-task-btn:hover {
+  background: #bae6fd;
+  border-color: var(--primary-blue);
+  transform: translateY(-1px);
+}
 
 /* Agent execution log */
 .agent-log-panel {
