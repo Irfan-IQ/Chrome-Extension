@@ -84,6 +84,7 @@ class Settings:
     # No quantization — the H200 has plenty of VRAM and VL quant kernels are
     # still rough in vLLM.
     VLLM_ENDPOINT: str = os.getenv("VLLM_ENDPOINT", "http://localhost:8001/v1")
+    VLLM_PORT: int = int(os.getenv("VLLM_PORT", "8001"))
     VLLM_MODEL: str = os.getenv("VLLM_MODEL", "Qwen/Qwen3-VL-30B-A3B-Instruct")
     VLLM_GPU_MEMORY_UTILIZATION: float = float(os.getenv("VLLM_GPU_MEMORY_UTILIZATION", "0.90"))
     VLLM_MAX_MODEL_LEN: int = int(os.getenv("VLLM_MAX_MODEL_LEN", "32768"))
@@ -131,6 +132,7 @@ class Settings:
         cmd = [
             "python", "-m", "vllm.entrypoints.openai.api_server",
             "--model", cls.VLLM_MODEL,
+            "--port", str(cls.VLLM_PORT),
             "--dtype", cls.VLLM_DTYPE,
             "--max-model-len", str(cls.VLLM_MAX_MODEL_LEN),
             "--gpu-memory-utilization", str(cls.VLLM_GPU_MEMORY_UTILIZATION),

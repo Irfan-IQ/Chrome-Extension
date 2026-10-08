@@ -397,6 +397,8 @@ def test_quantization_and_vram_budget():
     assert "--model" in vllm_cmd
     assert "--gpu-memory-utilization" in vllm_cmd
     assert "--max-num-seqs" in vllm_cmd
+    assert "--port" in vllm_cmd
+    assert str(settings.VLLM_PORT) in vllm_cmd
 
     prev_q = settings.QUANTIZATION
     try:
