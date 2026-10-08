@@ -8,8 +8,15 @@ from typing import Any, Dict, List, Optional
 import httpx
 
 
+try:
+    from config import settings
+    ACTIVE_MODEL = settings.VLLM_MODEL
+except Exception:
+    ACTIVE_MODEL = "Qwen/Qwen3-VL-30B-A3B-Instruct"
+
+
 DEFAULT_PAYLOAD: Dict[str, Any] = {
-    "model": "Qwen/Qwen2.5-14B-Instruct",
+    "model": ACTIVE_MODEL,
     "messages": [
         {"role": "system", "content": "You are a helpful and fast assistant."},
         {"role": "user", "content": "Ping test for server latency and throughput."},
@@ -20,7 +27,7 @@ DEFAULT_PAYLOAD: Dict[str, Any] = {
 }
 
 EXTENSION_SAMPLE_PAYLOAD: Dict[str, Any] = {
-    "model": "Qwen/Qwen2.5-14B-Instruct",
+    "model": ACTIVE_MODEL,
     "messages": [
         {
             "role": "system",
@@ -310,6 +317,7 @@ async def main():
     parser.add_argument("--token", default="", help="Optional X-Redact-Agent-Token value")
     parser.add_argument("--stream", action="store_true", help="Send requests with stream=True")
     parser.add_argument("--prompt", default="", help="Custom prompt to benchmark")
+    parser.add_argument("--model", default=ACTIVE_MODEL, help="Model identifier to benchmark")
     parser.add_argument("--verify-contract", action="store_true", help="Verify extension API contract compatibility")
     args = parser.parse_args()
 
@@ -318,6 +326,7 @@ async def main():
         headers["X-Redact-Agent-Token"] = args.token
 
     payload = dict(DEFAULT_PAYLOAD)
+    payload["model"] = args.model
     if args.stream:
         payload["stream"] = True
     if args.prompt:

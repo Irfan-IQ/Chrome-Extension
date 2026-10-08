@@ -83,7 +83,7 @@ def test_agent_tool_calling_flow():
     try:
         # Step 1: send user task with agent tools
         step1_req = {
-            "model": "Qwen/Qwen2.5-VL-7B-Instruct",
+            "model": settings.VLLM_MODEL,
             "messages": [
                 {
                     "role": "system",
@@ -104,7 +104,7 @@ def test_agent_tool_calling_flow():
         # Step 2: feed back tool result
         tool_call_id = choice1["message"]["tool_calls"][0]["id"]
         step2_req = {
-            "model": "Qwen/Qwen2.5-VL-7B-Instruct",
+            "model": settings.VLLM_MODEL,
             "messages": [
                 {"role": "user", "content": "Redact all personal info on this page"},
                 choice1["message"],
@@ -133,7 +133,7 @@ def test_sse_streaming_flow():
 
     try:
         req = {
-            "model": "Qwen/Qwen2.5-VL-7B-Instruct",
+            "model": settings.VLLM_MODEL,
             "messages": [
                 {"role": "user", "content": "Hello agent"},
             ],
@@ -380,7 +380,7 @@ def test_vllm_provider():
         assert len(data_lines) > 0
         assert data_lines[-1] == "[DONE]"
 
-        print("[PASS] vLLM native engine provider (Qwen2.5-14B) verified")
+        print(f"[PASS] vLLM native engine provider ({settings.VLLM_MODEL}) verified")
 
     finally:
         settings.BACKEND_MODE = prev
