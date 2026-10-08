@@ -58,7 +58,7 @@ export default function AgentMode({ setStatus, openZoom, active }) {
       return;
     }
 
-    const { backendMode = 'direct' } = await chrome.storage.local.get('backendMode');
+    const { backendMode = 'server' } = await chrome.storage.local.get('backendMode');
     const apiKey = await Gemini.getApiKey().catch(() => '');
     if (backendMode !== 'server' && !apiKey) {
       setResult({

@@ -8,7 +8,11 @@
 
 // Model id lives in src/modelConfig.js — shared with src/gemini.js. Keep
 // server/config.py's GEMINI_MODEL in sync when migrating.
-import { GEMINI_MODEL as AGENT_MODEL } from '../modelConfig.js';
+import {
+  GEMINI_MODEL as AGENT_MODEL,
+  DEFAULT_BACKEND_MODE,
+  DEFAULT_SERVER_URL,
+} from '../modelConfig.js';
 import { Gemini } from '../gemini.js';
 
 var GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models/";
@@ -23,8 +27,8 @@ var SYSTEM_INSTRUCTION = {
 };
 
 async function generateWithTools(messages, toolDefinitions, apiKey) {
-  var mode = "direct";
-  var serverUrl = "http://127.0.0.1:8000";
+  var mode = DEFAULT_BACKEND_MODE;
+  var serverUrl = DEFAULT_SERVER_URL;
   try {
     if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
       var stored = await chrome.storage.local.get(["backendMode", "serverUrl"]);
@@ -196,7 +200,7 @@ function clampPayload(obj) {
 }
 
 async function generateWithServer(messages, toolDefinitions, serverUrl) {
-  var endpoint = (serverUrl || "http://127.0.0.1:8000").replace(/\/+$/, "") + "/v1/chat/completions";
+  var endpoint = (serverUrl || DEFAULT_SERVER_URL).replace(/\/+$/, "") + "/v1/chat/completions";
 
   var tools = (toolDefinitions || []).map(function (tool) {
     return {

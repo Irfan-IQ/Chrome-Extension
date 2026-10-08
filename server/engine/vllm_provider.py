@@ -21,7 +21,7 @@ logger = logging.getLogger("server.vllm")
 
 
 class VLLMProvider(BaseEngine):
-    """High-throughput vLLM engine adapter for serving Qwen2.5-14B on A100."""
+    """High-throughput vLLM adapter for serving Qwen3-VL-30B-A3B on an H200."""
 
     name: str = "vllm"
 

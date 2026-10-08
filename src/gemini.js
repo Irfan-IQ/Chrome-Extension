@@ -4,7 +4,7 @@
 // Model id lives in src/modelConfig.js — a single source of truth shared
 // with src/agent/llmClient.js. Keep server/config.py's GEMINI_MODEL in
 // sync when migrating.
-import { GEMINI_MODEL } from './modelConfig.js';
+import { GEMINI_MODEL, DEFAULT_BACKEND_MODE, DEFAULT_SERVER_URL } from './modelConfig.js';
 const GEMINI_ENDPOINT =
   "https://generativelanguage.googleapis.com/v1beta/models/" +
   GEMINI_MODEL +
@@ -93,7 +93,7 @@ function dataUrlToInlinePart(dataUrl) {
  * @throws {Error} with a human-readable message on any failure.
  */
 async function sendMessage(message, conversationHistory = [], options = {}) {
-  const { backendMode = "direct", serverUrl = "http://127.0.0.1:8000" } =
+  const { backendMode = DEFAULT_BACKEND_MODE, serverUrl = DEFAULT_SERVER_URL } =
     await chrome.storage.local.get(["backendMode", "serverUrl"]);
 
   if (backendMode === "server") {
@@ -198,7 +198,7 @@ async function sendMessage(message, conversationHistory = [], options = {}) {
   return text;
 }
 
-async function sendMessageViaServer(message, conversationHistory = [], options = {}, serverUrl = "http://127.0.0.1:8000") {
+async function sendMessageViaServer(message, conversationHistory = [], options = {}, serverUrl = DEFAULT_SERVER_URL) {
   const endpoint = serverUrl.replace(/\/+$/, "") + "/v1/chat/completions";
   const messages = [];
 

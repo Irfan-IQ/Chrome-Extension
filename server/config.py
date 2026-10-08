@@ -63,11 +63,11 @@ class Settings:
     BATCH_MAX_SIZE: int = int(os.getenv("BATCH_MAX_SIZE", "8"))
     BATCH_MAX_DELAY_MS: float = float(os.getenv("BATCH_MAX_DELAY_MS", "15.0"))
 
-
-
-
+    # Default backend. `vllm` points at the self-hosted Qwen3-VL instance;
+    # `gemini_cloud` is kept as an opt-in fallback. `auto` picks based on
+    # hardware/keys (see services/hardware.resolve_auto_backend).
     BACKEND_MODE: Literal["auto", "gemini_cloud", "local_vlm", "vllm", "llamacpp"] = os.getenv(
-        "BACKEND_MODE", "gemini_cloud"
+        "BACKEND_MODE", "vllm"
     )
 
     @classmethod
@@ -76,52 +76,77 @@ class Settings:
         return detect_hardware()
 
 
-    # vLLM engine configuration (Qwen2.5-14B on A100 40GB)
-    VLLM_ENDPOINT: str = os.getenv("VLLM_ENDPOINT", "http://localhost:8000/v1")
-    VLLM_MODEL: str = os.getenv("VLLM_MODEL", "Qwen/Qwen2.5-14B-Instruct")
+    # ------------------------------------------------------------------
+    # vLLM engine — Qwen3-VL-30B-A3B-Instruct on NVIDIA H200 (141 GB HBM3e)
+    # ------------------------------------------------------------------
+    # MoE: 30B total params, ~3B active per token. BF16 fits comfortably on
+    # a single H200 with room for a long context + KV cache + vision tower.
+    # No quantization — the H200 has plenty of VRAM and VL quant kernels are
+    # still rough in vLLM.
+    VLLM_ENDPOINT: str = os.getenv("VLLM_ENDPOINT", "http://localhost:8001/v1")
+    VLLM_MODEL: str = os.getenv("VLLM_MODEL", "Qwen/Qwen3-VL-30B-A3B-Instruct")
     VLLM_GPU_MEMORY_UTILIZATION: float = float(os.getenv("VLLM_GPU_MEMORY_UTILIZATION", "0.90"))
-    VLLM_MAX_MODEL_LEN: int = int(os.getenv("VLLM_MAX_MODEL_LEN", "8192"))
+    VLLM_MAX_MODEL_LEN: int = int(os.getenv("VLLM_MAX_MODEL_LEN", "32768"))
     VLLM_API_KEY: str = os.getenv("VLLM_API_KEY", "")
+    VLLM_DTYPE: str = os.getenv("VLLM_DTYPE", "bfloat16")
 
-    # Quantization & VRAM budget configuration (AWQ/GPTQ for Qwen2.5-14B)
-    QUANTIZATION: Optional[str] = (
-        os.getenv("QUANTIZATION").lower() if os.getenv("QUANTIZATION") else "awq"
-    )
+    # Qwen3-VL-specific tuning. `limit-mm-per-prompt` caps how many images
+    # vLLM accepts in one request (the extension sends a single redacted
+    # screenshot per turn, so 2 gives a safe margin). Tool-call parser is
+    # `hermes` — the parser Qwen3 ships with for OpenAI-shape function
+    # calling in vLLM.
+    VLLM_LIMIT_MM_PER_PROMPT: str = os.getenv("VLLM_LIMIT_MM_PER_PROMPT", "image=2")
+    VLLM_TOOL_CALL_PARSER: str = os.getenv("VLLM_TOOL_CALL_PARSER", "hermes")
+    VLLM_ENABLE_AUTO_TOOL_CHOICE: bool = os.getenv(
+        "VLLM_ENABLE_AUTO_TOOL_CHOICE", "true"
+    ).lower() in ("true", "1", "yes")
+
     KV_CACHE_DTYPE: str = os.getenv("KV_CACHE_DTYPE", "auto")
     MAX_NUM_SEQS: int = int(os.getenv("MAX_NUM_SEQS", "64"))
-    MAX_NUM_BATCHED_TOKENS: int = int(os.getenv("MAX_NUM_BATCHED_TOKENS", "4096"))
+    MAX_NUM_BATCHED_TOKENS: int = int(os.getenv("MAX_NUM_BATCHED_TOKENS", "8192"))
     TENSOR_PARALLEL_SIZE: int = int(os.getenv("TENSOR_PARALLEL_SIZE", "1"))
     ENFORCE_EAGER: bool = os.getenv("ENFORCE_EAGER", "false").lower() in ("true", "1", "yes")
 
     @classmethod
     def get_vllm_command(cls) -> str:
-        """Generate recommended vLLM launch command for Qwen2.5-14B on A100."""
+        """Recommended vLLM launch command for Qwen3-VL-30B-A3B on an H200.
+
+        Prints a copy-pasteable command. Note the two VL-specific pieces:
+        `--limit-mm-per-prompt` enables multimodal input, and the tool-call
+        parser flags light up OpenAI function-calling for the agent flow.
+        """
         cmd = [
             "python", "-m", "vllm.entrypoints.openai.api_server",
             "--model", cls.VLLM_MODEL,
+            "--dtype", cls.VLLM_DTYPE,
             "--max-model-len", str(cls.VLLM_MAX_MODEL_LEN),
             "--gpu-memory-utilization", str(cls.VLLM_GPU_MEMORY_UTILIZATION),
             "--max-num-seqs", str(cls.MAX_NUM_SEQS),
             "--max-num-batched-tokens", str(cls.MAX_NUM_BATCHED_TOKENS),
             "--tensor-parallel-size", str(cls.TENSOR_PARALLEL_SIZE),
             "--kv-cache-dtype", cls.KV_CACHE_DTYPE,
+            "--limit-mm-per-prompt", cls.VLLM_LIMIT_MM_PER_PROMPT,
             "--trust-remote-code",
         ]
-        if cls.QUANTIZATION and cls.QUANTIZATION.lower() != "none":
-            cmd.extend(["--quantization", cls.QUANTIZATION])
+        if cls.VLLM_ENABLE_AUTO_TOOL_CHOICE:
+            cmd.extend([
+                "--enable-auto-tool-choice",
+                "--tool-call-parser", cls.VLLM_TOOL_CALL_PARSER,
+            ])
         if cls.ENFORCE_EAGER:
             cmd.append("--enforce-eager")
         return " ".join(cmd)
 
-    # Minimal-resource fallback engine (llama.cpp GGUF)
+    # Minimal-resource fallback engine (llama.cpp GGUF). Kept for the
+    # no-GPU case — not used in the default Qwen3-VL deployment.
     LLAMACPP_ENDPOINT: str = os.getenv("LLAMACPP_ENDPOINT", "http://localhost:8080/v1")
-    LLAMACPP_MODEL: str = os.getenv("LLAMACPP_MODEL", "qwen2.5-14b-instruct-q4_k_m.gguf")
+    LLAMACPP_MODEL: str = os.getenv("LLAMACPP_MODEL", "qwen3-vl-30b-a3b-instruct-q4_k_m.gguf")
     LLAMACPP_THREADS: int = int(os.getenv("LLAMACPP_THREADS", "6"))
     LLAMACPP_N_GPU_LAYERS: int = int(os.getenv("LLAMACPP_N_GPU_LAYERS", "0"))
 
     @classmethod
     def get_llamacpp_command(cls) -> str:
-        """Generate recommended llama-server CLI command for minimal hardware."""
+        """Recommended llama-server CLI command for minimal hardware."""
         return (
             f"llama-server -m {cls.LLAMACPP_MODEL} --port 8080 -t {cls.LLAMACPP_THREADS} "
             f"-ngl {cls.LLAMACPP_N_GPU_LAYERS} -c 8192 --cont-batching"
@@ -150,7 +175,10 @@ class Settings:
     # Generate one with: python -c "import secrets; print(secrets.token_urlsafe(32))"
     AUTH_TOKEN: str = os.getenv("AUTH_TOKEN", "").strip()
 
-    LOCAL_VLM_MODEL: str = os.getenv("LOCAL_VLM_MODEL", "Qwen/Qwen2.5-VL-7B-Instruct")
+    # Secondary local VLM path (Ollama / generic OpenAI-compatible proxy).
+    # Only used when BACKEND_MODE=local_vlm. The default vLLM path above is
+    # the primary self-hosted route.
+    LOCAL_VLM_MODEL: str = os.getenv("LOCAL_VLM_MODEL", "Qwen/Qwen3-VL-30B-A3B-Instruct")
     LOCAL_VLM_ENDPOINT: str = os.getenv("LOCAL_VLM_ENDPOINT", "http://localhost:11434/v1")
     DEVICE: str = get_device()
 
@@ -166,6 +194,8 @@ class Settings:
             "backend_mode": cls.BACKEND_MODE,
             "gemini_model": cls.GEMINI_MODEL,
             "has_gemini_key": bool(cls.GEMINI_API_KEY.strip()),
+            "vllm_model": cls.VLLM_MODEL,
+            "vllm_endpoint": cls.VLLM_ENDPOINT,
             "local_vlm_model": cls.LOCAL_VLM_MODEL,
             "local_vlm_endpoint": cls.LOCAL_VLM_ENDPOINT,
             "device": cls.DEVICE,

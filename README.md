@@ -77,12 +77,46 @@ expects. Do **not** zip the project root: it contains a second `manifest.json`
 at `./manifest.json` and the Web Store rejects multi-manifest packages
 (*"More than one manifest found in package"*).
 
-### Optional: Local Server (Only if hosting a local LLM/VLM)
-1. Create and activate a Python virtual environment (`python -m venv venv`).
-2. Install dependencies: `pip install -r server/requirements.txt`.
-3. Copy environment template: `copy server\.env.example server\.env` (or `cp server/.env.example server/.env`).
-4. Set `BACKEND_MODE=local_vlm` in `server/.env`.
-5. Start the server: `python server/main.py`.
+### Self-Hosted Backend (Default: Qwen3-VL-30B-A3B on H200)
+
+The extension defaults to a self-hosted inference server; Gemini is a
+selectable fallback in Settings.
+
+Two processes run on the GPU host:
+
+**1. Start vLLM with Qwen3-VL-30B-A3B-Instruct** (BF16, tool-calling, multimodal):
+
+```bash
+python -m vllm.entrypoints.openai.api_server \
+  --model Qwen/Qwen3-VL-30B-A3B-Instruct \
+  --dtype bfloat16 \
+  --max-model-len 32768 \
+  --gpu-memory-utilization 0.90 \
+  --max-num-seqs 64 \
+  --max-num-batched-tokens 8192 \
+  --tensor-parallel-size 1 \
+  --limit-mm-per-prompt image=2 \
+  --enable-auto-tool-choice \
+  --tool-call-parser hermes \
+  --trust-remote-code \
+  --port 8001
+```
+
+**2. Start the FastAPI gateway** (port 8000, proxies to vLLM on 8001):
+
+1. `python -m venv venv && source venv/bin/activate`
+2. `pip install -r server/requirements.txt`
+3. `cp server/.env.example server/.env` (defaults are already Qwen3-VL)
+4. `python server/main.py`
+
+Then in the extension's **⚙ Settings**, leave the backend set to
+*Qwen3-VL 30B-A3B (self-hosted)* and point **Server Endpoint** at your
+gateway (e.g. `http://your-dgx-host:8000`). For deployments reachable off
+localhost, set `AUTH_TOKEN` in `server/.env` and paste the same value into
+**Server Token**.
+
+To use Gemini instead, pick *Gemini Cloud API* in the dropdown and paste
+your [Gemini API key](https://aistudio.google.com/app/apikey).
 
 ---
 

@@ -41,7 +41,7 @@ export default function ChatMode({ setStatus, openZoom, clearSignal, active }) {
         console.error('Failed to load state:', e);
       }
       try {
-        const { backendMode = 'direct' } = await chrome.storage.local.get('backendMode');
+        const { backendMode = 'server' } = await chrome.storage.local.get('backendMode');
         const key = await Gemini.getApiKey();
         if (!key && backendMode !== 'server') {
           setHistory((h) =>

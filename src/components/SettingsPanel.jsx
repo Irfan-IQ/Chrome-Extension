@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Gemini } from '../gemini.js';
+import {
+  LOCAL_MODEL_LABEL,
+  DEFAULT_BACKEND_MODE,
+  DEFAULT_SERVER_URL,
+} from '../modelConfig.js';
 
 export default function SettingsPanel({ onClose }) {
-  const [backendMode, setBackendMode] = useState('direct');
-  const [serverUrl, setServerUrl] = useState('http://127.0.0.1:8000');
+  const [backendMode, setBackendMode] = useState(DEFAULT_BACKEND_MODE);
+  const [serverUrl, setServerUrl] = useState(DEFAULT_SERVER_URL);
   const [serverToken, setServerToken] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [status, setStatus] = useState({ text: '', kind: '' });
@@ -14,8 +19,8 @@ export default function SettingsPanel({ onClose }) {
         const key = await Gemini.getApiKey();
         setApiKey(key || '');
         const stored = await chrome.storage.local.get(['backendMode', 'serverUrl', 'serverToken']);
-        setBackendMode(stored.backendMode || 'direct');
-        setServerUrl(stored.serverUrl || 'http://127.0.0.1:8000');
+        setBackendMode(stored.backendMode || DEFAULT_BACKEND_MODE);
+        setServerUrl(stored.serverUrl || DEFAULT_SERVER_URL);
         setServerToken(stored.serverToken || '');
       } catch (e) {
         console.error(e);
@@ -24,6 +29,10 @@ export default function SettingsPanel({ onClose }) {
   }, []);
 
   async function save() {
+    if (backendMode === 'server' && !serverUrl.trim()) {
+      setStatus({ text: 'Enter the self-hosted server endpoint.', kind: 'err' });
+      return;
+    }
     if (backendMode === 'direct' && !apiKey.trim()) {
       setStatus({ text: 'Enter a Gemini key for direct cloud mode.', kind: 'err' });
       return;
@@ -31,7 +40,7 @@ export default function SettingsPanel({ onClose }) {
     try {
       await chrome.storage.local.set({
         backendMode,
-        serverUrl:  serverUrl.trim() || 'http://127.0.0.1:8000',
+        serverUrl:  serverUrl.trim() || DEFAULT_SERVER_URL,
         serverToken: serverToken.trim(),
       });
       if (apiKey.trim()) await Gemini.setApiKey(apiKey.trim());
@@ -53,8 +62,8 @@ export default function SettingsPanel({ onClose }) {
         value={backendMode}
         onChange={(e) => setBackendMode(e.target.value)}
       >
-        <option value="direct">Direct Gemini Cloud (Default)</option>
-        <option value="server">Local FastAPI Server (Open-Weights VLM)</option>
+        <option value="server">{LOCAL_MODEL_LABEL} — Default</option>
+        <option value="direct">Gemini Cloud API</option>
       </select>
 
       <div
@@ -68,7 +77,7 @@ export default function SettingsPanel({ onClose }) {
           type="text"
           value={serverUrl}
           onChange={(e) => setServerUrl(e.target.value)}
-          placeholder="http://127.0.0.1:8000"
+          placeholder="http://your-dgx-host:8000"
           autoComplete="off"
           spellCheck="false"
         />
@@ -86,7 +95,10 @@ export default function SettingsPanel({ onClose }) {
         />
       </div>
 
-      <div id="api-key-group">
+      <div
+        id="api-key-group"
+        className={backendMode === 'direct' ? '' : 'hidden'}
+      >
         <label htmlFor="api-key-input">Gemini API Key</label>
         <input
           id="api-key-input"
@@ -107,7 +119,10 @@ export default function SettingsPanel({ onClose }) {
         {status.text}
       </p>
       <p className="settings-hint">
-        Saved locally in this browser via <code>chrome.storage.local</code>.
+        Redaction runs locally in your browser before anything leaves. The
+        self-hosted route keeps inference on your own hardware too; the
+        Gemini option is here if you need it. Settings are saved in this
+        browser via <code>chrome.storage.local</code>.
       </p>
     </section>
   );
