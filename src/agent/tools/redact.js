@@ -26,11 +26,30 @@ async function execute(state, detectionIds, method) {
   var viewport           = state.viewport || { width: 1280, height: 800 };
   var detectionsToRedact = resolved.found.map(function (r) { return r.detection; });
 
+  if (!Array.isArray(state.redactedIds)) state.redactedIds = [];
+  var newIds = resolved.found.map(function (r) { return r.id; });
+  for (var i = 0; i < newIds.length; i++) {
+    if (state.redactedIds.indexOf(newIds[i]) === -1) {
+      state.redactedIds.push(newIds[i]);
+    }
+  }
+
+  // Accumulate all detections that should be masked on the raw screenshot across turns
+  var allDetectionsToRedact = state.redactedIds
+    .map(function (id) { return state.detectionMap && state.detectionMap[id]; })
+    .filter(Boolean);
+
+  for (var k = 0; k < detectionsToRedact.length; k++) {
+    if (allDetectionsToRedact.indexOf(detectionsToRedact[k]) === -1) {
+      allDetectionsToRedact.push(detectionsToRedact[k]);
+    }
+  }
+
   var screenshot = state.rawScreenshot;
 
   var masked;
   try {
-    masked = await ScreenshotRedactor.redact(screenshot, detectionsToRedact, viewport);
+    masked = await ScreenshotRedactor.redact(screenshot, allDetectionsToRedact, viewport);
   } catch (e) {
     return err("REDACTION_FAILED", "ScreenshotRedactor.redact() failed: " + msg(e));
   }
@@ -41,20 +60,13 @@ async function execute(state, detectionIds, method) {
   state.screenshotLog.push({
     step:          state.stepCount,
     dataUrl:       masked,
-    redactedCount: detectionsToRedact.length,
+    redactedCount: allDetectionsToRedact.length,
     autoRedacted:  false,
   });
 
-  var newIds = resolved.found.map(function (r) { return r.id; });
-  for (var i = 0; i < newIds.length; i++) {
-    if (state.redactedIds.indexOf(newIds[i]) === -1) {
-      state.redactedIds.push(newIds[i]);
-    }
-  }
-
   var catCounts = {};
-  for (var j = 0; j < detectionsToRedact.length; j++) {
-    var cat = detectionsToRedact[j].category;
+  for (var j = 0; j < allDetectionsToRedact.length; j++) {
+    var cat = allDetectionsToRedact[j].category;
     catCounts[cat] = (catCounts[cat] || 0) + 1;
   }
 
