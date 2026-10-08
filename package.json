@@ -1,9 +1,9 @@
 {
   "name": "redact-agent",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "private": true,
   "type": "module",
-  "description": "Gemini-powered AI chatbot with V4 hybrid privacy — React + Vite build.",
+  "description": "Autonomous privacy-preserving browser agent with V4 hybrid privacy — React + Vite build.",
   "scripts": {
     "dev": "vite build --watch --mode development",
     "build": "vite build",
