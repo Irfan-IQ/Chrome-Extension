@@ -194,6 +194,14 @@ function buildStepMessage(toolName, result) {
         : "⚠ " + (r.remainingCount || 0) + " region(s) still need redaction.";
     case "get_page_context":
       return "Page: " + (r.host || "unknown") + (r.title ? " — " + r.title.slice(0, 40) : "");
+    case "click_element":
+      return "Clicked " + (r.tag || "element") + (r.label ? " ('" + r.label.slice(0, 30) + "')" : "") + ".";
+    case "navigate_to":
+      return "Navigated to " + (r.url ? r.url.slice(0, 50) : "page") + ".";
+    case "open_tab":
+      return r.switched
+        ? "Switched to tab: " + (r.title ? r.title.slice(0, 40) : "existing tab") + "."
+        : "Opened tab: " + (r.url ? r.url.slice(0, 50) : "") + ".";
     default:
       return "Completed.";
   }
