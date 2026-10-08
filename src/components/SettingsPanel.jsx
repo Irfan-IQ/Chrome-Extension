@@ -13,6 +13,8 @@ export default function SettingsPanel({ onClose }) {
   const [apiKey, setApiKey] = useState('');
   const [status, setStatus] = useState({ text: '', kind: '' });
 
+  const [testing, setTesting] = useState(false);
+
   useEffect(() => {
     (async () => {
       try {
@@ -27,6 +29,73 @@ export default function SettingsPanel({ onClose }) {
       }
     })();
   }, []);
+
+  async function testConnection() {
+    if (testing) return;
+    setTesting(true);
+    setStatus({ text: 'Testing connection…', kind: '' });
+    const t0 = Date.now();
+
+    if (backendMode === 'server') {
+      const target = (serverUrl.trim() || DEFAULT_SERVER_URL).replace(/\/+$/, '');
+      try {
+        const headers = {};
+        if (serverToken.trim()) {
+          headers['Authorization'] = 'Bearer ' + serverToken.trim();
+        }
+        const res = await fetch(`${target}/health`, {
+          method: 'GET',
+          headers,
+          signal: AbortSignal.timeout(5000),
+        });
+        const ms = Date.now() - t0;
+        if (!res.ok) {
+          setStatus({
+            text: `Server returned HTTP ${res.status} (${ms}ms). Check URL or authorization.`,
+            kind: 'err',
+          });
+          return;
+        }
+        const data = await res.json();
+        const modelName = data.active_model || 'online';
+        setStatus({
+          text: `✓ Connected (${ms}ms) · Active model: ${modelName}`,
+          kind: 'ok',
+        });
+      } catch (e) {
+        const ms = Date.now() - t0;
+        setStatus({
+          text: `Cannot reach server at ${target} (${ms}ms): ${e?.message || 'Connection refused'}`,
+          kind: 'err',
+        });
+      } finally {
+        setTesting(false);
+      }
+    } else {
+      const key = apiKey.trim();
+      if (!key) {
+        setStatus({ text: 'Enter an API key to test.', kind: 'err' });
+        setTesting(false);
+        return;
+      }
+      try {
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`,
+          { signal: AbortSignal.timeout(6000) }
+        );
+        const ms = Date.now() - t0;
+        if (res.ok) {
+          setStatus({ text: `✓ Gemini API verified (${ms}ms).`, kind: 'ok' });
+        } else {
+          setStatus({ text: `Gemini API test failed (HTTP ${res.status}).`, kind: 'err' });
+        }
+      } catch (e) {
+        setStatus({ text: `Gemini test error: ${e?.message || 'Network error'}`, kind: 'err' });
+      } finally {
+        setTesting(false);
+      }
+    }
+  }
 
   async function save() {
     if (backendMode === 'server' && !serverUrl.trim()) {
@@ -77,7 +146,7 @@ export default function SettingsPanel({ onClose }) {
           type="text"
           value={serverUrl}
           onChange={(e) => setServerUrl(e.target.value)}
-          placeholder="http://your-dgx-host:8000"
+          placeholder="http://localhost:8000"
           autoComplete="off"
           spellCheck="false"
         />
@@ -113,6 +182,9 @@ export default function SettingsPanel({ onClose }) {
 
       <div className="settings-actions">
         <button className="primary-btn" onClick={save}>Save</button>
+        <button className="secondary-btn" onClick={testConnection} disabled={testing}>
+          {testing ? 'Testing…' : 'Test Connection'}
+        </button>
         <button className="secondary-btn" onClick={onClose}>Close</button>
       </div>
       <p className={'settings-status' + (status.kind ? ' ' + status.kind : '')}>
