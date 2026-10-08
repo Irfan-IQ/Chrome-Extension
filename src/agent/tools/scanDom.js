@@ -72,10 +72,16 @@ async function execute(state) {
     success: true,
     tool: "scan_dom",
     result: {
-      detectionCount:     state.domDetections.length,
-      categorySummary:    catCounts,
-      uninspectableCount: state.uninspectable.length,
-      note: "DOM scan complete. Call fuse_detections (with or without scan_ocr) to assign IDs.",
+      detectionCount:       state.domDetections.length,
+      categorySummary:      catCounts,
+      uninspectableCount:   state.uninspectable.length,
+      uninspectableRegions: state.uninspectable.map(function (u) {
+        return { kind: u.kind || "iframe", reason: u.reason || "cross-origin", host: u.src || null };
+      }),
+      note: "DOM scan complete. Call fuse_detections (with or without scan_ocr) to assign IDs." +
+        (state.uninspectable.length > 0
+          ? " (" + state.uninspectable.length + " uninspectable region(s) detected; recommend OCR/vision to capture them)"
+          : ""),
     },
   };
 }
