@@ -52,11 +52,30 @@
   --danger: var(--status-red);
   --radius: var(--radius-lg);
 
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+  font-family: var(--font-sans);
 }
 
 * {
   box-sizing: border-box;
+}
+
+/* Custom sleek slate scrollbars matching website */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
 
 html,
@@ -69,8 +88,11 @@ body {
 body {
   background: var(--bg);
   color: var(--text);
-  font-size: 14px;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #app {
