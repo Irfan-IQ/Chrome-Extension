@@ -4,7 +4,7 @@
 // Model id lives in src/modelConfig.js — a single source of truth shared
 // with src/agent/llmClient.js. Keep server/config.py's GEMINI_MODEL in
 // sync when migrating.
-import { GEMINI_MODEL, DEFAULT_BACKEND_MODE, DEFAULT_SERVER_URL } from './modelConfig.js';
+import { GEMINI_MODEL, LOCAL_MODEL, DEFAULT_BACKEND_MODE, DEFAULT_SERVER_URL } from './modelConfig.js';
 const GEMINI_ENDPOINT =
   "https://generativelanguage.googleapis.com/v1beta/models/" +
   GEMINI_MODEL +
@@ -232,7 +232,7 @@ async function sendMessageViaServer(message, conversationHistory = [], options =
     response = await fetch(endpoint, {
       method: "POST",
       headers: await buildServerHeaders(),
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify({ model: LOCAL_MODEL, messages }),
     });
   } catch (err) {
     throw new Error("Could not reach local server at " + serverUrl + ". Is it running?");

@@ -10,6 +10,7 @@
 // server/config.py's GEMINI_MODEL in sync when migrating.
 import {
   GEMINI_MODEL as AGENT_MODEL,
+  LOCAL_MODEL,
   DEFAULT_BACKEND_MODE,
   DEFAULT_SERVER_URL,
 } from '../modelConfig.js';
@@ -273,6 +274,7 @@ async function generateWithServer(messages, toolDefinitions, serverUrl) {
   }
 
   var body = {
+    model: LOCAL_MODEL,
     messages: openaiMessages,
     tools: tools.length > 0 ? tools : undefined,
     tool_choice: "auto",
