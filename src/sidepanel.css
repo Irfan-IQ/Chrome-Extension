@@ -200,62 +200,96 @@ body {
 
 /* ---------- Settings ---------- */
 .settings-panel {
-  background: var(--panel-bg);
-  border-bottom: 1px solid var(--border);
-  padding: 14px 12px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+  padding: 16px 14px;
   flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+  animation: fadeIn 0.18s ease;
 }
 .settings-panel.hidden {
   display: none;
 }
 .settings-panel h2 {
-  margin: 0 0 10px;
-  font-size: 14px;
+  margin: 0 0 12px;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
 }
 .settings-panel label {
   display: block;
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-bottom: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 5px;
 }
 #api-key-input,
 #server-url-input,
+#server-token-input,
 #backend-mode-select {
   width: 100%;
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  padding: 8px 11px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
   font-size: 13px;
   font-family: inherit;
-  background: var(--card-bg, #fff);
-  color: var(--text, #111);
+  background: var(--bg-main);
+  color: var(--text-main);
   box-sizing: border-box;
+  transition: var(--transition);
+}
+#api-key-input:focus,
+#server-url-input:focus,
+#server-token-input:focus,
+#backend-mode-select:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  background: var(--bg-card);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
 }
 .settings-actions {
   display: flex;
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
 }
 .settings-status {
-  font-size: 12px;
-  margin: 8px 0 0;
+  font-size: 11.5px;
+  margin: 10px 0 0;
   min-height: 16px;
+  border-radius: var(--radius-md);
+  padding: 0;
 }
 .settings-status.ok {
-  color: #16a34a;
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid rgba(5, 150, 105, 0.2);
+  padding: 6px 10px;
 }
 .settings-status.err {
-  color: var(--danger);
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  padding: 6px 10px;
 }
 .settings-hint {
   font-size: 11px;
-  color: var(--text-muted);
-  margin: 8px 0 0;
+  color: var(--text-secondary);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 9px 11px;
+  margin: 12px 0 0;
+  line-height: 1.45;
 }
 .settings-hint code {
-  background: var(--bg);
-  padding: 1px 4px;
+  background: rgba(2, 132, 199, 0.08);
+  color: var(--primary-blue-dark);
+  padding: 1.5px 5px;
   border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
 }
 
 /* ---------- Chat mode panel ---------- */
