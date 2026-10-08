@@ -158,30 +158,44 @@ body {
 }
 
 .status-dot {
-  width: 9px;
-  height: 9px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: #16a34a;
+  background: var(--status-green);
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.2);
   display: inline-block;
+  transition: var(--transition);
 }
 .status-dot.busy {
-  background: #d97706;
+  background: var(--status-amber);
+  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.25);
+  animation: pulse-dot 1.4s infinite ease-in-out;
 }
 .status-dot.error {
-  background: var(--danger);
+  background: var(--status-red);
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.25);
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(1.25); }
 }
 
 .icon-btn {
-  border: 1px solid var(--border);
-  background: var(--panel-bg);
-  color: var(--text-muted);
-  border-radius: 8px;
-  padding: 4px 8px;
-  font-size: 12px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border-radius: var(--radius-md);
+  padding: 4px 8.5px;
+  font-size: 11.5px;
+  font-weight: 500;
   cursor: pointer;
+  transition: var(--transition);
 }
 .icon-btn:hover {
-  background: var(--bg);
+  background: var(--primary-blue-light);
+  border-color: rgba(2, 132, 199, 0.3);
+  color: var(--primary-blue-dark);
 }
 
 /* ---------- Settings ---------- */
@@ -813,33 +827,34 @@ body {
 
 /* Mode tab toggle in header */
 .mode-tabs {
-  display: flex;
-  gap: 2px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  padding: 2.5px 3.5px;
 }
 .mode-tab {
   border: none;
   background: transparent;
-  border-radius: 6px;
-  padding: 4px 10px;
-  font-size: 12px;
-  font-weight: 500;
+  border-radius: var(--radius-full);
+  padding: 3.5px 10px;
+  font-size: 11.5px;
+  font-weight: 550;
   cursor: pointer;
   color: var(--text-muted);
   white-space: nowrap;
-  transition: background 0.12s, color 0.12s;
-}
-.mode-tab-active {
-  background: var(--panel-bg);
-  color: var(--text);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  transition: var(--transition);
 }
 .mode-tab:hover:not(.mode-tab-active) {
-  background: rgba(255,255,255,0.6);
-  color: var(--text);
+  color: var(--text-main);
+}
+.mode-tab-active {
+  background: var(--bg-card);
+  color: var(--primary-blue-dark);
+  font-weight: 650;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(2, 132, 199, 0.05);
 }
 
 /* Agent mode panel */
