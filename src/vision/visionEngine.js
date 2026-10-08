@@ -140,6 +140,9 @@ async function dataUrlToBitmap(dataUrl) {
 }
 
 function runYuNet(image) {
+  if (!initialized) {
+    return Promise.resolve({ detections: [], error: status.message || 'YuNet not initialized' });
+  }
   const id = nextRequestId++;
   const promise = new Promise((resolve, reject) => {
     pendingYuNet.set(id, { resolve, reject });
@@ -192,7 +195,11 @@ async function detectScreenshot(screenshotDataUrl) {
     throw new Error('Vision scan requires a screenshot.');
   }
 
-  await initialize();
+  try {
+    await initialize();
+  } catch (initErr) {
+    console.warn('[VisionEngine] YuNet initialization skipped/failed:', (initErr && initErr.message) || initErr);
+  }
 
   const [yunetBitmap, opencvBitmap] = await Promise.all([
     dataUrlToBitmap(screenshotDataUrl),
@@ -235,7 +242,7 @@ async function detectScreenshot(screenshotDataUrl) {
   ];
 
   if (!yunet && !opencv) {
-    throw new Error(`Vision workers failed. YuNet: ${yunetResult.reason?.message || 'failed'}; OpenCV: ${opencvResult.reason?.message || 'failed'}`);
+    console.warn(`[VisionEngine] Vision workers yielded no output. YuNet: ${yunetResult.reason?.message || status.message}; OpenCV: ${opencvResult.reason?.message || 'failed'}`);
   }
 
   return {
