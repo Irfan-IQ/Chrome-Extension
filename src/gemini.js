@@ -4,10 +4,20 @@
 // Model id lives in src/modelConfig.js — a single source of truth shared
 // with src/agent/llmClient.js. Keep server/config.py's GEMINI_MODEL in
 // sync when migrating.
-import { GEMINI_MODEL, LOCAL_MODEL, DEFAULT_BACKEND_MODE, DEFAULT_SERVER_URL } from './modelConfig.js';
+import {
+  GEMINI_MODEL,
+  GEMINI_FALLBACK_MODEL,
+  LOCAL_MODEL,
+  DEFAULT_BACKEND_MODE,
+  DEFAULT_SERVER_URL,
+} from './modelConfig.js';
 const GEMINI_ENDPOINT =
   "https://generativelanguage.googleapis.com/v1beta/models/" +
   GEMINI_MODEL +
+  ":generateContent";
+const GEMINI_FALLBACK_ENDPOINT =
+  "https://generativelanguage.googleapis.com/v1beta/models/" +
+  (GEMINI_FALLBACK_MODEL || "gemini-2.0-flash") +
   ":generateContent";
 
 /**
@@ -143,6 +153,24 @@ async function sendMessage(message, conversationHistory = [], options = {}) {
   } catch (parseError) {
     console.error("Gemini response was not valid JSON:", parseError);
     throw new Error("Received an invalid response from Gemini.");
+  }
+
+  // If preview model returns 404, retry once with standard fallback model
+  if (!response.ok && response.status === 404 && GEMINI_FALLBACK_ENDPOINT) {
+    try {
+      const fbResponse = await fetch(GEMINI_FALLBACK_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey,
+        },
+        body: JSON.stringify(body),
+      });
+      if (fbResponse.ok) {
+        response = fbResponse;
+        data = await response.json();
+      }
+    } catch (_) {}
   }
 
   if (!response.ok) {

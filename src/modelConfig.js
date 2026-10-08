@@ -16,6 +16,7 @@
 export const LOCAL_MODEL = 'Qwen/Qwen3-VL-30B-A3B-Instruct';
 export const LOCAL_MODEL_LABEL = 'Qwen3-VL 30B-A3B (self-hosted)';
 export const GEMINI_MODEL = 'gemini-3-flash-preview';
+export const GEMINI_FALLBACK_MODEL = 'gemini-2.0-flash';
 
 // Default backend when nothing is stored yet. Keep this aligned with the
 // `useState` default in SettingsPanel.jsx and the destructuring defaults in
