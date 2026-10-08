@@ -47,6 +47,14 @@ async function execute(state, args) {
 
         if (!el) return { found: false };
 
+        if (el.disabled || el.getAttribute("aria-disabled") === "true") {
+          return { found: true, skipped: true, reason: "Target element is disabled." };
+        }
+
+        try {
+          el.scrollIntoView({ behavior: "instant", block: "center", inline: "center" });
+        } catch (_) {}
+
         el.click();
         return {
           found:  true,
@@ -68,6 +76,10 @@ async function execute(state, args) {
         (selector ? " selector='" + selector + "'" : "") +
         (text     ? " text='"     + text     + "'" : "") + "."
     );
+  }
+
+  if (r.skipped) {
+    return err("ELEMENT_DISABLED", r.reason || "Target element is disabled.");
   }
 
   return {
