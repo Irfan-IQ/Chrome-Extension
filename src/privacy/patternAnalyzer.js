@@ -106,8 +106,9 @@ var PATTERNS = [
     category: "bank_account",
     confidence: 0.78,
     test: function (t) {
-      var digits = t.replace(/\s/g, "");
-      return /^\d{9,18}$/.test(digits);
+      var hasBankContext = /(?:account|acct|a\/c|bank|savings|current|ifsc|iban|c\/a|s\/b)/i.test(t);
+      var digits = t.replace(/\D/g, "");
+      return hasBankContext && digits.length >= 9 && digits.length <= 18;
     },
     extract: function (t) { return t.trim(); },
   },

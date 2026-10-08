@@ -398,11 +398,6 @@
         var pat = TEXT_NODE_PATTERNS[pi];
         var m = text.match(pat.re);
         if (!m) continue;
-        var matched = m[0];
-        // Deduplicate by matched text to avoid flagging the same email 10 times
-        if (seen.has(matched)) continue;
-        seen.add(matched);
-
         var rect;
         try { rect = el.getBoundingClientRect(); } catch (e) { continue; }
         var vRect = {
@@ -415,6 +410,12 @@
               { x: vRect.left, y: vRect.top, width: vRect.width, height: vRect.height },
               viewport.width, viewport.height)) continue;
         if (vRect.width < 4 || vRect.height < 4) continue;
+
+        // Deduplicate by element position / bounding box to avoid double-counting parent & child nodes,
+        // while properly detecting repeated PII across different locations on the page.
+        var locKey = Math.round(vRect.left) + "_" + Math.round(vRect.top) + "_" + Math.round(vRect.width) + "_" + Math.round(vRect.height);
+        if (seen.has(locKey)) continue;
+        seen.add(locKey);
 
         try {
           _dbg("[V3 dom] Detected " + pat.category + " in text node");
