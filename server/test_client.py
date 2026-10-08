@@ -397,7 +397,20 @@ def test_quantization_and_vram_budget():
     assert "--model" in vllm_cmd
     assert "--gpu-memory-utilization" in vllm_cmd
     assert "--max-num-seqs" in vllm_cmd
-    assert "--quantization" in vllm_cmd
+
+    prev_q = settings.QUANTIZATION
+    try:
+        settings.QUANTIZATION = "awq"
+        awq_cmd = settings.get_vllm_command()
+        assert "--quantization" in awq_cmd
+        assert "awq" in awq_cmd
+
+        settings.QUANTIZATION = None
+        none_cmd = settings.get_vllm_command()
+        assert "--quantization" not in none_cmd
+    finally:
+        settings.QUANTIZATION = prev_q
+
     print("[PASS] quantization & VRAM budget configuration verified")
 
 

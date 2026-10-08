@@ -101,6 +101,12 @@ class Settings:
         "VLLM_ENABLE_AUTO_TOOL_CHOICE", "true"
     ).lower() in ("true", "1", "yes")
 
+    # Quantization setting. Unquantized BF16 is optimal on H200 (141GB VRAM).
+    # Optional AWQ/GPTQ/FP8 supported for smaller hardware slices.
+    QUANTIZATION: Optional[str] = (
+        os.getenv("QUANTIZATION").lower() if os.getenv("QUANTIZATION") else None
+    )
+
     KV_CACHE_DTYPE: str = os.getenv("KV_CACHE_DTYPE", "auto")
     MAX_NUM_SEQS: int = int(os.getenv("MAX_NUM_SEQS", "64"))
     MAX_NUM_BATCHED_TOKENS: int = int(os.getenv("MAX_NUM_BATCHED_TOKENS", "8192"))
@@ -108,13 +114,20 @@ class Settings:
     ENFORCE_EAGER: bool = os.getenv("ENFORCE_EAGER", "false").lower() in ("true", "1", "yes")
 
     @classmethod
-    def get_vllm_command(cls) -> str:
+    def get_vllm_command(cls, quantization: Optional[str] = None) -> str:
         """Recommended vLLM launch command for Qwen3-VL-30B-A3B on an H200.
 
         Prints a copy-pasteable command. Note the two VL-specific pieces:
         `--limit-mm-per-prompt` enables multimodal input, and the tool-call
         parser flags light up OpenAI function-calling for the agent flow.
         """
+        if quantization is not None:
+            q = quantization
+        elif "settings" in globals():
+            q = getattr(settings, "QUANTIZATION", cls.QUANTIZATION)
+        else:
+            q = cls.QUANTIZATION
+
         cmd = [
             "python", "-m", "vllm.entrypoints.openai.api_server",
             "--model", cls.VLLM_MODEL,
@@ -128,6 +141,8 @@ class Settings:
             "--limit-mm-per-prompt", cls.VLLM_LIMIT_MM_PER_PROMPT,
             "--trust-remote-code",
         ]
+        if q and q.lower() != "none":
+            cmd.extend(["--quantization", q])
         if cls.VLLM_ENABLE_AUTO_TOOL_CHOICE:
             cmd.extend([
                 "--enable-auto-tool-choice",
