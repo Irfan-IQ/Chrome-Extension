@@ -112,7 +112,7 @@ app.add_middleware(
     allow_methods=["*"],
     # Explicitly list the headers the extension sends so a tightened CORS
     # policy doesn't silently drop them (particularly the auth header).
-    allow_headers=["Content-Type", "X-Redact-Agent-Token"],
+    allow_headers=["Content-Type", "X-Redact-Agent-Token", "Authorization"],
 )
 
 
@@ -123,15 +123,21 @@ async def auth_and_log(request: Request, call_next):
     # Shared-secret check. Skipped when AUTH_TOKEN is unset (dev default)
     # or when the request targets a public metadata endpoint.
     if settings.AUTH_TOKEN and request.url.path not in UNAUTHENTICATED_PATHS:
-        presented = request.headers.get("x-redact-agent-token", "")
+        auth_header = request.headers.get("authorization", "")
+        bearer_token = (
+            auth_header[7:].strip()
+            if auth_header.lower().startswith("bearer ")
+            else auth_header.strip()
+        )
+        presented = request.headers.get("x-redact-agent-token", "") or bearer_token
         if not hmac.compare_digest(presented, settings.AUTH_TOKEN):
             logger.warning(
-                "rejecting %s %s — missing or wrong X-Redact-Agent-Token",
+                "rejecting %s %s — missing or wrong authentication token",
                 request.method, request.url.path,
             )
             return FastJSONResponse(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                content={"detail": "missing or invalid X-Redact-Agent-Token"},
+                content={"detail": "missing or invalid authorization token"},
             )
 
     response = await call_next(request)

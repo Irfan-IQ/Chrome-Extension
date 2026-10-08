@@ -35,12 +35,15 @@
   <div id="output"></div>
   <div id="summary"></div>
 
-  <!-- Load only the modules under test (no privacy engine, no Gemini) -->
-  <script src="../agent/agentState.js"></script>
-  <script src="../agent/toolRegistry.js"></script>
-  <script src="../agent/toolValidator.js"></script>
+  <!-- Load modules under test from src/agent/ -->
+  <script type="module">
+    import { AgentState } from "../src/agent/agentState.js";
+    import { ToolRegistry } from "../src/agent/toolRegistry.js";
+    import { ToolValidator } from "../src/agent/toolValidator.js";
 
-  <script>
+    window.AgentState = AgentState;
+    window.ToolRegistry = ToolRegistry;
+    window.ToolValidator = ToolValidator;
     // -------------------------------------------------------------------------
     // Minimal test harness
     // -------------------------------------------------------------------------
