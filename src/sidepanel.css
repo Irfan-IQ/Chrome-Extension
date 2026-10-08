@@ -108,30 +108,46 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 10px 12px;
-  background: var(--panel-bg);
-  border-bottom: 1px solid var(--border);
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--shadow-xs);
+  position: sticky;
+  top: 0;
+  z-index: 100;
   flex-shrink: 0;
 }
 
 .header-title {
   display: flex;
-  align-items: baseline;
-  gap: 6px;
+  align-items: center;
+  gap: 7px;
   min-width: 0;
 }
 
+.brand-icon {
+  color: var(--primary-blue);
+  flex-shrink: 0;
+}
+
 .app-name {
-  font-weight: 650;
+  font-weight: 700;
   font-size: 15px;
+  letter-spacing: -0.02em;
+  color: var(--primary-blue-dark);
 }
 
 .app-badge {
-  font-size: 11px;
-  color: var(--text-muted);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 1px 7px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: var(--primary-blue-light);
+  color: var(--primary-blue-dark);
+  border: 1px solid rgba(2, 132, 199, 0.2);
+  border-radius: var(--radius-full);
+  padding: 1.5px 7px;
 }
 
 .header-right {
