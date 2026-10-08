@@ -1048,10 +1048,11 @@ body {
 
 /* Agent execution log */
 .agent-log-panel {
-  background: var(--panel-bg);
-  border-bottom: 1px solid var(--border);
-  padding: 10px 12px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+  padding: 12px 14px;
   flex-shrink: 0;
+  box-shadow: var(--shadow-xs);
 }
 .agent-log-panel.hidden { display: none; }
 
@@ -1059,28 +1060,33 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 9px;
 }
 .agent-log-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
 }
 .agent-log-status-badge {
-  font-size: 11px;
+  font-size: 10.5px;
+  font-weight: 600;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: #fef3c7;
-  color: #92400e;
-  border: 1px solid #fcd34d;
+  color: #b45309;
+  border: 1px solid rgba(217, 119, 6, 0.25);
 }
-.agent-log-status-badge.done  { background:#dcfce7; color:#15803d; border-color:#86efac; }
-.agent-log-status-badge.error { background:#fdecea; color:var(--danger); border-color:#f5c2bd; }
+.agent-log-status-badge.done  { background: #ecfdf5; color: #047857; border-color: rgba(5, 150, 105, 0.25); }
+.agent-log-status-badge.error { background: #fef2f2; color: #b91c1c; border-color: rgba(220, 38, 38, 0.25); }
 
 .agent-step-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
 /* Individual step entry */
@@ -1089,13 +1095,22 @@ body {
   align-items: flex-start;
   gap: 8px;
   font-size: 12px;
-  line-height: 1.4;
+  line-height: 1.45;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 7px 10px;
+  transition: var(--transition);
+}
+.agent-step:hover {
+  border-color: var(--border-medium);
 }
 .agent-step-icon {
   flex-shrink: 0;
-  width: 18px;
+  width: 16px;
   text-align: center;
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 700;
   margin-top: 1px;
 }
 .agent-step-body {
@@ -1104,32 +1119,40 @@ body {
 }
 .agent-step-tool {
   font-weight: 600;
-  font-family: monospace;
-  font-size: 11px;
-  color: #1d4ed8;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--primary-blue-dark);
+  background: var(--primary-blue-light);
+  padding: 1.5px 6px;
+  border-radius: 4px;
+  margin-right: 5px;
+  display: inline-block;
 }
 .agent-step-msg {
-  color: var(--text-muted);
+  color: var(--text-secondary);
   word-wrap: break-word;
 }
 .agent-step-duration {
   flex-shrink: 0;
+  font-family: var(--font-mono);
   font-size: 10px;
   color: var(--text-muted);
-  opacity: 0.6;
-  margin-top: 2px;
+  background: var(--bg-subtle);
+  padding: 1.5px 5px;
+  border-radius: 4px;
+  margin-top: 1px;
 }
 
 /* Step status colours */
-.agent-step.status-success .agent-step-icon { color: #16a34a; }
-.agent-step.status-error   .agent-step-icon { color: var(--danger); }
-.agent-step.status-working .agent-step-icon { color: #d97706; }
-.agent-step.status-rejected.agent-step-icon { color: var(--danger); }
-.agent-step.status-complete .agent-step-icon { color: #16a34a; }
+.agent-step.status-success .agent-step-icon { color: var(--status-green); }
+.agent-step.status-error   .agent-step-icon { color: var(--status-red); }
+.agent-step.status-working .agent-step-icon { color: var(--status-amber); }
+.agent-step.status-rejected .agent-step-icon { color: var(--status-red); }
+.agent-step.status-complete .agent-step-icon { color: var(--status-green); }
 
 /* Agent result panel */
 .agent-result-panel {
-  padding: 12px;
+  padding: 14px;
   flex-shrink: 0;
 }
 .agent-result-panel.hidden { display: none; }
@@ -1138,22 +1161,23 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 9px;
 }
 
 .agent-result-text {
   font-size: 13px;
-  color: var(--text);
+  color: var(--text-main);
   line-height: 1.55;
   white-space: pre-wrap;
   word-wrap: break-word;
-  background: var(--panel-bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+  padding: 12px 14px;
 }
 
 /* ---------- Screenshots gallery toggle button ---------- */
