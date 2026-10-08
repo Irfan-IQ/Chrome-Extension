@@ -4,19 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Redact Agent</title>
+    <script src="./lib/tesseract.min.js"></script>
+    <script src="./privacy/coordinateUtils.js"></script>
   </head>
   <body>
     <div id="root"></div>
-
-    <!-- Classic scripts required in the sidepanel context:
-         • tesseract.min.js — sets window.Tesseract, used by src/privacy/ocrAnalyzer.js.
-         • privacy/coordinateUtils.js — sets window.CoordinateUtils, used by
-           src/privacy/screenshotRedactor.js in the sidepanel. The SAME file is
-           also injected into pages by src/privacy/privacyEngine.js, so it must
-           remain a classic script.
-         Everything else (gemini, agent, privacy analyzers) is bundled via /src/main.jsx. -->
-    <script src="./lib/tesseract.min.js"></script>
-    <script src="./privacy/coordinateUtils.js"></script>
 
     <script type="module" src="/src/main.jsx"></script>
   </body>
