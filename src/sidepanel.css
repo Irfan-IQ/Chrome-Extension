@@ -270,11 +270,12 @@ body {
 
 /* ---------- V2/V3 Privacy strip ---------- */
 .privacy-strip {
-  background: #f0f6ff;
-  border-bottom: 1px solid var(--border);
-  padding: 8px 12px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+  padding: 8px 14px;
   flex-shrink: 0;
   font-size: 12px;
+  box-shadow: var(--shadow-xs);
 }
 .privacy-row {
   display: flex;
@@ -285,29 +286,48 @@ body {
 .privacy-actions {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 .privacy-toggle {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   cursor: pointer;
   user-select: none;
+  font-size: 12px;
+  color: var(--text-secondary);
 }
-.privacy-toggle input {
+.privacy-toggle input[type="checkbox"] {
+  accent-color: var(--primary-blue);
   width: 14px;
   height: 14px;
+  cursor: pointer;
 }
-#privacy-state {
-  color: #16a34a;
+.privacy-toggle strong {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  background: #ecfdf5;
+  color: var(--status-green);
+  border: 1px solid rgba(5, 150, 105, 0.2);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
-#privacy-state.off {
+.privacy-toggle strong.off {
+  background: var(--bg-subtle);
   color: var(--text-muted);
+  border-color: var(--border-color);
 }
 .privacy-detail {
-  color: var(--text-muted);
-  margin-top: 6px;
-  line-height: 1.45;
+  color: var(--text-secondary);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  margin-top: 8px;
+  line-height: 1.5;
+  font-size: 11.5px;
 }
 .privacy-detail.hidden {
   display: none;
@@ -315,19 +335,21 @@ body {
 .privacy-status {
   margin-top: 6px;
   min-height: 0;
+  font-size: 11.5px;
   color: var(--text-muted);
 }
 .privacy-status:not(:empty) {
   min-height: 16px;
 }
 .privacy-status.working {
-  color: #1d4ed8;
+  color: var(--primary-blue-dark);
 }
 .privacy-status.ok {
-  color: #16a34a;
+  color: var(--status-green);
+  font-weight: 500;
 }
 .privacy-status.err {
-  color: var(--danger);
+  color: var(--status-red);
 }
 .privacy-status ul {
   margin: 3px 0 0;
@@ -689,20 +711,30 @@ body {
 
 /* ---------- Scan button ---------- */
 .scan-btn {
-  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+  background: var(--primary-blue);
   color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 5px 10px;
-  font-size: 12px;
+  border-radius: var(--radius-md);
+  padding: 5px 11px;
+  font-size: 11.5px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: 0 1px 3px rgba(37,99,235,0.3);
-  transition: opacity 0.15s;
+  box-shadow: var(--shadow-xs);
+  transition: var(--transition);
 }
-.scan-btn:hover { opacity: 0.88; }
-.scan-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.scan-btn:hover:not(:disabled) {
+  background: var(--primary-blue-dark);
+  box-shadow: var(--shadow-sm);
+}
+.scan-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.scan-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
 
 /* ---------- Scan result panel ---------- */
 .scan-result-panel {
