@@ -60,7 +60,7 @@ async function execute(state, detectionIds, method) {
   state.screenshotLog.push({
     step:          state.stepCount,
     dataUrl:       masked,
-    redactedCount: allDetectionsToRedact.length,
+    redactedCount: detectionsToRedact.length,
     autoRedacted:  false,
   });
 

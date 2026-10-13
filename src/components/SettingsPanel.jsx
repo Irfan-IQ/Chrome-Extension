@@ -131,8 +131,8 @@ export default function SettingsPanel({ onClose }) {
         value={backendMode}
         onChange={(e) => setBackendMode(e.target.value)}
       >
-        <option value="server">{LOCAL_MODEL_LABEL} — Default</option>
-        <option value="direct">Gemini Cloud API</option>
+        <option value="direct">Gemini Cloud API — Default</option>
+        <option value="server">{LOCAL_MODEL_LABEL}</option>
       </select>
 
       <div

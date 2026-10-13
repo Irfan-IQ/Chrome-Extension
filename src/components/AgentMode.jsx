@@ -23,7 +23,8 @@ export default function AgentMode({ setStatus, openZoom, active }) {
   const [running, setRunning] = useState(false);
   const [logStatus, setLogStatus] = useState({ text: '', kind: '' }); // 'done' | 'error' | ''
   const [steps, setSteps] = useState([]); // ordered list of step entries
-  const [result, setResult] = useState(null); // { summary, redactedScreenshot, screenshotLog }
+  const [result, setResult] = useState(null); // { summary, redactedScreenshot }
+  const [screenshotLog, setScreenshotLog] = useState([]);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const stepListRef = useRef(null);
   const inputRef = useRef(null);
@@ -58,7 +59,7 @@ export default function AgentMode({ setStatus, openZoom, active }) {
       return;
     }
 
-    const { backendMode = 'server' } = await chrome.storage.local.get('backendMode');
+    const { backendMode = 'direct' } = await chrome.storage.local.get('backendMode');
     const apiKey = await Gemini.getApiKey().catch(() => '');
     if (backendMode !== 'server' && !apiKey) {
       setResult({
@@ -72,6 +73,7 @@ export default function AgentMode({ setStatus, openZoom, active }) {
     setStatus('busy');
     setSteps([]);
     setResult(null);
+    setScreenshotLog([]);
     setGalleryOpen(false);
     setLogStatus({ text: 'Running…', kind: '' });
 
@@ -86,8 +88,8 @@ export default function AgentMode({ setStatus, openZoom, active }) {
       setResult({
         summary: res.summary || (res.success ? 'Task complete.' : 'Task did not complete.'),
         redactedScreenshot: res.redactedScreenshot || '',
-        screenshotLog: res.screenshotLog || [],
       });
+      setScreenshotLog(Array.isArray(res.screenshotLog) ? res.screenshotLog : []);
     } catch (err) {
       console.error('[Agent] Unexpected error:', err);
       setLogStatus({ text: 'Error', kind: 'error' });
@@ -98,7 +100,7 @@ export default function AgentMode({ setStatus, openZoom, active }) {
     }
   }
 
-  const shotCount = result?.screenshotLog?.length || 0;
+  const shotCount = screenshotLog.length;
 
   return (
     <>
@@ -227,7 +229,7 @@ export default function AgentMode({ setStatus, openZoom, active }) {
             </button>
           </div>
           <div className="agent-screenshots-grid">
-            {result.screenshotLog.map((shot, i) => (
+            {screenshotLog.map((shot, i) => (
               <div key={i} className="agent-screenshot-thumb" title="Click to zoom">
                 <div className="agent-screenshot-thumb-label">
                   Step {shot.step} · {shot.redactedCount} region

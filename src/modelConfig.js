@@ -20,7 +20,7 @@ export const GEMINI_FALLBACK_MODEL = 'gemini-2.0-flash';
 
 // Default backend when nothing is stored yet. Keep this aligned with the
 // `useState` default in SettingsPanel.jsx and the destructuring defaults in
-// gemini.js and agent/llmClient.js — a clean install should land on the
-// local server, not Gemini.
-export const DEFAULT_BACKEND_MODE = 'server';
+// gemini.js, agent/llmClient.js, ChatMode.jsx and AgentMode.jsx — a clean
+// install should land on Gemini cloud.
+export const DEFAULT_BACKEND_MODE = 'direct';
 export const DEFAULT_SERVER_URL = 'http://127.0.0.1:8000';
