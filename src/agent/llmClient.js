@@ -10,6 +10,7 @@
 // server/config.py's GEMINI_MODEL in sync when migrating.
 import {
   GEMINI_MODEL as AGENT_MODEL,
+  GEMINI_FALLBACK_MODEL,
   LOCAL_MODEL,
   DEFAULT_BACKEND_MODE,
   DEFAULT_SERVER_URL,
@@ -44,8 +45,6 @@ async function generateWithTools(messages, toolDefinitions, apiKey) {
 
   if (!apiKey) throw new Error("No Gemini API key configured.");
 
-  var endpoint = GEMINI_BASE + AGENT_MODEL + ":generateContent";
-
   var body = {
     system_instruction: SYSTEM_INSTRUCTION,
     contents: messages,
@@ -54,24 +53,22 @@ async function generateWithTools(messages, toolDefinitions, apiKey) {
     generationConfig: { temperature: 0.1, maxOutputTokens: 2048 },
   };
 
-  var response;
-  try {
-    response = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-      body: JSON.stringify(body),
-    });
-  } catch (networkErr) {
-    throw new Error("Network error reaching Gemini: " + ((networkErr && networkErr.message) || "unknown"));
+  var attempt = await callGeminiWithRetry(AGENT_MODEL, body, apiKey);
+  // On persistent overload/5xx, fall back to the secondary model once.
+  if (!attempt.ok && isTransientStatus(attempt.status) && GEMINI_FALLBACK_MODEL &&
+      GEMINI_FALLBACK_MODEL !== AGENT_MODEL) {
+    var fb = await callGeminiWithRetry(GEMINI_FALLBACK_MODEL, body, apiKey);
+    if (fb.ok) attempt = fb;
   }
 
-  var data;
-  try { data = await response.json(); }
-  catch (e) { throw new Error("Gemini returned invalid JSON."); }
+  var response = attempt.response;
+  var data = attempt.data;
 
   if (!response.ok) {
     var apiMsg = (data && data.error && data.error.message) || "Unknown API error";
     if (response.status === 429) throw new Error("Rate limit hit. Please wait a moment.");
+    if (response.status === 503)
+      throw new Error("Gemini is overloaded (503). Tried fallback model too — please retry in a moment.");
     if (response.status === 401 || response.status === 403)
       throw new Error("API key rejected by Gemini.");
     if (response.status === 400 && /api.?key/i.test(apiMsg))
@@ -109,6 +106,58 @@ async function generateWithTools(messages, toolDefinitions, apiKey) {
   if (!text) throw new Error("Gemini returned an empty response.");
 
   return { type: "text", text: text, rawContent: candidate.content };
+}
+
+function isTransientStatus(status) {
+  return status === 503 || status === 502 || status === 504 || status === 500 || status === 429;
+}
+
+async function callGeminiWithRetry(model, body, apiKey) {
+  var endpoint = GEMINI_BASE + model + ":generateContent";
+  var delays = [500, 1500, 4000]; // ms — up to 3 attempts total (initial + 2 retries)
+  var lastResponse = null;
+  var lastData = null;
+  var lastStatus = 0;
+
+  for (var attempt = 0; attempt <= delays.length; attempt++) {
+    if (attempt > 0) {
+      var base = delays[attempt - 1];
+      var jitter = Math.floor(Math.random() * 250);
+      await new Promise(function (r) { setTimeout(r, base + jitter); });
+    }
+
+    var response;
+    try {
+      response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+        body: JSON.stringify(body),
+      });
+    } catch (networkErr) {
+      if (attempt === delays.length) {
+        throw new Error("Network error reaching Gemini: " +
+          ((networkErr && networkErr.message) || "unknown"));
+      }
+      continue;
+    }
+
+    var data = null;
+    try { data = await response.json(); } catch (e) {
+      if (response.ok) throw new Error("Gemini returned invalid JSON.");
+    }
+
+    lastResponse = response;
+    lastData = data;
+    lastStatus = response.status;
+
+    if (response.ok) return { ok: true, response: response, data: data, status: response.status };
+    if (!isTransientStatus(response.status)) {
+      return { ok: false, response: response, data: data, status: response.status };
+    }
+    // transient → loop and retry
+  }
+
+  return { ok: false, response: lastResponse, data: lastData, status: lastStatus };
 }
 
 function buildFunctionResponseMessage(toolName, toolResult, callId) {

@@ -39,6 +39,17 @@ BROWSER TASK WORKFLOW EXAMPLE — 'open the Repositories tab':
   → If NOT_FOUND: get_page_context() to get the hostname, then
   2. navigate_to(url: 'https://<host>?tab=repositories')
 
+AFTER ANY BROWSER ACTION THAT LANDS ON A NEW PAGE (navigate_to, click_element
+that changed the view, open_tab) you MUST also run the full privacy pipeline on
+the resulting page so the user gets a redacted preview — even if the task did
+not explicitly ask for redaction. Pages reached by opening a profile, account,
+inbox, dashboard, or similar frequently expose emails, phone numbers, handles,
+or other PII; silently returning without a redacted screenshot leaves that
+exposure visible. Run steps 2–6 of the privacy workflow below (take_screenshot
+→ scan_ocr → fuse_detections → redact → verify_redaction, preceded by
+scan_dom) before writing the final summary. Only skip the privacy pass if the
+user explicitly said not to scan or redact.
+
 == TASK TYPE B: PRIVACY / PII REDACTION ==
 Use these tools for scanning and redacting sensitive data on the page:
 

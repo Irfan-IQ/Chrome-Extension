@@ -55,6 +55,10 @@ function ensureWorker(onProgress) {
       workerPath: CONFIG.getWorkerPath(),
       langPath: CONFIG.getLangPath(),
       corePath: CONFIG.getCorePath(),
+      // Load the worker directly from chrome-extension:// instead of wrapping
+      // it in a Blob URL. The Blob wrapper's importScripts() can hit remote
+      // CDN fallbacks under MV3 CSP, which triggers NetworkError on load.
+      workerBlobURL: false,
       logger: function (m) {
         if (m.progress && m.progress < 1) {
           if (onProgress && m.status) {

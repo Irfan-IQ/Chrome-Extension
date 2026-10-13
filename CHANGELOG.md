@@ -5,6 +5,35 @@ All notable changes to Redact Agent are recorded here. The format follows
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) once a
 release is tagged.
 
+## [4.0.1] — 2026-10-13
+
+### Fixed
+- **Screenshot capture (`chrome.tabs.captureVisibleTab`) failing with
+  `"<all_urls>" or "activeTab" permission required`.** The 4.0.0 audit
+  pass had narrowed `host_permissions` to `http://*/*` + `https://*/*`,
+  but Chrome's `captureVisibleTab` API only accepts `<all_urls>` or
+  `activeTab` — narrower wildcards are refused. Restored `<all_urls>`
+  in `host_permissions` so the agent can screenshot any http/https tab
+  after navigating. `file://` and other schemes remain outside scope at
+  runtime because tools gate on tab URL.
+- **OCR worker failing with `NetworkError: Failed to execute
+  importScripts on WorkerGlobalScope` against
+  `cdn.jsdelivr.net/npm/tesseract.js@v4.1.1/dist/worker.min.js`.** Added
+  `workerBlobURL: false` to the Tesseract `createWorker` call so the
+  bundled `lib/tesseract.worker.min.js` is loaded directly from
+  `chrome-extension://` instead of being wrapped in a Blob URL that
+  falls back to the jsdelivr CDN under MV3 CSP.
+- **Agent LLM calls aborting on transient Gemini 503s.**
+  `src/agent/llmClient.js` now retries 429/500/502/503/504 up to 3
+  times with exponential backoff + jitter, then falls back to
+  `GEMINI_FALLBACK_MODEL` once if the primary model stays overloaded.
+
+### Changed
+- **Agent prompt**: after any browser-action tool (`navigate_to`,
+  `click_element`, `open_tab`) lands on a new page, the agent now also
+  runs the full privacy pipeline so the user gets a redacted preview
+  by default — matching pre-4.0.0 behaviour.
+
 ## [Unreleased] — Audit & Optimization Pass
 
 ### Follow-ups after Phase 7
