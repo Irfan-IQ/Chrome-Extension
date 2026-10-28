@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Redact Agent",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "Autonomous privacy-preserving browser agent with local OCR, DOM detection, and self-hosted inference.",
   "permissions": [
     "sidePanel",
