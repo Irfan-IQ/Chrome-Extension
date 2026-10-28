@@ -1,88 +1,85 @@
-# Redact Agent — Chrome Extension (V4)
+# 🛡️ Redact Agent
 
-A Chrome Manifest V3 extension that combines a Gemini-powered **privacy chatbot** (Chat Mode) with a genuine **LLM tool-calling agent** (Agent Mode) for automated, privacy-first page redaction.
+**A privacy-preserving Chrome extension for AI-assisted browsing and on-page redaction.**
 
-Built for **Smart India Hackathon**.
+Built for **Smart India Hackathon 2026 — SIH26171: On-device Visual Perception for Light-weight Browser Agents**.
 
----
+[🌐 Install from the Chrome Web Store](https://chromewebstore.google.com/detail/redact-agent/ggcakjfhifadhiehiofjhjllfkijodio)
 
-## What's New in V4: Agent Mode
+## 📌 Overview
 
-Agent Mode upgrades the extension from a simple chatbot into a proper agentic system:
+Redact Agent combines a Chrome side panel, a local privacy pipeline, and an AI assistant to help users inspect web pages and redact sensitive information before sharing page context with an AI model.
 
-```
-User → AgentManager → LLM → Tool Call → Validator → Executor → Privacy Engine → Result → LLM → ...
-```
+The project addresses a central challenge in browser agents: **how can an AI assistant work with visual page context without unnecessarily exposing personal or sensitive information?**
 
-The LLM (Gemini) **plans and decides** which tools to call. The extension **executes them locally**. Raw PII never reaches the LLM.
+Redact Agent performs page scanning and redaction in the browser. Depending on the selected mode and configuration, it uses Gemini or a self-hosted vision-language model for reasoning.
 
----
+## ✨ Features
 
-## Features
+- **Chat Mode** — Ask questions about the current page with a privacy-protected page context.
+- **Agent Mode** — Give the agent a task and let it coordinate supported tools through a validated observe–decide–act loop.
+- **DOM scanning** — Inspect page elements and detect potentially sensitive information.
+- **Local OCR** — Use Tesseract.js to read text from supported visual content, including images and canvas.
+- **Vision-based detection** — Use YuNet and OpenCV workers for supported visual detections, including faces.
+- **PII detection and fusion** — Combine pattern-based, context-based, DOM, OCR, and vision signals.
+- **Screenshot redaction** — Mask detected regions with opaque blocks before a screenshot is shared with an AI model.
+- **Agent safeguards** — Validate tool names and parameters before executing supported browser actions.
+- **Configurable AI backend** — Use the Gemini Cloud API or a self-hosted model through the optional FastAPI gateway.
+- **Built-in assets** — OCR worker, WASM, language data, icons, and the YuNet model are packaged with the extension.
 
-### Chat Mode (original)
-- Gemini-powered chatbot in Chrome's side panel
-- Privacy protection: automatically scans the current page before sending each message
-- DOM scan, OCR (Tesseract.js), pattern + context analysis, detection fusion
-- Redacted screenshot sent to Gemini — raw screenshot stays local
-- Before/after screenshot comparison with detection summary
+## ⚙️ How it works
 
-### Agent Mode (new in V4)
-- LLM-driven agent that orchestrates the privacy pipeline step by step
-- Gemini native function calling — structured, validated, not free-form text parsing
-- Live step log: see the agent's Observe → Decide → Act cycle in real time
-- Quick-task shortcuts: "Redact all PII", "Scan & Report", "Emails & Phones"
-- Redacted screenshot displayed after the agent completes
-- Security boundary: every LLM tool call is validated before execution
+1. **Inspect locally:** The extension scans the page DOM and supported visual content.
+2. **Detect sensitive regions:** Local detectors identify candidate personal or sensitive information.
+3. **Combine detections:** The privacy pipeline fuses detection results and prepares a redacted screenshot.
+4. **Reason with AI:** Chat Mode uses the privacy-protected page context; Agent Mode can use stable detection IDs, categories, confidence scores, and safe page metadata to plan its next step.
+5. **Execute safely:** Agent tool calls are checked by the extension before supported actions run in the browser.
 
----
+**Privacy design:** Raw matched values, DOM selectors, bounding-box coordinates, and unredacted screenshot pixels are intended to remain in the local privacy-processing boundary rather than being supplied to the agent's LLM. Chat Mode can send a redacted screenshot and the user's message to the selected AI provider. Review the code and your selected provider's policies before using the extension with sensitive information.
 
-## Privacy Model
+## 🚀 Installation
 
-> **The LLM never sees raw PII. The LLM never sees the raw screenshot.**
+### Option 1: Chrome Web Store
 
-| Data | LLM sees? | Stays local? |
-|------|-----------|--------------|
-| Detection IDs (`det_0`, `det_1`, …) | ✓ | |
-| Category labels (`email`, `phone`) | ✓ | |
-| Confidence scores | ✓ | |
-| Matched text values | ✗ | ✓ |
-| Bounding-box coordinates | ✗ | ✓ |
-| DOM element selectors | ✗ | ✓ |
-| Raw screenshot pixels | ✗ | ✓ |
+1. Open the [Redact Agent listing](https://chromewebstore.google.com/detail/redact-agent/ggcakjfhifadhiehiofjhjllfkijodio).
+2. Select **Add to Chrome** and confirm the requested permissions.
+3. Open the extension from Chrome's Extensions menu or toolbar.
+4. Open **Settings** and configure your AI provider.
 
-The agent uses stable detection IDs to reference specific detections without ever seeing the actual data.
+### Option 2: Build and load from source
 
----
+#### Prerequisites
 
-## Installation
+- [Node.js](https://nodejs.org/) and npm
+- Google Chrome
+- A Gemini API key, or a configured self-hosted backend
 
-1. Clone or download this repository.
-2. Run `npm install && npm run build` to produce `dist/`.
-3. Open Chrome and go to `chrome://extensions/`.
-4. Enable **Developer mode** (top right).
-5. Click **Load unpacked** and select the **`dist/`** folder (not the project root).
-6. Click the extension icon → the side panel opens.
-7. Click ⚙ Settings and paste your [Gemini API key](https://aistudio.google.com/app/apikey).
-
-### Publishing to the Chrome Web Store
+#### Steps
 
 ```bash
-npm run package
+git clone https://github.com/Irfan-IQ/Chrome-Extension.git
+cd Chrome-Extension
+npm install
+npm run build
 ```
 
-Writes `redact-agent.zip` containing the contents of `dist/` with
-`manifest.json` at the archive root — the exact shape the Chrome Web Store
-expects. Do **not** zip the project root: it contains a second `manifest.json`
-at `./manifest.json` and the Web Store rejects multi-manifest packages
-(*"More than one manifest found in package"*).
+Then load the extension into Chrome:
 
-### Self-Hosted Backend (Default: Qwen3-VL-30B-A3B on H200)
+1. Open `chrome://extensions`.
+2. Enable **Developer mode**.
+3. Click **Load unpacked**.
+4. Select the project's generated `dist/` directory.
+5. Open Redact Agent and configure your AI provider in **Settings**.
 
-The extension defaults to a self-hosted inference server; Gemini is a
-selectable fallback in Settings.
+After changing the source, run `npm run build` again and reload the extension from `chrome://extensions`.
 
-Two processes run on the GPU host:
+## 🧠 AI backend configuration
+
+Redact Agent supports Gemini Cloud API and a self-hosted model served through vLLM and the optional FastAPI gateway.
+
+### Option A: Self-hosted Qwen3-VL
+
+This setup uses **Qwen3-VL-30B-A3B-Instruct** with BF16, tool-calling, and multimodal image support. It requires a compatible GPU and enough GPU memory to serve the model.
 
 **1. Start vLLM with Qwen3-VL-30B-A3B-Instruct** (BF16, tool-calling, multimodal):
 
@@ -102,192 +99,101 @@ python -m vllm.entrypoints.openai.api_server \
   --port 8001
 ```
 
-**2. Start the FastAPI gateway** (port 8000, proxies to vLLM on 8001):
+**2. Start the FastAPI gateway** (port `8000`, forwarding requests to vLLM on port `8001`):
 
-1. `python -m venv venv && source venv/bin/activate`
-2. `pip install -r server/requirements.txt`
-3. `cp server/.env.example server/.env` (defaults are already Qwen3-VL)
-4. `python server/main.py`
+Create and activate a virtual environment, then install the gateway dependencies and configure it:
 
-Then in the extension's **⚙ Settings**, leave the backend set to
-*Qwen3-VL 30B-A3B (self-hosted)* and point **Server Endpoint** at your
-gateway (e.g. `http://your-dgx-host:8000`). For deployments reachable off
-localhost, set `AUTH_TOKEN` in `server/.env` and paste the same value into
-**Server Token**.
-
-To use Gemini instead, pick *Gemini Cloud API* in the dropdown and paste
-your [Gemini API key](https://aistudio.google.com/app/apikey).
-
----
-
-
-## Usage
-
-### Chat Mode
-
-1. Navigate to any page.
-2. Ensure **Privacy Protection: ON** in the side panel.
-3. Click **🛡 Scan Page** to see what the privacy engine detects.
-4. Type a message — the redacted screenshot is automatically attached.
-
-### Agent Mode
-
-1. Click the **🤖 Agent** tab in the header.
-2. Type a privacy task or click a quick-task button.
-3. Click **▶ Run**.
-4. Watch the agent plan and execute each step in real time.
-5. After completion, review the redacted screenshot and agent summary.
-
-**Example tasks:**
-- "Redact all personal information on this page"
-- "Find and redact all email addresses and phone numbers"
-- "Scan this page for sensitive data and report what you find"
-
----
-
-## Architecture
-
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full system architecture (merged system + agent-layer view, including the security model and how to add new tools).
-
-See [`docs/PROBLEM_STATEMENT_AND_AGENT_FLOW.md`](docs/PROBLEM_STATEMENT_AND_AGENT_FLOW.md) for the problem-statement framing and a step-by-step agent-execution flow.
-
-See [`CHANGELOG.md`](CHANGELOG.md) for the version history and [`CONTRIBUTING.md`](CONTRIBUTING.md) for the local-dev loop and the two-realm privacy-tree convention.
-
-### Agent Tools
-
-The LLM may call **only** these predefined tools:
-
-| Tool | Description |
-|------|-------------|
-| `scan_dom` | Detect PII in the DOM using local pattern rules |
-| `take_screenshot` | Capture the active tab (stored locally) |
-| `scan_ocr` | Detect PII in images/canvas via local OCR |
-| `fuse_detections` | Merge DOM + OCR results; assign stable detection IDs |
-| `redact` | Paint opaque blocks over detected regions |
-| `verify_redaction` | Confirm all detections have been masked |
-| `get_page_context` | Return safe page metadata (host, title, viewport) |
-
-### Security Model
-
-- **ToolValidator** — allowlist check + type + parameter validation on every LLM tool call
-- **ToolExecutor** — static `switch/case`, no dynamic dispatch
-- `chrome.scripting.executeScript` is called only with hardcoded extension files, never with LLM-generated code
-- Loop protection: `MAX_AGENT_STEPS = 10`, `MAX_SAME_TOOL_IN_A_ROW = 2`
-
----
-
-## Privacy Pipeline (Local, Deterministic)
-
-```
-DOM scan (detector.js)
-    +
-Screenshot → OCR (Tesseract.js)
-    +
-Pattern analysis (regex) + Context/NER analysis
-    ↓
-Detection Fusion (IoU + confidence scoring)
-    ↓
-ScreenshotRedactor (OffscreenCanvas — opaque blocks)
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -r server/requirements.txt
+cp server/.env.example server/.env
+python server/main.py
 ```
 
-All processing runs **inside the Chrome extension**. No raw data is sent to any server.
+On Windows, activate the environment with `venv\Scripts\activate` in Command Prompt or `.\venv\Scripts\Activate.ps1` in PowerShell. If your environment uses a different backend configuration, update `server/.env` accordingly.
 
----
+**3. Configure the extension:**
 
-## File Structure
+1. Open Redact Agent's **⚙️ Settings**.
+2. Set the backend to **Qwen3-VL 30B-A3B (self-hosted)**.
+3. Set **Server Endpoint** to your gateway URL, for example `http://your-dgx-host:8000`.
+4. For deployments reachable beyond localhost, set `AUTH_TOKEN` in `server/.env` and enter the same value in **Server Token**.
 
-```
-├── manifest.json
-├── vite.config.js
-├── sidepanel.html
-│
+Keep the vLLM server and FastAPI gateway running while using the self-hosted backend. The example vLLM command is a starting point; adjust GPU memory, parallelism, and other options for your hardware.
+
+### Option B: Gemini Cloud API
+
+1. Create an API key in [Google AI Studio](https://aistudio.google.com/app/apikey).
+2. Open Redact Agent's **⚙️ Settings**.
+3. Select **Gemini Cloud API** from the backend dropdown.
+4. Paste your Gemini API key.
+
+The selected AI provider processes the request data it receives. The extension's local privacy pipeline is designed to redact page screenshots before they are sent.
+
+## 🧰 Technology stack
+
+| Area | Technologies |
+|---|---|
+| Browser extension | Chrome Extensions Manifest V3, Chrome Side Panel API |
+| Frontend | React 18, JavaScript, Vite |
+| Local text and page analysis | DOM inspection, JavaScript pattern matching, context analysis |
+| OCR | Tesseract.js, WebAssembly |
+| Vision | YuNet, OpenCV.js workers, ONNX Runtime Web |
+| AI reasoning | Gemini API; self-hosted Qwen3-VL through vLLM |
+| Optional gateway | Python, FastAPI, Pydantic, HTTPX |
+| Build and packaging | npm, Vite |
+
+## 🗂️ Repository structure
+
+```text
+.
+├── manifest.json              # Chrome Extension Manifest V3 configuration
+├── package.json               # npm scripts and dependencies
+├── vite.config.js             # Extension build configuration
+├── sidepanel.html             # Side panel entry point
 ├── src/
-│   ├── App.jsx, main.jsx       React side-panel entry
-│   ├── background.js           MV3 service worker
-│   ├── gemini.js               Gemini REST client (Chat mode)
-│   ├── sidepanel.css
-│   ├── utils.js
-│   │
-│   ├── components/             React UI (Header, Chat, Agent, Settings, …)
-│   │
-│   ├── privacy/                SIDE-PANEL realm — bundled with the React app
-│   │   ├── privacyEngine.js    public entry point
-│   │   ├── ocrAnalyzer.js
-│   │   ├── patternAnalyzer.js
-│   │   ├── contextAnalyzer.js
-│   │   ├── detectionFusion.js
-│   │   └── screenshotRedactor.js
-│   │
-│   ├── privacy-page/           PAGE realm — injected via chrome.scripting
-│   │   ├── contentScript.js    (copied verbatim to dist/privacy/ at build time)
-│   │   ├── detector.js
-│   │   └── coordinateUtils.js
-│   │
-│   ├── vision/                 YuNet + OpenCV workers (face / card candidates)
-│   │
-│   └── agent/                  Agent layer (V4)
-│       ├── agentState.js
-│       ├── toolRegistry.js
-│       ├── toolValidator.js
-│       ├── toolExecutor.js
-│       ├── llmClient.js
-│       ├── agentManager.js
-│       └── tools/
-│           ├── scanDom.js, screenshot.js, scanOcr.js, fuseDetections.js,
-│           ├── redact.js, verifyRedaction.js, getPageContext.js,
-│           └── clickElement.js, navigateTo.js, openTab.js
-│
-├── server/                     FastAPI backend (optional for local LLM)
-│   ├── config.py
-│   ├── main.py
-│   ├── schemas.py
-│   └── requirements.txt
-│
-├── lib/
-│   └── tesseract.min.js        Bundled OCR engine (no CDN)
-│
-├── test/
-│   └── agent-test.html         Unit tests (35+ cases, no API key needed)
-│
+│   ├── components/             # Chat, Agent, settings, and UI components
+│   ├── agent/                  # Agent loop, tools, validation, and execution
+│   ├── privacy/                # OCR, pattern/context analysis, fusion, redaction
+│   ├── privacy-page/           # Scripts that inspect the page DOM
+│   ├── vision/                 # Vision engine and workers
+│   ├── background.js           # Extension service worker
+│   └── gemini.js               # AI API client
+├── public/
+│   ├── icons/                  # Extension icons
+│   ├── lib/                    # Tesseract.js and OCR runtime assets
+│   └── models/yunet/           # YuNet model assets
+├── server/                     # Optional FastAPI model gateway
+├── test/                       # Manual test pages and agent test harness
+├── vision-model/               # Vision-model experiments and training tools
+├── Redact-Agent/               # Static project website and reports
 ├── docs/
-│   ├── ARCHITECTURE.md             Merged system + agent architecture
+│   ├── ARCHITECTURE.md
 │   └── PROBLEM_STATEMENT_AND_AGENT_FLOW.md
-├── Redact-Agent/                   Separate static landing site (Vercel-hosted)
-├── CHANGELOG.md
+├── README.md
 └── CONTRIBUTING.md
 ```
 
----
+## 🧪 Development commands
 
-## Running the Tests
+```bash
+npm install       # Install JavaScript dependencies
+npm run build     # Build the extension into dist/
+npm run preview   # Preview the Vite build locally
+npm run package   # Build and create redact-agent.zip for Chrome Web Store packaging
+```
 
-Open `test/agent-test.html` as a local file in Chrome (or serve it from the extension context). The tests cover:
+`npm run package` packages the contents of `dist/` with `manifest.json` at the archive root. Upload the generated `redact-agent.zip` to the Chrome Web Store when preparing a release.
 
-- ToolRegistry — allowlist, definitions, dangerous ops blocked
-- ToolValidator — valid calls, security rejections, redact parameter validation
-- AgentState — detection ID assignment, metadata privacy, ID resolution
+The repository also contains a browser-based agent test harness at `test/agent-test.html` and Python gateway tests under `server/`. Run the gateway tests from an environment with the server dependencies installed:
 
-No API key or network access required.
+```bash
+python -m pytest server/
+```
 
----
+## 📚 Documentation
 
-## Tech Stack
+For contribution guidelines, see [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
-| Component | Technology |
-|-----------|-----------|
-| Extension platform | Chrome MV3, side panel |
-| LLM | Google Gemini 2.0 Flash (function calling) |
-| OCR | Tesseract.js v4 (LSTM, fully local) |
-| Screenshot redaction | OffscreenCanvas (fully local) |
-| Language | Vanilla JavaScript (no build step, no framework) |
-
----
-
-## Hackathon Notes
-
-- All PII detection and redaction runs **100% locally** — no external services except the Gemini API for reasoning.
-- The Gemini API receives only: the user's task text, safe page metadata, and detection IDs/categories — never raw PII or the raw screenshot.
-- The agent architecture demonstrates a real **Observe → Decide → Act** loop with native function calling, not prompt engineering tricks.
-`public/models/yunet/face_detection_yunet_2023mar.onnx`
-
-The current repository ZIP does not contain the ONNX weights. The detector code alone is not enough to load the model. Obtain the official YuNet weight from OpenCV Zoo and place it at the path above before building. OpenCV Zoo lists `face_detection_yunet_2023mar.onnx` in its face detection model directory and documents the model as MIT licensed. 
+For the system design and component interactions, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
